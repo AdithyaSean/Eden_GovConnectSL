@@ -4,7 +4,9 @@ import { DashboardLayout } from "@/components/dashboard-layout";
 export default function ChatPage() {
     return (
         <DashboardLayout>
-            <ChatInterface />
+            <div className="p-4 md:p-8">
+                <ChatInterface />
+            </div>
         </DashboardLayout>
     );
 }

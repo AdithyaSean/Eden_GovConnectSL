@@ -15,7 +15,7 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
-      <div className="flex-1 space-y-8 p-8 pt-6">
+      <div className="flex-1 space-y-8 p-4 md:p-8 pt-6">
         <div className="flex items-center justify-between space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         </div>
@@ -64,14 +64,14 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <div className="space-y-6">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <h2 className="text-2xl font-bold tracking-tight">Services</h2>
-                   <div className="relative w-full max-w-sm">
+                   <div className="relative w-full sm:w-auto sm:max-w-xs">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                       <Input placeholder="Search services..." className="pl-10 h-11" />
                     </div>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                   {services.map((service) => (
                     <ServiceCard key={service.title} service={service} />
                   ))}
@@ -80,7 +80,7 @@ export default function DashboardPage() {
              <div className="space-y-6">
                  <div className="flex items-center justify-between">
                     <h2 className="text-2xl font-bold tracking-tight">Traffic Services</h2>
-                    <Button variant="outline">View All Vehicles</Button>
+                    <Button variant="outline">View All</Button>
                 </div>
                 <div className="space-y-4">
                   {trafficServices.map((service) => (
@@ -90,8 +90,8 @@ export default function DashboardPage() {
                           <Car className="w-6 h-6 text-primary" />
                         </div>
                         <div>
-                          <p className="font-semibold">{service.title}</p>
-                          <p className="text-sm text-muted-foreground">{service.description}</p>
+                          <p className="font-semibold text-sm sm:text-base">{service.title}</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground">{service.description}</p>
                         </div>
                       </CardHeader>
                     </Card>
@@ -102,17 +102,17 @@ export default function DashboardPage() {
 
         <Card className="bg-primary text-primary-foreground">
             <CardHeader>
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-full bg-white/20 flex-shrink-0 flex items-center justify-center">
                     <LifeBuoy className="w-7 h-7" />
                   </div>
                   <div>
-                    <CardTitle>Help & Support</CardTitle>
+                    <CardTitle className="text-xl md:text-2xl">Help & Support</CardTitle>
                     <p className="text-sm opacity-80 mt-1">Get help with our services, or contact our team.</p>
                   </div>
                 </div>
-                <Button variant="secondary" size="lg">Contact Support <ArrowRight className="ml-2" /></Button>
+                <Button variant="secondary" size="lg" className="w-full md:w-auto mt-4 md:mt-0">Contact Support <ArrowRight className="ml-2" /></Button>
               </div>
             </CardHeader>
         </Card>
