@@ -25,6 +25,6 @@ export interface Service {
   description: string;
   status: ServiceStatus;
   statusVariant: ServiceStatusVariant;
-  icon: keyof typeof import("lucide-react");
+  icon: keyof typeof import("lucide-react") | "default";
   actions: ServiceAction[];
 }

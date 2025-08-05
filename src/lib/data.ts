@@ -1,25 +1,25 @@
 import type { NavItem, Service } from "./types";
-import { Home, Briefcase, User, MoreHorizontal } from 'lucide-react';
+import { Home, Briefcase, Users, MoreHorizontal } from 'lucide-react';
 
 export const navItems: NavItem[] = [
   {
     title: "Home",
-    href: "/",
+    href: "/dashboard",
     icon: Home,
   },
   {
     title: "My Services",
-    href: "#",
+    href: "/my-services",
     icon: Briefcase,
   },
   {
     title: "Family",
-    href: "#",
-    icon: User,
+    href: "/family",
+    icon: Users,
   },
   {
     title: "Other Services",
-    href: "#",
+    href: "/other-services",
     icon: MoreHorizontal,
   },
 ];

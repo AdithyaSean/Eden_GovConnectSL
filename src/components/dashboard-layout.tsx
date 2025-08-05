@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname } from 'next/navigation'
 import { cn } from "@/lib/utils";
 import { navItems } from "@/lib/data";
-import { Bell, MessageCircle, Search, Settings, User, UserSquare } from "lucide-react";
+import { Bell, MessageCircle, Search, Settings, User, UserSquare, Users } from "lucide-react";
 import { Input } from "./ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
@@ -17,7 +17,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen w-full bg-background text-foreground">
       <header className="sticky top-0 z-50 w-full border-b bg-card shadow-sm">
         <div className="container flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 font-bold text-lg">
+          <Link href="/dashboard" className="flex items-center gap-2 font-bold text-lg">
              <UserSquare className="h-7 w-7 text-primary" />
             <span>e-Services</span>
           </Link>
@@ -54,7 +54,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             </Link>
             <Avatar>
               <AvatarImage src="https://placehold.co/100x100" alt="@shadcn" data-ai-hint="avatar user" />
-              <AvatarFallback>HS</AvatarFallback>
+              <AvatarFallback>SL</AvatarFallback>
             </Avatar>
           </div>
         </div>
