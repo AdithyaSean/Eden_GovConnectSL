@@ -1,5 +1,5 @@
 import type { NavItem, Service } from "./types";
-import { Home, Fingerprint, BookUser, Car, Briefcase, Landmark, GraduationCap } from 'lucide-react';
+import { Home, Briefcase, User, MoreHorizontal } from 'lucide-react';
 
 export const navItems: NavItem[] = [
   {
@@ -8,57 +8,54 @@ export const navItems: NavItem[] = [
     icon: Home,
   },
   {
-    title: "Services",
+    title: "My Services",
     href: "#",
     icon: Briefcase,
   },
   {
-    title: "Profile",
+    title: "Family",
     href: "#",
-    icon: Fingerprint,
+    icon: User,
   },
   {
-    title: "Help",
+    title: "Other Services",
     href: "#",
-    icon: GraduationCap,
+    icon: MoreHorizontal,
   },
 ];
 
 export const services: Service[] = [
   {
-    title: "National Identity Card",
-    description: "Apply for a new NIC or renew your existing one.",
+    title: "Missing Documents",
+    description: "",
     status: "Active",
     statusVariant: "success",
-    icon: "Fingerprint",
-    actions: [
-      { label: "View Details", variant: "secondary" },
-      { label: "Renew", variant: "default" },
-    ],
+    icon: "FileQuestion",
+    actions: [],
   },
   {
-    title: "Passport Services",
-    description: "Apply for a new passport or renew your travel document.",
-    status: "Renewal Due",
-    statusVariant: "warning",
-    icon: "BookUser",
-    actions: [{ label: "Renew Now", variant: "default" }],
-  },
-  {
-    title: "Driving License",
-    description: "Services for new licenses, renewals, and information updates.",
+    title: "Renew Driving License",
+    description: "",
     status: "Renewal Due",
     statusVariant: "warning",
     icon: "Car",
-    actions: [{ label: "Renew Now", variant: "default" }],
+    actions: [],
   },
   {
-    title: "Business Registration",
-    description: "Register a new business or manage existing registrations.",
+    title: "Taqdeer",
+    description: "",
+    status: "Renewal Due",
+    statusVariant: "warning",
+    icon: "Landmark",
+    actions: [],
+  },
+  {
+    title: "National ID Services",
+    description: "",
     status: "Not Applied",
     statusVariant: "destructive",
-    icon: "Briefcase",
-    actions: [{ label: "Apply Now", variant: "default" }],
+    icon: "Fingerprint",
+    actions: [],
   },
   {
     title: "Land Registry",
@@ -93,3 +90,17 @@ export const services: Service[] = [
     actions: [{ label: "File Return", variant: "default" }],
   },
 ];
+
+
+export const trafficServices = [
+  {
+    title: "Encore",
+    description: "WEE-1004",
+    icon: "Car"
+  },
+   {
+    title: "Rogue",
+    description: "GSM-9690",
+    icon: "Car"
+  }
+]
