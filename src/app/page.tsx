@@ -4,81 +4,64 @@ import { services } from "@/lib/data";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { FileText, UserCheck, UserPlus, Users } from "lucide-react";
 import { AiChatbot } from "@/components/ai-chatbot";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
+  const featuredServices = services.slice(0, 4);
+  const otherServices = services.slice(4, 8);
+
   return (
     <DashboardLayout>
-      <div className="flex-1 space-y-6 p-4 sm:p-6 lg:p-8">
-        <h2 className="text-3xl font-bold tracking-tight font-headline">
-          Dashboard
-        </h2>
+      <div className="flex-1 space-y-8 p-4 sm:p-6 lg:p-8">
+        <Card className="overflow-hidden bg-primary text-primary-foreground shadow-lg">
+          <div className="flex flex-col md:flex-row">
+            <div className="p-8 space-y-4">
+              <CardTitle className="text-3xl font-bold">
+                Welcome, Citizen User
+              </CardTitle>
+              <CardDescription className="text-primary-foreground/80 max-w-lg">
+                Your central hub for all government services. Easily access applications, check statuses, and discover new services available to you.
+              </CardDescription>
+              <Button variant="secondary" size="lg" className="mt-4">
+                View Profile
+              </Button>
+            </div>
+            <div className="relative md:w-1/3">
+              <Image
+                src="https://placehold.co/600x400.png"
+                alt="Sri Lanka landscape"
+                data-ai-hint="sri lanka landscape"
+                fill
+                className="object-cover"
+              />
+            </div>
+          </div>
+        </Card>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Total Services Used
-              </CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">4</div>
-              <p className="text-xs text-muted-foreground">
-                in the last year
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Active Applications
-              </CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">1</div>
-              <p className="text-xs text-muted-foreground">
-                Passport application pending
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Renewals Due</CardTitle>
-              <UserCheck className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">2</div>
-              <p className="text-xs text-muted-foreground">
-                Driving License & Passport
-              </p>
-            </CardContent>
-          </Card>
-           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">New Services</CardTitle>
-              <UserPlus className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">+1</div>
-              <p className="text-xs text-muted-foreground">
-                Business Registration available
-              </p>
-            </CardContent>
-          </Card>
+
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold tracking-tight font-headline">
+            Featured Services
+          </h2>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {featuredServices.map((service) => (
+              <ServiceCard key={service.title} service={service} />
+            ))}
+          </div>
         </div>
 
         <div className="space-y-4">
-          <h3 className="text-2xl font-bold tracking-tight font-headline">
-            Your Services
-          </h3>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {services.map((service) => (
+          <h2 className="text-2xl font-bold tracking-tight font-headline">
+            Explore Other Services
+          </h2>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+             {otherServices.map((service) => (
               <ServiceCard key={service.title} service={service} />
             ))}
           </div>

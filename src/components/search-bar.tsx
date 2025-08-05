@@ -3,7 +3,7 @@
 import React from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverAnchor } from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { services } from "@/lib/data";
 import { Button } from "./ui/button";
 
@@ -28,16 +28,16 @@ export function SearchBar() {
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <div className="relative w-full max-w-md">
+      <div className="relative w-full">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <PopoverAnchor asChild>
+        <PopoverTrigger asChild>
           <Input
             placeholder="Search services..."
             className="pl-9 w-full"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-        </PopoverAnchor>
+        </PopoverTrigger>
       </div>
       <PopoverContent
         className="w-[var(--radix-popover-trigger-width)] p-1"

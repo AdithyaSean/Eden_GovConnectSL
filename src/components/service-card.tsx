@@ -8,6 +8,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
+  CardDescription
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,20 +32,20 @@ export function ServiceCard({ service }: ServiceCardProps) {
   };
 
   return (
-    <Card className="flex flex-col hover:shadow-lg transition-shadow duration-300">
-      <CardHeader>
-        <div className="flex items-start justify-between gap-2">
-            <div className="flex-shrink-0 p-3 rounded-lg bg-muted">
-              {Icon ? <Icon className="w-6 h-6 text-primary" /> : null}
-            </div>
-          <Badge variant="outline" className={cn("text-xs whitespace-nowrap", badgeVariantClasses[statusVariant])}>
+    <Card className="flex flex-col hover:shadow-lg transition-shadow duration-300 h-full">
+       <CardHeader className="flex-row items-start gap-4 space-y-0">
+          <div className="flex-shrink-0 p-3 rounded-lg bg-muted">
+            {Icon ? <Icon className="w-6 h-6 text-primary" /> : null}
+          </div>
+        <div className="flex-1">
+          <CardTitle className="pt-0 text-lg font-headline">{title}</CardTitle>
+          {status && <Badge variant="outline" className={cn("text-xs whitespace-nowrap mt-1", badgeVariantClasses[statusVariant])}>
             {status}
-          </Badge>
+          </Badge>}
         </div>
-        <CardTitle className="pt-2 font-headline">{title}</CardTitle>
       </CardHeader>
       <CardContent className="flex-grow">
-        <p className="text-sm text-muted-foreground">{description}</p>
+        <CardDescription>{description}</CardDescription>
       </CardContent>
       <CardFooter className="gap-2 pt-4">
         {actions.map((action) => (
@@ -52,7 +53,7 @@ export function ServiceCard({ service }: ServiceCardProps) {
             key={action.label}
             variant={action.variant}
             size="sm"
-            className={action.variant === 'default' ? 'bg-primary hover:bg-primary/90' : ''}
+            className="w-full"
           >
             {action.label}
           </Button>

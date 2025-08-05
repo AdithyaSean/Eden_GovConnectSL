@@ -1,46 +1,26 @@
 import type { NavItem, Service } from "./types";
-import { Home, Settings, Fingerprint, BookUser, Car, Briefcase, Landmark, GraduationCap } from 'lucide-react';
+import { Home, Fingerprint, BookUser, Car, Briefcase, Landmark, GraduationCap } from 'lucide-react';
 
 export const navItems: NavItem[] = [
   {
-    title: "Dashboard",
+    title: "Home",
     href: "/",
     icon: Home,
   },
   {
-    title: "National ID",
-    href: "#",
-    icon: Fingerprint,
-  },
-  {
-    title: "Passport",
-    href: "#",
-    icon: BookUser,
-  },
-  {
-    title: "Driving License",
-    href: "#",
-    icon: Car,
-  },
-  {
-    title: "Business Registration",
+    title: "Services",
     href: "#",
     icon: Briefcase,
   },
   {
-    title: "Land Registry",
+    title: "Profile",
     href: "#",
-    icon: Landmark,
+    icon: Fingerprint,
   },
   {
-    title: "Exam Results",
+    title: "Help",
     href: "#",
     icon: GraduationCap,
-  },
-  {
-    title: "Settings",
-    href: "#",
-    icon: Settings,
   },
 ];
 
