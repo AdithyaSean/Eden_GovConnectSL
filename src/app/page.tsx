@@ -7,18 +7,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { AiChatbot } from "@/components/ai-chatbot";
 import { Button } from "@/components/ui/button";
-import { User, Bell, Settings, Search, LifeBuoy, ArrowRight, UserSquare, Car, BookUser, Briefcase } from "lucide-react";
+import { Bell, Settings, Search, LifeBuoy, ArrowRight, UserSquare, Car, BookUser } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 export default function Home() {
-
-  const digitalDocuments = [
-    { name: "Citizen ID", icon: "UserSquare", color: "bg-green-100" },
-    { name: "Passport", icon: "BookUser", color: "bg-purple-100" },
-    { name: "Driving License", icon: "Car", color: "bg-blue-100" },
-  ];
 
   return (
     <DashboardLayout>
@@ -46,7 +39,7 @@ export default function Home() {
                 <CardTitle className="text-sm font-medium">
                   Active Services
                 </CardTitle>
-                <Briefcase className="h-5 w-5 text-muted-foreground" />
+                <BookUser className="h-5 w-5 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">5</div>
@@ -125,7 +118,6 @@ export default function Home() {
         </Card>
 
       </div>
-      <AiChatbot />
     </DashboardLayout>
   );
 }

@@ -94,13 +94,13 @@ export const services: Service[] = [
 
 export const trafficServices = [
   {
-    title: "Encore",
-    description: "WEE-1004",
+    title: "Toyota Aqua",
+    description: "WP-CAR-1234",
     icon: "Car"
   },
    {
-    title: "Rogue",
-    description: "GSM-9690",
+    title: "Honda Vezel",
+    description: "SP-CAB-5678",
     icon: "Car"
   }
 ]

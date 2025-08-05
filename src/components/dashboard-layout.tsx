@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname } from 'next/navigation'
 import { cn } from "@/lib/utils";
 import { navItems } from "@/lib/data";
-import { Bell, Search, Settings, User, UserSquare } from "lucide-react";
+import { Bell, MessageCircle, Search, Settings, User, UserSquare } from "lucide-react";
 import { Input } from "./ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
@@ -46,6 +46,12 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               <Bell className="h-5 w-5" />
               <span className="sr-only">Notifications</span>
             </Button>
+             <Link href="/chat">
+              <Button variant="ghost" size="icon" className="rounded-full">
+                  <MessageCircle className="h-5 w-5" />
+                  <span className="sr-only">AI Assistant</span>
+              </Button>
+            </Link>
             <Avatar>
               <AvatarImage src="https://placehold.co/100x100" alt="@shadcn" data-ai-hint="avatar user" />
               <AvatarFallback>HS</AvatarFallback>
