@@ -2,35 +2,64 @@
 
 import type React from "react";
 import { Button } from "@/components/ui/button";
-import { Home, Briefcase, User, MoreHorizontal } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from 'next/navigation'
 import { cn } from "@/lib/utils";
 import { navItems } from "@/lib/data";
-
+import { Bell, Search, Settings, User, UserSquare } from "lucide-react";
+import { Input } from "./ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      <main className="flex-1 pb-24">
+    <div className="min-h-screen w-full bg-background text-foreground">
+      <header className="sticky top-0 z-50 w-full border-b bg-card shadow-sm">
+        <div className="container flex h-16 items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 font-bold text-lg">
+             <UserSquare className="h-7 w-7 text-primary" />
+            <span>e-Services</span>
+          </Link>
+
+          <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
+            {navItems.map((item) => (
+              <Link
+                key={item.title}
+                href={item.href}
+                className={cn(
+                  "transition-colors hover:text-primary",
+                  pathname === item.href ? "text-primary" : "text-muted-foreground"
+                )}
+              >
+                {item.title}
+              </Link>
+            ))}
+          </nav>
+          
+          <div className="flex items-center gap-4">
+             <Button variant="ghost" size="icon" className="rounded-full">
+                <Search className="h-5 w-5" />
+                <span className="sr-only">Search</span>
+            </Button>
+            <Button variant="ghost" size="icon" className="rounded-full">
+              <Bell className="h-5 w-5" />
+              <span className="sr-only">Notifications</span>
+            </Button>
+            <Avatar>
+              <AvatarImage src="https://placehold.co/100x100" alt="@shadcn" data-ai-hint="avatar user" />
+              <AvatarFallback>HS</AvatarFallback>
+            </Avatar>
+          </div>
+        </div>
+      </header>
+      <main className="container mx-auto">
         {children}
       </main>
-      <footer className="fixed bottom-0 left-0 right-0 bg-card border-t z-50">
-        <nav className="container flex justify-around items-center h-16">
-          {navItems.map((item) => (
-            <Link key={item.title} href={item.href} className={cn(
-              "flex flex-col items-center justify-center gap-1 transition-colors w-full h-full",
-              pathname === item.href 
-                ? "text-primary font-semibold" 
-                : "text-muted-foreground hover:text-primary"
-            )}>
-              <item.icon className="h-6 w-6" />
-              <span className="text-xs">{item.title}</span>
-            </Link>
-          ))}
-        </nav>
+      <footer className="border-t">
+        <div className="container mx-auto py-6 text-center text-muted-foreground">
+            <p>&copy; {new Date().getFullYear()} e-Services Platform. All rights reserved.</p>
+        </div>
       </footer>
     </div>
   );
