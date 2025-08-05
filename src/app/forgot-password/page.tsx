@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { UserSquare } from "lucide-react";
 
-export default function LoginPage() {
+export default function ForgotPasswordPage() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
       <Card className="mx-auto max-w-sm w-full">
@@ -19,9 +19,9 @@ export default function LoginPage() {
             <div className="flex justify-center mb-4">
                <UserSquare className="h-12 w-12 text-primary" />
             </div>
-          <CardTitle className="text-2xl">Login</CardTitle>
+          <CardTitle className="text-2xl">Forgot Password</CardTitle>
           <CardDescription>
-            Enter your email below to login to your account
+            Enter your email to receive a reset link
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -35,29 +35,14 @@ export default function LoginPage() {
                 required
               />
             </div>
-            <div className="grid gap-2">
-              <div className="flex items-center">
-                <Label htmlFor="password">Password</Label>
-                <Link
-                  href="/forgot-password"
-                  className="ml-auto inline-block text-sm underline"
-                >
-                  Forgot your password?
-                </Link>
-              </div>
-              <Input id="password" type="password" required />
-            </div>
-            <Button type="submit" className="w-full" asChild>
-                <Link href="/dashboard">Login</Link>
-            </Button>
-            <Button variant="outline" className="w-full">
-              Login with National ID
+            <Button type="submit" className="w-full">
+              Send Reset Link
             </Button>
           </div>
           <div className="mt-4 text-center text-sm">
-            Don&apos;t have an account?{" "}
-            <Link href="/signup" className="underline">
-              Sign up
+            Remembered your password?{" "}
+            <Link href="/login" className="underline">
+              Login
             </Link>
           </div>
         </CardContent>
