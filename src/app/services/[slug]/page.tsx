@@ -13,6 +13,7 @@ import { ExamResultsService } from "@/components/services/exam-results-service";
 import { PensionDepartmentService } from "@/components/services/pension-department-service";
 import { TaxPaymentsService } from "@/components/services/tax-payments-service";
 import { HealthServicesService } from "@/components/services/health-services-service";
+import { ElectricityBillPaymentService } from "@/components/services/electricity-bill-payment-service";
 
 const serviceComponentMap = {
   "missing-documents": MissingDocumentsService,
@@ -24,6 +25,7 @@ const serviceComponentMap = {
   "pension-department": PensionDepartmentService,
   "tax-payments-ird": TaxPaymentsService,
   "health-services": HealthServicesService,
+  "electricity-bill-payment": ElectricityBillPaymentService,
 };
 
 export default function ServiceDetailPage({ params }: { params: { slug: string } }) {

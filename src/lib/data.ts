@@ -1,5 +1,5 @@
 import type { NavItem, Service } from "./types";
-import { Home, Briefcase, Users, MoreHorizontal, Landmark, FileQuestion, Car, Fingerprint, GraduationCap, FileText, HeartPulse, CreditCard, LifeBuoy } from 'lucide-react';
+import { Home, Briefcase, Users, MoreHorizontal, Landmark, FileQuestion, Car, Fingerprint, GraduationCap, FileText, HeartPulse, CreditCard, LifeBuoy, Zap } from 'lucide-react';
 
 export const navItems: NavItem[] = [
   {
@@ -286,6 +286,30 @@ export const services: Service[] = [
         {
           title: "Book Appointments",
           content: "Schedule appointments at government hospitals and clinics for consultations, check-ups, and specialized treatments."
+        }
+      ]
+    }
+  },
+  {
+    title: "Electricity Bill Payment",
+    slug: "electricity-bill-payment",
+    description: "Pay your electricity bill online.",
+    status: "Active",
+    statusVariant: "success",
+    icon: "Zap",
+    actions: [],
+    content: {
+      longDescription: "Conveniently pay your electricity bill through our secure online portal. Check your current bill details and make payments anytime, anywhere.",
+      sections: [
+        {
+          title: "How to Pay",
+          content: "Enter your electricity account number to view your latest bill. You can then proceed to pay using various payment methods.",
+          list: [
+            "Enter your account number and click 'Fetch Bill'.",
+            "Verify the bill details displayed.",
+            "Click 'Pay Now' to proceed to the secure payment gateway.",
+            "Choose your preferred payment method and complete the transaction."
+          ]
         }
       ]
     }
