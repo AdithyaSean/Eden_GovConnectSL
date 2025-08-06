@@ -4,12 +4,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Search } from "lucide-react";
 
 const applications = [
-  { id: "MID-01", type: "Medical ID Card", submitted: "2024-07-22", status: "Pending" },
-  { id: "APPT-02", type: "Appointment Booking", submitted: "2024-07-21", status: "Confirmed" },
+  { id: "MID-01", type: "Medical ID Card", submitted: "2024-07-22", status: "Pending", user: "John Doe", nic: "199012345V" },
+  { id: "APPT-02", type: "Appointment Booking", submitted: "2024-07-21", status: "Confirmed", user: "Jane Smith", nic: "198512345V" },
 ];
 
 export default function WorkerHealthDashboard() {
@@ -20,12 +22,31 @@ export default function WorkerHealthDashboard() {
         <Card>
           <CardHeader>
             <CardTitle>Health Service Requests</CardTitle>
+            <div className="flex items-center gap-4 mt-4">
+                <div className="relative w-full">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input placeholder="Search by NIC or Name..." className="pl-10" />
+                </div>
+                <Select>
+                    <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Filter by type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Types</SelectItem>
+                        <SelectItem value="medical-id">Medical ID Card</SelectItem>
+                        <SelectItem value="appointment">Appointment Booking</SelectItem>
+                    </SelectContent>
+                </Select>
+                 <Button>Search</Button>
+            </div>
           </CardHeader>
           <CardContent>
              <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Ref ID</TableHead>
+                  <TableHead>User</TableHead>
+                  <TableHead>NIC</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Submitted On</TableHead>
                   <TableHead>Status</TableHead>
@@ -36,10 +57,12 @@ export default function WorkerHealthDashboard() {
                 {applications.map((app) => (
                   <TableRow key={app.id}>
                     <TableCell>{app.id}</TableCell>
+                    <TableCell>{app.user}</TableCell>
+                    <TableCell>{app.nic}</TableCell>
                     <TableCell>{app.type}</TableCell>
                     <TableCell>{app.submitted}</TableCell>
                     <TableCell>
-                      <Badge variant={app.status === 'Confirmed' ? 'default' : 'secondary'}>{app.status}</Badge>
+                      <Badge variant={app.status === 'Confirmed' ? 'default' : 'secondary'} className={app.status === 'Confirmed' ? 'bg-green-600' : ''}>{app.status}</Badge>
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
