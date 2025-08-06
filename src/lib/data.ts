@@ -263,6 +263,28 @@ export const services: Service[] = [
         ]
     }
   },
+  {
+    title: "Health Services",
+    slug: "health-services",
+    description: "Access public health services, records, and appointments.",
+    status: "Active",
+    statusVariant: "success",
+    icon: "HeartPulse",
+    actions: [],
+    content: {
+      longDescription: "Manage your public health needs by accessing vaccination records, booking hospital appointments, downloading medical reports, and applying for health-related benefits.",
+      sections: [
+        {
+          title: "Vaccination Records",
+          content: "View your complete history of vaccinations, including COVID-19 and other national immunization programs."
+        },
+        {
+          title: "Book Appointments",
+          content: "Schedule appointments at government hospitals and clinics for consultations, check-ups, and specialized treatments."
+        }
+      ]
+    }
+  }
 ];
 
 
