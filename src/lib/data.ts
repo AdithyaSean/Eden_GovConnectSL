@@ -1,4 +1,4 @@
-import type { NavItem, Service } from "./types";
+import type { NavItem, Service, Fine } from "./types";
 import { Home, Briefcase, Users, MoreHorizontal, Landmark, FileQuestion, Car, Fingerprint, GraduationCap, FileText, HeartPulse, CreditCard, LifeBuoy, Zap, BookUser, ReceiptText } from 'lucide-react';
 
 export const navItems: NavItem[] = [
@@ -335,23 +335,17 @@ export const services: Service[] = [
   {
     title: "Fine Payment",
     slug: "fine-payment",
-    description: "Pay traffic or other government-related fines.",
+    description: "View and pay traffic or other government fines.",
     status: "Active",
     statusVariant: "success",
     icon: "ReceiptText",
     actions: [],
     content: {
-      longDescription: "This service allows you to conveniently pay traffic or other government-related fines. Enter your Fine Reference Number or NIC to retrieve fine details and proceed with payment.",
+      longDescription: "View your fine history and pay any outstanding penalties for traffic violations or other government-related infractions.",
       sections: [
         {
-          title: "How to Pay a Fine",
-          content: "To pay a fine, you will need the reference number from the ticket you received. You can also search by your NIC number.",
-          list: [
-            "Enter the Fine Reference Number or your NIC number.",
-            "Click 'Search Fine' to retrieve the details.",
-            "Verify the fine information displayed.",
-            "If the fine is payable, click 'Pay Now' to proceed to the payment gateway."
-          ]
+          title: "Your Fines",
+          content: "Below is a list of all pending and paid fines associated with your account."
         }
       ]
     }
@@ -370,4 +364,39 @@ export const trafficServices = [
     description: "SP-CAB-5678",
     icon: "Car"
   }
+]
+
+export const fines: Fine[] = [
+    {
+        id: "TFC-2024-001",
+        type: "Traffic Violation (Speeding)",
+        issuedDate: "2024-07-10",
+        amount: "2000.00",
+        dueDate: "2024-07-24",
+        status: "Pending",
+    },
+    {
+        id: "MUN-2024-005",
+        type: "Municipal Fine (Parking)",
+        issuedDate: "2024-06-15",
+        amount: "1000.00",
+        dueDate: "2024-06-29",
+        status: "Pending",
+    },
+     {
+        id: "TFC-2024-002",
+        type: "Traffic Violation (Red Light)",
+        issuedDate: "2024-05-20",
+        amount: "3000.00",
+        dueDate: "2024-06-03",
+        status: "Paid",
+    },
+     {
+        id: "TFC-2023-089",
+        type: "Traffic Violation (Illegal U-Turn)",
+        issuedDate: "2023-11-01",
+        amount: "1500.00",
+        dueDate: "2023-11-15",
+        status: "Paid",
+    },
 ]

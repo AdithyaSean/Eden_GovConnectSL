@@ -37,3 +37,12 @@ export interface Service {
     }[];
   };
 }
+
+export interface Fine {
+    id: string;
+    type: string;
+    issuedDate: string;
+    amount: string;
+    dueDate: string;
+    status: 'Pending' | 'Paid';
+}
