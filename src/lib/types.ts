@@ -22,9 +22,18 @@ export interface ServiceAction {
 
 export interface Service {
   title: string;
+  slug: string;
   description: string;
   status: ServiceStatus;
   statusVariant: ServiceStatusVariant;
   icon: keyof typeof import("lucide-react") | "default";
   actions: ServiceAction[];
+  content: {
+    longDescription: string;
+    sections: {
+      title: string;
+      content: string;
+      list?: string[];
+    }[];
+  };
 }
