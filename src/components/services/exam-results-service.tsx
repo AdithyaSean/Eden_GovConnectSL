@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -7,6 +8,7 @@ import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
+import { useToast } from '@/hooks/use-toast';
 
 const sampleResults = {
     "GCE A/L": [
@@ -27,12 +29,27 @@ const sampleResults = {
 export function ExamResultsService({ service }) {
   const [examType, setExamType] = useState('');
   const [results, setResults] = useState([]);
+  const { toast } = useToast();
   
   const handleViewResults = () => {
     if(examType) {
         setResults(sampleResults[examType] || []);
     }
   }
+
+  const handleDownload = () => {
+    toast({
+        title: "Download Successful",
+        description: "You have successfully downloaded the PDF.",
+    });
+  };
+
+  const handleAppeal = () => {
+    toast({
+        title: "Appeal Submitted",
+        description: "Your appeal request has been submitted.",
+    });
+  };
 
   return (
     <div className="space-y-8">
@@ -92,8 +109,8 @@ export function ExamResultsService({ service }) {
                     </Table>
                 </CardContent>
                  <CardFooter className="flex justify-end gap-2">
-                    <Button variant="outline">Download PDF</Button>
-                    <Button variant="secondary">Appeal for Re-correction</Button>
+                    <Button variant="outline" onClick={handleDownload}>Download PDF</Button>
+                    <Button variant="secondary" onClick={handleAppeal}>Appeal for Re-correction</Button>
                 </CardFooter>
             </Card>
         )}
