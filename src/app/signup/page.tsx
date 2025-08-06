@@ -30,6 +30,10 @@ export default function SignupPage() {
                 <Label htmlFor="full-name">Full Name</Label>
                 <Input id="full-name" placeholder="Sri Lankan" required />
             </div>
+             <div className="grid gap-2">
+                <Label htmlFor="national-id">National ID Number</Label>
+                <Input id="national-id" placeholder="e.g. 199812345678" required />
+            </div>
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -45,9 +49,6 @@ export default function SignupPage() {
             </div>
             <Button type="submit" className="w-full" asChild>
                 <Link href="/dashboard">Create an account</Link>
-            </Button>
-            <Button variant="outline" className="w-full">
-              Sign up with National ID
             </Button>
           </div>
           <div className="mt-4 text-center text-sm">

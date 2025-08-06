@@ -21,17 +21,17 @@ export default function LoginPage() {
             </div>
           <CardTitle className="text-2xl">Login</CardTitle>
           <CardDescription>
-            Enter your email below to login to your account
+            Enter your National ID number to login
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="national-id">National ID Number</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
+                id="national-id"
+                type="text"
+                placeholder="e.g. 199812345678"
                 required
               />
             </div>
@@ -49,9 +49,6 @@ export default function LoginPage() {
             </div>
             <Button type="submit" className="w-full" asChild>
                 <Link href="/dashboard">Login</Link>
-            </Button>
-            <Button variant="outline" className="w-full">
-              Login with National ID
             </Button>
           </div>
           <div className="mt-4 text-center text-sm">
