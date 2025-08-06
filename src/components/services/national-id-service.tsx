@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -11,6 +12,8 @@ import { useState } from 'react';
 
 export function NationalIdService({ service }) {
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const [serviceType, setServiceType] = useState("new-id");
+
   return (
     <div className="space-y-8">
         <Card>
@@ -28,7 +31,7 @@ export function NationalIdService({ service }) {
                 <CardTitle>Select Service Type</CardTitle>
             </CardHeader>
             <CardContent>
-                <RadioGroup defaultValue="new-id">
+                <RadioGroup defaultValue={serviceType} onValueChange={setServiceType}>
                     <div className="flex items-center space-x-2">
                         <RadioGroupItem value="new-id" id="new-id" />
                         <Label htmlFor="new-id">Apply for New ID (First Time)</Label>
@@ -50,10 +53,21 @@ export function NationalIdService({ service }) {
                 <CardTitle>Upload Required Documents</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FileUpload label="Birth Certificate" />
-                <FileUpload label="Certified Photo" />
-                <FileUpload label="Grama Niladhari Certificate" />
-                <FileUpload label="Police Report (for Lost ID)" />
+                {serviceType === 'new-id' && (
+                    <FileUpload label="Birth Certificate" />
+                )}
+                
+                {(serviceType === 'new-id' || serviceType === 'update-id' || serviceType === 'lost-id') && (
+                    <FileUpload label="Certified Photo" />
+                )}
+
+                {(serviceType === 'new-id' || serviceType === 'update-id') && (
+                    <FileUpload label="Grama Niladhari Certificate" />
+                )}
+
+                {serviceType === 'lost-id' && (
+                    <FileUpload label="Police Report (for Lost ID)" />
+                )}
             </CardContent>
         </Card>
         
