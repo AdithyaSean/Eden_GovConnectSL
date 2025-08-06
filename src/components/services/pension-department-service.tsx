@@ -35,7 +35,6 @@ export function PensionDepartmentService({ service }) {
                 <CardTitle>Application Status</CardTitle>
             </CardHeader>
             <CardContent>
-                 <Input placeholder="Enter Application Reference Number to track" className="mb-4" />
                 <div className="flex items-center gap-4">
                     <Progress value={60} className="w-full" />
                     <span className="text-lg font-bold">60%</span>
