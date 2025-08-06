@@ -5,7 +5,7 @@ import type React from "react";
 import Link from "next/link";
 import { usePathname } from 'next/navigation';
 import { cn } from "@/lib/utils";
-import { Bell, Home, Users, Settings, LogOut, Shield, FileText, PenSquare } from "lucide-react";
+import { Bell, Home, Users, Settings, LogOut, Shield, FileText, PenSquare, Building, BookUser, Car, Fingerprint, GraduationCap, HeartPulse, CreditCard } from "lucide-react";
 import { Button } from "./ui/button";
 
 const adminNavItems = [
@@ -16,8 +16,15 @@ const adminNavItems = [
 ];
 
 const workerNavItems = [
-    { title: "Dashboard", href: "/worker/dashboard", icon: Home },
-    { title: "Assigned Tasks", href: "/worker/dashboard", icon: PenSquare },
+    { title: "Role Dashboards", href: "/worker/dashboard", icon: Home },
+    { title: "Transport", href: "/worker/transport/dashboard", icon: Car },
+    { title: "Immigration", href: "/worker/immigration/dashboard", icon: BookUser },
+    { title: "Identity", href: "/worker/identity/dashboard", icon: Fingerprint },
+    { title: "Health", href: "/worker/health/dashboard", icon: HeartPulse },
+    { title: "Tax", href: "/worker/tax/dashboard", icon: CreditCard },
+    { title: "Pensions", href: "/worker/pension/dashboard", icon: Users },
+    { title: "Land Registry", href: "/worker/landregistry/dashboard", icon: Building },
+    { title: "Exams", href: "/worker/exams/dashboard", icon: GraduationCap },
 ];
 
 interface AdminLayoutProps {
