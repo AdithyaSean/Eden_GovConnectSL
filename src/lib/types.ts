@@ -46,3 +46,14 @@ export interface Fine {
     dueDate: string;
     status: 'Pending' | 'Paid';
 }
+
+export interface Vehicle {
+    id: string;
+    type: string;
+    licensePlate: string;
+    registrationDate: string;
+    chassisNumber: string;
+    status: 'Active' | 'Inactive';
+    insuranceExpiry: string;
+    emissionTestExpiry: string;
+}

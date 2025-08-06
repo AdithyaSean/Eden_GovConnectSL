@@ -1,4 +1,4 @@
-import type { NavItem, Service, Fine } from "./types";
+import type { NavItem, Service, Fine, Vehicle } from "./types";
 import { Home, Briefcase, Users, MoreHorizontal, Landmark, FileQuestion, Car, Fingerprint, GraduationCap, FileText, HeartPulse, CreditCard, LifeBuoy, Zap, BookUser, ReceiptText } from 'lucide-react';
 
 export const navItems: NavItem[] = [
@@ -304,30 +304,6 @@ export const services: Service[] = [
     }
   },
   {
-    title: "Electricity Bill Payment",
-    slug: "electricity-bill-payment",
-    description: "Pay your electricity bill online.",
-    status: "Active",
-    statusVariant: "success",
-    icon: "Zap",
-    actions: [],
-    content: {
-      longDescription: "Conveniently pay your electricity bill through our secure online portal. Check your current bill details and make payments anytime, anywhere.",
-      sections: [
-        {
-          title: "How to Pay",
-          content: "Enter your electricity account number to view your latest bill. You can then proceed to pay using various payment methods.",
-          list: [
-            "Enter your account number and click 'Fetch Bill'.",
-            "Verify the bill details displayed.",
-            "Click 'Pay Now' to proceed to the secure payment gateway.",
-            "Choose your preferred payment method and complete the transaction."
-          ]
-        }
-      ]
-    }
-  },
-  {
     title: "Fine Payment",
     slug: "fine-payment",
     description: "View and pay traffic or other government fines.",
@@ -341,6 +317,24 @@ export const services: Service[] = [
         {
           title: "Your Fines",
           content: "Below is a list of all pending and paid fines associated with your account."
+        }
+      ]
+    }
+  },
+  {
+    title: "Registered Vehicles",
+    slug: "registered-vehicles",
+    description: "View all vehicles registered under your NIC.",
+    status: "Active",
+    statusVariant: "success",
+    icon: "Car",
+    actions: [],
+    content: {
+      longDescription: "View and manage all vehicles registered under your National Identity Card. Check registration status, download certificates, and get notified about upcoming renewals.",
+      sections: [
+        {
+          title: "Your Registered Vehicles",
+          content: "A list of all vehicles currently registered under your name."
         }
       ]
     }
@@ -394,4 +388,27 @@ export const fines: Fine[] = [
         dueDate: "2023-11-15",
         status: "Paid",
     },
-]
+];
+
+export const vehicles: Vehicle[] = [
+    {
+        id: "VEH-001",
+        type: "Toyota Aqua",
+        licensePlate: "WP-CAR-1234",
+        registrationDate: "2021-03-15",
+        chassisNumber: "DAA-NHP10-123456",
+        status: "Active",
+        insuranceExpiry: "2025-03-14",
+        emissionTestExpiry: "2025-03-14",
+    },
+    {
+        id: "VEH-002",
+        type: "Honda Vezel",
+        licensePlate: "SP-CAB-5678",
+        registrationDate: "2019-08-20",
+        chassisNumber: "RU3-987654",
+        status: "Active",
+        insuranceExpiry: "2024-08-19",
+        emissionTestExpiry: "2024-08-19",
+    }
+];
