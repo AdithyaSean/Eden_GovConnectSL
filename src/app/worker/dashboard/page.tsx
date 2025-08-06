@@ -1,3 +1,4 @@
+
 import { AdminLayout } from "@/components/admin-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,7 @@ import { Check, Edit, AlertTriangle } from "lucide-react";
 
 const assignedTasks = [
   { id: "APP-001", user: "John Doe", service: "Driving License", status: "Pending Verification" },
-  { id: "APP-004", user: "Emily Brown", service: "Land Registry", status: "Documents Missing" },
+  { id: "APP-004", user: "Emily Brown", service: "Vehicle Registration", status: "Documents Missing" },
   { id: "APP-006", user: "Michael Clark", service: "Driving License", status: "Pending Verification" },
 ];
 
@@ -16,7 +17,7 @@ export default function WorkerDashboardPage() {
     <AdminLayout workerMode={true}>
       <div className="flex-1 space-y-8 p-8 pt-6">
         <div className="flex items-center justify-between space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Worker Portal</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Worker Portal - Motor Traffic</h1>
         </div>
         <Card>
           <CardHeader>
