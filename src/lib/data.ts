@@ -1,5 +1,5 @@
 import type { NavItem, Service } from "./types";
-import { Home, Briefcase, Users, MoreHorizontal, Landmark, FileQuestion, Car, Fingerprint, GraduationCap, FileText, HeartPulse, CreditCard, LifeBuoy, Zap, BookUser } from 'lucide-react';
+import { Home, Briefcase, Users, MoreHorizontal, Landmark, FileQuestion, Car, Fingerprint, GraduationCap, FileText, HeartPulse, CreditCard, LifeBuoy, Zap, BookUser, ReceiptText } from 'lucide-react';
 
 export const navItems: NavItem[] = [
   {
@@ -327,6 +327,30 @@ export const services: Service[] = [
             "Verify the bill details displayed.",
             "Click 'Pay Now' to proceed to the secure payment gateway.",
             "Choose your preferred payment method and complete the transaction."
+          ]
+        }
+      ]
+    }
+  },
+  {
+    title: "Fine Payment",
+    slug: "fine-payment",
+    description: "Pay traffic or other government-related fines.",
+    status: "Active",
+    statusVariant: "success",
+    icon: "ReceiptText",
+    actions: [],
+    content: {
+      longDescription: "This service allows you to conveniently pay traffic or other government-related fines. Enter your Fine Reference Number or NIC to retrieve fine details and proceed with payment.",
+      sections: [
+        {
+          title: "How to Pay a Fine",
+          content: "To pay a fine, you will need the reference number from the ticket you received. You can also search by your NIC number.",
+          list: [
+            "Enter the Fine Reference Number or your NIC number.",
+            "Click 'Search Fine' to retrieve the details.",
+            "Verify the fine information displayed.",
+            "If the fine is payable, click 'Pay Now' to proceed to the payment gateway."
           ]
         }
       ]
