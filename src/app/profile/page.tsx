@@ -26,31 +26,6 @@ import {
 import { Download } from "lucide-react";
 import { useEffect, useState } from 'react';
 
-const paymentHistory = [
-  {
-    id: "PAY756483",
-    service: "Driving License Renewal",
-    date: "2024-07-15",
-    amount: "2,500.00",
-    status: "Success",
-  },
-  {
-    id: "PAY648392",
-    service: "Land Registry Fee",
-    date: "2024-06-28",
-    amount: "1,000.00",
-    status: "Success",
-  },
-  {
-    id: "PAY583729",
-    service: "Tax Payment (Q1)",
-    date: "2024-04-14",
-    amount: "18,000.00",
-    status: "Success",
-  },
-];
-
-
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("personal-info");
   
@@ -69,10 +44,9 @@ export default function ProfilePage() {
         </div>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 max-w-2xl mx-auto">
+            <TabsList className="grid w-full grid-cols-2 max-w-lg mx-auto">
               <TabsTrigger value="personal-info">Personal Information</TabsTrigger>
               <TabsTrigger value="password">Password</TabsTrigger>
-              <TabsTrigger value="payment-history">Payment History</TabsTrigger>
             </TabsList>
 
             <TabsContent value="personal-info">
@@ -134,53 +108,6 @@ export default function ProfilePage() {
                     <CardFooter>
                          <Button type="submit">Update Password</Button>
                     </CardFooter>
-                </Card>
-            </TabsContent>
-            
-            <TabsContent value="payment-history">
-                 <Card>
-                    <CardHeader>
-                        <CardTitle>Payment History</CardTitle>
-                        <CardDescription>
-                        View your past transactions and download receipts.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Reference ID</TableHead>
-                                    <TableHead>Service</TableHead>
-                                    <TableHead>Date</TableHead>
-                                    <TableHead>Amount (LKR)</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead className="text-right">Action</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {paymentHistory.map((payment) => (
-                                    <TableRow key={payment.id}>
-                                        <TableCell className="font-medium">{payment.id}</TableCell>
-                                        <TableCell>{payment.service}</TableCell>
-                                        <TableCell>{payment.date}</TableCell>
-                                        <TableCell>{payment.amount}</TableCell>
-                                        <TableCell>
-                                            <span className={`px-2 py-1 text-xs rounded-full ${payment.status === 'Success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{payment.status}</span>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <Button variant="ghost" size="icon">
-                                                <Download className="h-4 w-4" />
-                                                <span className="sr-only">Download Receipt</span>
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </CardContent>
-                     <CardFooter className="flex justify-end">
-                        <Button variant="outline">Raise a Payment Issue</Button>
-                     </CardFooter>
                 </Card>
             </TabsContent>
         </Tabs>

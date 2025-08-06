@@ -1,5 +1,5 @@
 import type { NavItem, Service } from "./types";
-import { Home, Briefcase, Users, MoreHorizontal } from 'lucide-react';
+import { Home, Briefcase, Users, MoreHorizontal, Landmark, FileQuestion, Car, Fingerprint, GraduationCap, FileText, HeartPulse, CreditCard, LifeBuoy } from 'lucide-react';
 
 export const navItems: NavItem[] = [
   {
@@ -8,19 +8,24 @@ export const navItems: NavItem[] = [
     icon: Home,
   },
   {
-    title: "My Services",
-    href: "/my-services",
+    title: "My Applications",
+    href: "/my-applications",
     icon: Briefcase,
   },
   {
-    title: "Family",
+    title: "Family & Dependents",
     href: "/family",
     icon: Users,
   },
   {
-    title: "Other Services",
-    href: "/other-services",
-    icon: MoreHorizontal,
+    title: "Payments",
+    href: "/payments",
+    icon: CreditCard,
+  },
+  {
+    title: "Support",
+    href: "/support",
+    icon: LifeBuoy,
   },
 ];
 

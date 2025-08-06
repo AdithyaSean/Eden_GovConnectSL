@@ -55,7 +55,7 @@ export default function PaymentPage() {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <Button variant="outline" asChild>
-                <Link href="/profile#payment-history">View Payment History</Link>
+                <Link href="/payments">View Payment History</Link>
               </Button>
               <AlertDialogAction asChild>
                 <Link href="/dashboard">Back to Dashboard</Link>
