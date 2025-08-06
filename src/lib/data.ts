@@ -13,11 +13,6 @@ export const navItems: NavItem[] = [
     icon: Briefcase,
   },
   {
-    title: "Family & Dependents",
-    href: "/family",
-    icon: Users,
-  },
-  {
     title: "Payments",
     href: "/payments",
     icon: CreditCard,
