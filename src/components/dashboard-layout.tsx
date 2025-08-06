@@ -7,7 +7,7 @@ import Link from "next/link";
 import { usePathname } from 'next/navigation'
 import { cn } from "@/lib/utils";
 import { navItems } from "@/lib/data";
-import { Bell, Menu, MessageCircle, Search, UserSquare } from "lucide-react";
+import { Bell, Menu, MessageCircle, Search, UserSquare, CheckCircle, CreditCard, Calendar } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import {
   DropdownMenu,
@@ -27,18 +27,21 @@ const notifications = [
         description: "Your Driving License renewal is complete.",
         time: "2 hours ago",
         href: "/my-applications",
+        icon: CheckCircle,
     },
     {
         title: "Payment Received",
         description: "Payment for National ID application was successful.",
         time: "1 day ago",
         href: "/payments",
+        icon: CreditCard,
     },
     {
         title: "Appointment Reminder",
         description: "Biometrics for NIC on Aug 28, 2025.",
         time: "3 days ago",
         href: "/services/national-id-services",
+        icon: Calendar,
     }
 ]
 
@@ -121,15 +124,18 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-80">
-                    <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                    <DropdownMenuLabel className="px-3 py-2">Notifications</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <ScrollArea className="h-64">
+                    <ScrollArea className="h-72">
                     {notifications.map((notification, index) => (
-                        <DropdownMenuItem key={index} asChild>
-                           <Link href={notification.href} className="flex flex-col items-start gap-1">
-                                <p className="font-medium">{notification.title}</p>
-                                <p className="text-sm text-muted-foreground">{notification.description}</p>
-                                <p className="text-xs text-muted-foreground/70">{notification.time}</p>
+                        <DropdownMenuItem key={index} asChild className="p-0">
+                           <Link href={notification.href} className="flex items-start gap-3 p-3 w-full">
+                                <notification.icon className="h-5 w-5 mt-1 text-primary flex-shrink-0" />
+                                <div className="flex flex-col gap-1">
+                                    <p className="font-medium leading-tight">{notification.title}</p>
+                                    <p className="text-sm text-muted-foreground">{notification.description}</p>
+                                    <p className="text-xs text-muted-foreground/70">{notification.time}</p>
+                               </div>
                            </Link>
                         </DropdownMenuItem>
                     ))}
