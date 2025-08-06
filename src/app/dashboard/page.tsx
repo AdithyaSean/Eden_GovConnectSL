@@ -1,6 +1,6 @@
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { ServiceCard } from "@/components/service-card";
-import { services, trafficServices } from "@/lib/data";
+import { services } from "@/lib/data";
 import {
   Card,
   CardContent,
@@ -62,41 +62,18 @@ export default function DashboardPage() {
             </Card>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <h2 className="text-2xl font-bold tracking-tight">Services</h2>
-                   <div className="relative w-full sm:w-auto sm:max-w-xs">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                      <Input placeholder="Search services..." className="pl-10 h-11" />
-                    </div>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                  {services.map((service) => (
-                    <ServiceCard key={service.title} service={service} />
-                  ))}
+        <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <h2 className="text-2xl font-bold tracking-tight">Services</h2>
+               <div className="relative w-full sm:w-auto sm:max-w-xs">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Input placeholder="Search services..." className="pl-10 h-11" />
                 </div>
             </div>
-             <div className="space-y-6">
-                 <div className="flex items-center justify-between">
-                    <h2 className="text-2xl font-bold tracking-tight">Traffic Services</h2>
-                    <Button variant="outline">View All</Button>
-                </div>
-                <div className="space-y-4">
-                  {trafficServices.map((service) => (
-                    <Card key={service.title}>
-                      <CardHeader className="flex flex-row items-center gap-4 p-4">
-                        <div className="p-3 rounded-lg bg-muted">
-                          <Car className="w-6 h-6 text-primary" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-sm sm:text-base">{service.title}</p>
-                          <p className="text-xs sm:text-sm text-muted-foreground">{service.description}</p>
-                        </div>
-                      </CardHeader>
-                    </Card>
-                  ))}
-                </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+              {services.map((service) => (
+                <ServiceCard key={service.title} service={service} />
+              ))}
             </div>
         </div>
 

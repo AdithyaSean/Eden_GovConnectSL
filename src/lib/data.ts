@@ -341,20 +341,6 @@ export const services: Service[] = [
   }
 ];
 
-
-export const trafficServices = [
-  {
-    title: "Toyota Aqua",
-    description: "WP-CAR-1234",
-    icon: "Car"
-  },
-   {
-    title: "Honda Vezel",
-    description: "SP-CAB-5678",
-    icon: "Car"
-  }
-]
-
 export const fines: Fine[] = [
     {
         id: "TFC-2024-001",
