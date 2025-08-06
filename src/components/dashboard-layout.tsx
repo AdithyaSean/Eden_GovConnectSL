@@ -19,6 +19,28 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { ScrollArea } from "./ui/scroll-area";
+import { Badge } from "./ui/badge";
+
+const notifications = [
+    {
+        title: "Application Approved",
+        description: "Your Driving License renewal is complete.",
+        time: "2 hours ago",
+        href: "/my-applications",
+    },
+    {
+        title: "Payment Received",
+        description: "Payment for National ID application was successful.",
+        time: "1 day ago",
+        href: "/payments",
+    },
+    {
+        title: "Appointment Reminder",
+        description: "Biometrics for NIC on Aug 28, 2025.",
+        time: "3 days ago",
+        href: "/services/national-id-services",
+    }
+]
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -90,10 +112,30 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 <Search className="h-5 w-5" />
                 <span className="sr-only">Search</span>
             </Button>
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <Bell className="h-5 w-5" />
-              <span className="sr-only">Notifications</span>
-            </Button>
+             <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="rounded-full relative">
+                        <Bell className="h-5 w-5" />
+                        <span className="sr-only">Notifications</span>
+                        <Badge className="absolute top-1 right-1 h-4 w-4 shrink-0 justify-center rounded-full p-0 text-xs">{notifications.length}</Badge>
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80">
+                    <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <ScrollArea className="h-64">
+                    {notifications.map((notification, index) => (
+                        <DropdownMenuItem key={index} asChild>
+                           <Link href={notification.href} className="flex flex-col items-start gap-1">
+                                <p className="font-medium">{notification.title}</p>
+                                <p className="text-sm text-muted-foreground">{notification.description}</p>
+                                <p className="text-xs text-muted-foreground/70">{notification.time}</p>
+                           </Link>
+                        </DropdownMenuItem>
+                    ))}
+                    </ScrollArea>
+                </DropdownMenuContent>
+             </DropdownMenu>
              <Link href="/chat">
               <Button variant="ghost" size="icon" className="rounded-full">
                   <MessageCircle className="h-5 w-5" />
