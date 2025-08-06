@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -7,8 +8,26 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Progress } from '../ui/progress';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+import { useToast } from '@/hooks/use-toast';
 
 export function PensionDepartmentService({ service }) {
+  const { toast } = useToast();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    toast({
+        title: "Application Submitted",
+        description: "Your pension application has been successfully submitted for review.",
+    });
+  }
+
+  const handleSaveBankDetails = () => {
+     toast({
+        title: "Bank Details Saved",
+        description: "Your bank details have been saved successfully.",
+    });
+  }
+
   return (
     <div className="space-y-8">
          <Card>
@@ -28,67 +47,72 @@ export function PensionDepartmentService({ service }) {
             </CardFooter>
         </Card>
 
-        <Card>
-            <CardHeader>
-                <CardTitle>Pension Application Form</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="pensionerName">Name of Retiree</Label>
-                    <Input id="pensionerName" />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="pensionerNIC">NIC Number</Label>
-                    <Input id="pensionerNIC" />
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="lastWorkplace">Last Place of Work</Label>
-                    <Input id="lastWorkplace" />
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="retirementDate">Date of Retirement</Label>
-                    <Input id="retirementDate" type="date" />
-                </div>
-            </CardContent>
-        </Card>
+        <form onSubmit={handleSubmit}>
+            <div className="space-y-8">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Pension Application Form</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="pensionerName">Name of Retiree</Label>
+                            <Input id="pensionerName" required/>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="pensionerNIC">NIC Number</Label>
+                            <Input id="pensionerNIC" required/>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="lastWorkplace">Last Place of Work</Label>
+                            <Input id="lastWorkplace" required/>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="retirementDate">Date of Retirement</Label>
+                            <Input id="retirementDate" type="date" required/>
+                        </div>
+                    </CardContent>
+                </Card>
 
-         <Card>
-            <CardHeader>
-                <CardTitle>Document Checklist & Upload</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FileUpload label="Service Certificate" />
-                <FileUpload label="Retirement Letter" />
-                <FileUpload label="Copy of NIC" />
-                <FileUpload label="Bank Account Details Confirmation" />
-            </CardContent>
-             <CardFooter>
-                <Button>Submit Application</Button>
-            </CardFooter>
-        </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Document Checklist & Upload</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FileUpload label="Service Certificate" />
+                        <FileUpload label="Retirement Letter" />
+                        <FileUpload label="Copy of NIC" />
+                        <FileUpload label="Bank Account Details Confirmation" />
+                    </CardContent>
+                </Card>
 
-         <Card>
-            <CardHeader>
-                <CardTitle>Bank Detail Form</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="bankName">Bank Name</Label>
-                    <Input id="bankName" />
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Bank Detail Form</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="bankName">Bank Name</Label>
+                            <Input id="bankName" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="branchName">Branch Name</Label>
+                            <Input id="branchName" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="accountNumber">Account Number</Label>
+                            <Input id="accountNumber" />
+                        </div>
+                    </CardContent>
+                    <CardFooter className="justify-start gap-2">
+                        <Button type="button" variant="secondary" onClick={handleSaveBankDetails}>Save Bank Details</Button>
+                    </CardFooter>
+                </Card>
+
+                 <div className="flex justify-end">
+                    <Button type="submit" size="lg">Submit Application</Button>
                 </div>
-                <div className="space-y-2">
-                    <Label htmlFor="branchName">Branch Name</Label>
-                    <Input id="branchName" />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="accountNumber">Account Number</Label>
-                    <Input id="accountNumber" />
-                </div>
-            </CardContent>
-            <CardFooter>
-                <Button variant="secondary">Save Bank Details</Button>
-            </CardFooter>
-        </Card>
+            </div>
+        </form>
 
          <Card>
             <CardHeader>
