@@ -16,7 +16,6 @@ const adminNavItems = [
 ];
 
 const workerNavItems = [
-    { title: "Role Dashboards", href: "/worker/dashboard", icon: Home },
     { title: "Transport", href: "/worker/transport/dashboard", icon: Car },
     { title: "Immigration", href: "/worker/immigration/dashboard", icon: BookUser },
     { title: "Identity", href: "/worker/identity/dashboard", icon: Fingerprint },
@@ -35,7 +34,7 @@ interface AdminLayoutProps {
 export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) {
   const pathname = usePathname();
   const navItems = workerMode ? workerNavItems : adminNavItems;
-  const logoHref = workerMode ? "/worker/dashboard" : "/admin/dashboard";
+  const logoHref = workerMode ? "/worker/transport/dashboard" : "/admin/dashboard";
   const logoText = workerMode ? "Worker Portal" : "Admin Panel";
   const LogoIcon = workerMode ? PenSquare : Shield;
 
@@ -58,8 +57,7 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
                   href={item.href}
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-                    pathname.startsWith(item.href) && item.href !== '/worker/dashboard' ? "bg-muted text-primary" : "",
-                    pathname === item.href && item.href === '/worker/dashboard' ? "bg-muted text-primary" : ""
+                    pathname.startsWith(item.href) && "bg-muted text-primary"
                   )}
                 >
                   <item.icon className="h-4 w-4" />

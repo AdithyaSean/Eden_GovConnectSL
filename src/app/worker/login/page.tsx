@@ -21,7 +21,7 @@ export default function WorkerLoginPage() {
             </div>
           <CardTitle className="text-2xl">Worker Portal</CardTitle>
           <CardDescription>
-            Enter your credentials to access the worker dashboard
+            Enter your credentials to access your dashboard
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -40,7 +40,7 @@ export default function WorkerLoginPage() {
               <Input id="password" type="password" required />
             </div>
             <Button type="submit" className="w-full" asChild>
-                <Link href="/worker/dashboard">Login</Link>
+                <Link href="/worker/transport/dashboard">Login</Link>
             </Button>
           </div>
            <div className="mt-4 text-center text-sm">
