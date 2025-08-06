@@ -15,15 +15,15 @@ const adminNavItems = [
   { title: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
-const workerNavItems = [
-    { title: "Transport", href: "/worker/transport/dashboard", icon: Car },
-    { title: "Immigration", href: "/worker/immigration/dashboard", icon: BookUser },
-    { title: "Identity", href: "/worker/identity/dashboard", icon: Fingerprint },
-    { title: "Health", href: "/worker/health/dashboard", icon: HeartPulse },
-    { title: "Tax", href: "/worker/tax/dashboard", icon: CreditCard },
-    { title: "Pensions", href: "/worker/pension/dashboard", icon: Users },
-    { title: "Land Registry", href: "/worker/landregistry/dashboard", icon: Building },
-    { title: "Exams", href: "/worker/exams/dashboard", icon: GraduationCap },
+const allWorkerNavItems = [
+    { title: "Transport", href: "/worker/transport/dashboard", icon: Car, role: "transport" },
+    { title: "Immigration", href: "/worker/immigration/dashboard", icon: BookUser, role: "immigration" },
+    { title: "Identity", href: "/worker/identity/dashboard", icon: Fingerprint, role: "identity" },
+    { title: "Health", href: "/worker/health/dashboard", icon: HeartPulse, role: "health" },
+    { title: "Tax", href: "/worker/tax/dashboard", icon: CreditCard, role: "tax" },
+    { title: "Pensions", href: "/worker/pension/dashboard", icon: Users, role: "pension" },
+    { title: "Land Registry", href: "/worker/landregistry/dashboard", icon: Building, role: "landregistry" },
+    { title: "Exams", href: "/worker/exams/dashboard", icon: GraduationCap, role: "exams" },
 ];
 
 interface AdminLayoutProps {
@@ -33,8 +33,17 @@ interface AdminLayoutProps {
 
 export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) {
   const pathname = usePathname();
-  const navItems = workerMode ? workerNavItems : adminNavItems;
-  const logoHref = workerMode ? "/worker/transport/dashboard" : "/admin/dashboard";
+
+  const getWorkerNavItems = () => {
+    const workerRole = pathname.split('/')[2];
+    if (workerRole) {
+      return allWorkerNavItems.filter(item => item.role === workerRole);
+    }
+    return [];
+  }
+
+  const navItems = workerMode ? getWorkerNavItems() : adminNavItems;
+  const logoHref = workerMode ? (navItems[0]?.href || "/worker/login") : "/admin/dashboard";
   const logoText = workerMode ? "Worker Portal" : "Admin Panel";
   const LogoIcon = workerMode ? PenSquare : Shield;
 
