@@ -60,6 +60,11 @@ export default function LoginPage() {
               Sign up
             </Link>
           </div>
+          <div className="mt-6 pt-4 border-t text-center text-sm">
+            <Link href="/admin/login" className="text-muted-foreground hover:text-primary underline">
+              Admin & Worker Login
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>
