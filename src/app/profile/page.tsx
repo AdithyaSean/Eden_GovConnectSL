@@ -1,3 +1,6 @@
+
+"use client";
+
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import {
@@ -6,20 +9,73 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Download } from "lucide-react";
+import { useEffect, useState } from 'react';
+
+const paymentHistory = [
+  {
+    id: "PAY756483",
+    service: "Driving License Renewal",
+    date: "2024-07-15",
+    amount: "2,500.00",
+    status: "Success",
+  },
+  {
+    id: "PAY648392",
+    service: "Land Registry Fee",
+    date: "2024-06-28",
+    amount: "1,000.00",
+    status: "Success",
+  },
+  {
+    id: "PAY583729",
+    service: "Tax Payment (Q1)",
+    date: "2024-04-14",
+    amount: "18,000.00",
+    status: "Success",
+  },
+];
+
 
 export default function ProfilePage() {
+  const [activeTab, setActiveTab] = useState("personal-info");
+  
+  useEffect(() => {
+    const hash = window.location.hash.replace('#', '');
+    if (hash) {
+      setActiveTab(hash);
+    }
+  }, []);
+
   return (
     <DashboardLayout>
       <div className="flex-1 space-y-8 p-4 md:p-8 pt-6">
         <div className="flex items-center justify-between space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">Profile Settings</h1>
         </div>
-        <div className="grid gap-6 md:grid-cols-3">
-            <div className="md:col-span-1">
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 max-w-2xl mx-auto">
+              <TabsTrigger value="personal-info">Personal Information</TabsTrigger>
+              <TabsTrigger value="password">Password</TabsTrigger>
+              <TabsTrigger value="payment-history">Payment History</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="personal-info">
                 <Card>
                     <CardHeader className="text-center">
                         <Avatar className="w-24 h-24 mx-auto mb-4">
@@ -29,17 +85,36 @@ export default function ProfilePage() {
                         <CardTitle>Sri Lankan Citizen</CardTitle>
                         <CardDescription>s.citizen@gov.lk</CardDescription>
                     </CardHeader>
-                    <CardContent>
-                        <Button className="w-full">Edit Profile</Button>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                        <div className="space-y-1">
+                            <Label>Full Name</Label>
+                            <p className="font-medium">Sri Lankan Citizen</p>
+                        </div>
+                        <div className="space-y-1">
+                            <Label>Email</Label>
+                            <p className="font-medium">s.citizen@gov.lk</p>
+                        </div>
+                         <div className="space-y-1">
+                            <Label>NIC Number</Label>
+                            <p className="font-medium">199012345V</p>
+                        </div>
+                         <div className="space-y-1">
+                            <Label>Contact Number</Label>
+                            <p className="font-medium">+94 77 123 4567</p>
+                        </div>
                     </CardContent>
+                    <CardFooter className="justify-center">
+                        <Button>Edit Profile</Button>
+                    </CardFooter>
                 </Card>
-            </div>
-            <div className="md:col-span-2">
-                <Card>
+            </TabsContent>
+
+            <TabsContent value="password">
+                 <Card>
                     <CardHeader>
                         <CardTitle>Update Password</CardTitle>
                         <CardDescription>
-                        Change your password here. After saving, you'll be logged out.
+                        Change your password here. After saving, you'll be logged out for security purposes.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -55,11 +130,60 @@ export default function ProfilePage() {
                             <Label htmlFor="confirm-password">Confirm New Password</Label>
                             <Input id="confirm-password" type="password" />
                         </div>
-                         <Button type="submit">Update Password</Button>
                     </CardContent>
+                    <CardFooter>
+                         <Button type="submit">Update Password</Button>
+                    </CardFooter>
                 </Card>
-            </div>
-        </div>
+            </TabsContent>
+            
+            <TabsContent value="payment-history">
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Payment History</CardTitle>
+                        <CardDescription>
+                        View your past transactions and download receipts.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Reference ID</TableHead>
+                                    <TableHead>Service</TableHead>
+                                    <TableHead>Date</TableHead>
+                                    <TableHead>Amount (LKR)</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead className="text-right">Action</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {paymentHistory.map((payment) => (
+                                    <TableRow key={payment.id}>
+                                        <TableCell className="font-medium">{payment.id}</TableCell>
+                                        <TableCell>{payment.service}</TableCell>
+                                        <TableCell>{payment.date}</TableCell>
+                                        <TableCell>{payment.amount}</TableCell>
+                                        <TableCell>
+                                            <span className={`px-2 py-1 text-xs rounded-full ${payment.status === 'Success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{payment.status}</span>
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <Button variant="ghost" size="icon">
+                                                <Download className="h-4 w-4" />
+                                                <span className="sr-only">Download Receipt</span>
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                     <CardFooter className="flex justify-end">
+                        <Button variant="outline">Raise a Payment Issue</Button>
+                     </CardFooter>
+                </Card>
+            </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );

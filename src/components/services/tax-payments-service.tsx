@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -5,10 +6,11 @@ import { Button } from '@/components/ui/button';
 import { FileUpload } from '../file-upload';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+import Link from 'next/link';
 
 const taxPayments = [
-    { year: 2023, type: "Income Tax (Q4)", amount: "LKR 15,000.00", status: "Paid", dueDate: "2024-01-15" },
-    { year: 2024, type: "Income Tax (Q1)", amount: "LKR 18,000.00", status: "Due", dueDate: "2024-04-15" },
+    { year: 2023, type: "Income Tax (Q4)", amount: "15,000.00", status: "Paid", dueDate: "2024-01-15" },
+    { year: 2024, type: "Income Tax (Q1)", amount: "18,000.00", status: "Due", dueDate: "2024-04-15" },
 ];
 
 export function TaxPaymentsService({ service }) {
@@ -24,7 +26,7 @@ export function TaxPaymentsService({ service }) {
                         <TableRow>
                             <TableHead>Year</TableHead>
                             <TableHead>Tax Type</TableHead>
-                            <TableHead>Amount</TableHead>
+                            <TableHead>Amount (LKR)</TableHead>
                              <TableHead>Due Date</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead className="text-right">Action</TableHead>
@@ -43,7 +45,9 @@ export function TaxPaymentsService({ service }) {
                                     </span>
                                 </TableCell>
                                 <TableCell className="text-right">
-                                    {tax.status === 'Due' && <Button size="sm">Pay Now</Button>}
+                                    {tax.status === 'Due' && <Button size="sm" asChild>
+                                        <Link href={`/payment?service=Tax+Payment&amount=${tax.amount}&ref=TAX-${tax.year}-Q1`}>Pay Now</Link>
+                                    </Button>}
                                 </TableCell>
                             </TableRow>
                         ))}

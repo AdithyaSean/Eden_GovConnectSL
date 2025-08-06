@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -7,6 +8,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Textarea } from '../ui/textarea';
+import Link from 'next/link';
 
 export function LandRegistryService({ service }) {
   return (
@@ -64,7 +66,9 @@ export function LandRegistryService({ service }) {
                     <p className="font-semibold">Applicable Fees</p>
                     <p className="text-muted-foreground">Stamp Duty: 4%, Registration Fee: LKR 1000</p>
                 </div>
-                <Button>Submit for Registration</Button>
+                <Button asChild>
+                    <Link href="/payment?service=Land+Registration&amount=1000.00">Submit for Registration</Link>
+                </Button>
               </CardFooter>
             </Card>
           </TabsContent>

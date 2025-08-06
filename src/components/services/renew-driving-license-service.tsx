@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -9,6 +10,7 @@ import { Calendar } from '../ui/calendar';
 import { useState } from 'react';
 import { Progress } from '../ui/progress';
 import { Textarea } from '../ui/textarea';
+import Link from 'next/link';
 
 export function RenewDrivingLicenseService({ service }) {
     const [date, setDate] = useState<Date | undefined>(new Date());
@@ -100,7 +102,9 @@ export function RenewDrivingLicenseService({ service }) {
             </CardHeader>
              <CardContent>
                 <p className="text-muted-foreground mb-4">The total renewal fee is LKR 2,500.00. Please proceed to payment.</p>
-                <Button size="lg">Pay Now</Button>
+                 <Button size="lg" asChild>
+                    <Link href="/payment?service=Driving+License+Renewal&amount=2500.00">Pay Now</Link>
+                </Button>
             </CardContent>
         </Card>
 
