@@ -14,10 +14,12 @@ import { PensionDepartmentService } from "@/components/services/pension-departme
 import { TaxPaymentsService } from "@/components/services/tax-payments-service";
 import { HealthServicesService } from "@/components/services/health-services-service";
 import { ElectricityBillPaymentService } from "@/components/services/electricity-bill-payment-service";
+import { PassportRenewalService } from "@/components/services/passport-renewal-service";
 
 const serviceComponentMap = {
   "missing-documents": MissingDocumentsService,
   "renew-driving-license": RenewDrivingLicenseService,
+  "passport-renewal": PassportRenewalService,
   "taqdeer": TaqdeerService,
   "national-id-services": NationalIdService,
   "land-registry": LandRegistryService,

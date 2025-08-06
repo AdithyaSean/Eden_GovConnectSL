@@ -1,5 +1,5 @@
 import type { NavItem, Service } from "./types";
-import { Home, Briefcase, Users, MoreHorizontal, Landmark, FileQuestion, Car, Fingerprint, GraduationCap, FileText, HeartPulse, CreditCard, LifeBuoy, Zap } from 'lucide-react';
+import { Home, Briefcase, Users, MoreHorizontal, Landmark, FileQuestion, Car, Fingerprint, GraduationCap, FileText, HeartPulse, CreditCard, LifeBuoy, Zap, BookUser } from 'lucide-react';
 
 export const navItems: NavItem[] = [
   {
@@ -94,6 +94,24 @@ export const services: Service[] = [
                 content: "The fee for renewal depends on the license category and the validity period. Please refer to the latest fee schedule on the DMT website for accurate information."
             }
         ]
+    }
+  },
+  {
+    title: "Passport Renewal",
+    slug: "passport-renewal",
+    description: "Renew your passport online.",
+    status: "Active",
+    statusVariant: "success",
+    icon: "BookUser",
+    actions: [],
+    content: {
+      longDescription: "This service allows you to renew your Sri Lankan passport online. You can fill out the form, upload the required documents, and submit your application for processing.",
+      sections: [
+        {
+          title: "Instructions",
+          content: "Please ensure all details are accurate and the uploaded documents are clear and legible. Any incorrect information may lead to delays or rejection of your application."
+        },
+      ]
     }
   },
   {
