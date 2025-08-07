@@ -28,17 +28,25 @@ const roles = [
 
 export default function UsersPage() {
   const [users, setUsers] = useState(initialUsers);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false);
+  const [isChangeRoleDialogOpen, setIsChangeRoleDialogOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [selectedRole, setSelectedRole] = useState("");
 
   const handleAddUser = () => {
     setCurrentUser(null);
-    setIsDialogOpen(true);
+    setIsEditUserDialogOpen(true);
   };
 
   const handleEditUser = (user) => {
     setCurrentUser(user);
-    setIsDialogOpen(true);
+    setIsEditUserDialogOpen(true);
+  };
+
+  const handleChangeRole = (user) => {
+    setCurrentUser(user);
+    setSelectedRole(user.role);
+    setIsChangeRoleDialogOpen(true);
   };
   
   const handleSaveUser = (event) => {
@@ -52,8 +60,15 @@ export default function UsersPage() {
       const newUser = { ...userData, id: users.length + 1, joined: new Date().toISOString().split('T')[0] };
       setUsers([...users, newUser]);
     }
-    setIsDialogOpen(false);
+    setIsEditUserDialogOpen(false);
   };
+
+  const handleSaveRole = () => {
+    if(currentUser && selectedRole) {
+         setUsers(users.map(u => u.id === currentUser.id ? { ...u, role: selectedRole } : u));
+    }
+    setIsChangeRoleDialogOpen(false);
+  }
 
   return (
     <AdminLayout>
@@ -100,7 +115,7 @@ export default function UsersPage() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuItem onClick={() => handleEditUser(user)}>Edit User</DropdownMenuItem>
-                          <DropdownMenuItem>Change Role</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleChangeRole(user)}>Change Role</DropdownMenuItem>
                            <DropdownMenuItem>Reset Password</DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem className="text-red-600">Delete User</DropdownMenuItem>
@@ -115,7 +130,7 @@ export default function UsersPage() {
         </Card>
       </div>
 
-       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+       <Dialog open={isEditUserDialogOpen} onOpenChange={setIsEditUserDialogOpen}>
         <DialogContent>
           <form onSubmit={handleSaveUser}>
             <DialogHeader>
@@ -135,7 +150,7 @@ export default function UsersPage() {
               </div>
                <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="role" className="text-right">Role</Label>
-                <Select name="role" defaultValue={currentUser?.role}>
+                <Select name="role" defaultValue={currentUser?.role || "Citizen"}>
                     <SelectTrigger className="col-span-3">
                         <SelectValue placeholder="Select a role" />
                     </SelectTrigger>
@@ -152,6 +167,36 @@ export default function UsersPage() {
               <Button type="submit">Save changes</Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isChangeRoleDialogOpen} onOpenChange={setIsChangeRoleDialogOpen}>
+        <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Change User Role</DialogTitle>
+              <DialogDescription>
+                Select a new role for {currentUser?.name}.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+               <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="role-select" className="text-right">New Role</Label>
+                <Select value={selectedRole} onValueChange={setSelectedRole}>
+                    <SelectTrigger id="role-select" className="col-span-3">
+                        <SelectValue placeholder="Select a role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {roles.map(role => <SelectItem key={role} value={role}>{role}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="outline">Cancel</Button>
+              </DialogClose>
+              <Button type="button" onClick={handleSaveRole}>Save Role</Button>
+            </DialogFooter>
         </DialogContent>
       </Dialog>
     </AdminLayout>
