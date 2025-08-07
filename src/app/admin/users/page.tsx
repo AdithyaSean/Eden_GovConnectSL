@@ -1,13 +1,13 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { AdminLayout } from "@/components/admin-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowRight, PlusCircle } from "lucide-react";
+import { ArrowRight, PlusCircle, Search } from "lucide-react";
 import Link from "next/link";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -30,6 +30,8 @@ export default function UsersPage() {
   const [users, setUsers] = useState(initialUsers);
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
   const [newUserRole, setNewUserRole] = useState("Citizen");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
 
   const handleAddUser = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -47,6 +49,17 @@ export default function UsersPage() {
     setNewUserRole("Citizen");
   };
 
+  const filteredUsers = useMemo(() => {
+    return users.filter(user => {
+      const searchLower = searchQuery.toLowerCase();
+      const matchesSearch = user.name.toLowerCase().includes(searchLower) ||
+                            user.email.toLowerCase().includes(searchLower) ||
+                            user.nic.toLowerCase().includes(searchLower);
+      const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+      return matchesSearch && matchesRole;
+    });
+  }, [users, searchQuery, roleFilter]);
+
   return (
     <AdminLayout>
       <div className="flex-1 space-y-8 p-8 pt-6">
@@ -58,6 +71,26 @@ export default function UsersPage() {
           <CardHeader>
             <CardTitle>All Users</CardTitle>
             <CardDescription>Manage platform users and their roles.</CardDescription>
+             <div className="flex items-center gap-4 pt-4">
+                <div className="relative w-full">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input 
+                        placeholder="Search by name, email, or NIC..." 
+                        className="pl-10"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)} 
+                    />
+                </div>
+                <Select value={roleFilter} onValueChange={setRoleFilter}>
+                    <SelectTrigger className="w-[200px]">
+                        <SelectValue placeholder="Filter by role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Roles</SelectItem>
+                        {roles.map(role => <SelectItem key={role} value={role}>{role}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+            </div>
           </CardHeader>
           <CardContent>
             <Table>
@@ -73,7 +106,7 @@ export default function UsersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((user) => (
+                {filteredUsers.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">{user.name}</TableCell>
                     <TableCell>{user.role === 'Citizen' ? user.nic : user.email}</TableCell>
