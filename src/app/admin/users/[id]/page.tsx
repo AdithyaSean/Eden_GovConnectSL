@@ -16,6 +16,7 @@ const user = {
   id: 1,
   name: "John Doe",
   email: "john.d@example.com",
+  nic: "199012345V",
   role: "Citizen",
   joined: "2024-05-10",
   status: "Active"
@@ -63,7 +64,7 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
                         <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <CardTitle>{user.name}</CardTitle>
-                    <CardDescription>{user.email}</CardDescription>
+                    <CardDescription>{user.role === 'Citizen' ? user.nic : user.email}</CardDescription>
                 </CardHeader>
                 <CardContent className="text-sm">
                     <div className="flex justify-between py-2 border-b">
@@ -93,8 +94,8 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
                         <Input id="name" defaultValue={user.name} className="col-span-2" />
                     </div>
                     <div className="grid grid-cols-3 items-center gap-4">
-                        <Label htmlFor="email">Email</Label>
-                        <Input id="email" type="email" defaultValue={user.email} className="col-span-2" />
+                        <Label htmlFor="identifier">{user.role === 'Citizen' ? 'NIC Number' : 'Email'}</Label>
+                        <Input id="identifier" type="text" defaultValue={user.role === 'Citizen' ? user.nic : user.email} className="col-span-2" />
                     </div>
                     <div className="grid grid-cols-3 items-center gap-4">
                         <Label htmlFor="role">Role</Label>

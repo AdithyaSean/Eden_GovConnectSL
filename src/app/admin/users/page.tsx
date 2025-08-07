@@ -15,11 +15,11 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const initialUsers = [
-  { id: 1, name: "John Doe", email: "john.d@example.com", role: "Citizen", joined: "2024-05-10", status: "Active" },
-  { id: 2, name: "Jane Smith", email: "jane.s@example.com", role: "Citizen", joined: "2024-05-12", status: "Active" },
-  { id: 3, name: "Admin User", email: "admin@gov.lk", role: "Super Admin", joined: "2024-01-01", status: "Active" },
-  { id: 4, name: "Transport Worker", email: "worker.transport@gov.lk", role: "worker_transport", joined: "2024-02-15", status: "Active" },
-  { id: 5, name: "Immigration Worker", email: "worker.immigration@gov.lk", role: "worker_immigration", joined: "2024-02-16", status: "Suspended" },
+  { id: 1, name: "John Doe", email: "john.d@example.com", nic: "199012345V", role: "Citizen", joined: "2024-05-10", status: "Active" },
+  { id: 2, name: "Jane Smith", email: "jane.s@example.com", nic: "198567890V", role: "Citizen", joined: "2024-05-12", status: "Active" },
+  { id: 3, name: "Admin User", email: "admin@gov.lk", nic: "", role: "Super Admin", joined: "2024-01-01", status: "Active" },
+  { id: 4, name: "Transport Worker", email: "worker.transport@gov.lk", nic: "", role: "worker_transport", joined: "2024-02-15", status: "Active" },
+  { id: 5, name: "Immigration Worker", email: "worker.immigration@gov.lk", nic: "", role: "worker_immigration", joined: "2024-02-16", status: "Suspended" },
 ];
 
 const roles = [
@@ -30,10 +30,10 @@ export default function UsersPage() {
   const [users, setUsers] = useState(initialUsers);
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
 
-  const handleAddUser = (event) => {
+  const handleAddUser = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const formData = new FormData(event.target);
-    const userData = Object.fromEntries(formData.entries());
+    const formData = new FormData(event.target as HTMLFormElement);
+    const userData = Object.fromEntries(formData.entries()) as { name: string; email: string; role: string, nic: string };
     const newUser = { 
         ...userData, 
         id: users.length + 1, 
@@ -61,7 +61,7 @@ export default function UsersPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
+                  <TableHead>Email / NIC</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Status</TableHead>
                    <TableHead>
@@ -73,7 +73,7 @@ export default function UsersPage() {
                 {users.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">{user.name}</TableCell>
-                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.role === 'Citizen' ? user.nic : user.email}</TableCell>
                     <TableCell>
                       <Badge variant={user.role === 'Super Admin' ? 'destructive' : user.role.startsWith('worker_') ? 'outline' : 'secondary'}>{user.role}</Badge>
                     </TableCell>
@@ -111,7 +111,11 @@ export default function UsersPage() {
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="email" className="text-right">Email</Label>
-                <Input id="email" name="email" type="email" className="col-span-3" required />
+                <Input id="email" name="email" type="email" className="col-span-3" />
+              </div>
+               <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="nic" className="text-right">NIC</Label>
+                <Input id="nic" name="nic" type="text" className="col-span-3" />
               </div>
                <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="role" className="text-right">Role</Label>
