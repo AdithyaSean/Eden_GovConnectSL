@@ -134,6 +134,10 @@ export default function UsersPage() {
                   <Input id="email" name="email" type="email" className="col-span-3" required />
                 </div>
               )}
+               <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="password" className="text-right">Password</Label>
+                  <Input id="password" name="password" type="password" className="col-span-3" required />
+                </div>
             </div>
             <DialogFooter>
               <DialogClose asChild>
