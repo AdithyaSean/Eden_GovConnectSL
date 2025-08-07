@@ -1,12 +1,15 @@
 
+
 "use client";
 
 import type React from "react";
 import Link from "next/link";
 import { usePathname } from 'next/navigation';
 import { cn } from "@/lib/utils";
-import { Bell, Home, Users, Settings, LogOut, Shield, FileText, PenSquare, Building, BookUser, Car, Fingerprint, GraduationCap, HeartPulse, CreditCard } from "lucide-react";
+import { Bell, Home, Users, Settings, LogOut, Shield, FileText, PenSquare, Building, BookUser, Car, Fingerprint, GraduationCap, HeartPulse, CreditCard, UserCircle } from "lucide-react";
 import { Button } from "./ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 const adminNavItems = [
   { title: "Dashboard", href: "/admin/dashboard", icon: Home },
@@ -86,12 +89,33 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
               <Bell className="h-5 w-5" />
               <span className="sr-only">Notifications</span>
             </Button>
-           <Button asChild variant="outline">
-               <Link href="/login">
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-               </Link>
-            </Button>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full">
+                    <Avatar className="h-8 w-8">
+                       <AvatarFallback>{workerMode ? 'W' : 'A'}</AvatarFallback>
+                    </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href={workerMode ? "/worker/profile" : "/admin/profile"}>
+                    <UserCircle className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </Link>
+                </DropdownMenuItem>
+                 <DropdownMenuItem asChild>
+                   <Link href="/login">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Logout</span>
+                   </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
         </header>
         <main className="flex flex-1 flex-col gap-4 bg-muted/40">
            {children}
