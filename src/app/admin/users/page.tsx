@@ -154,7 +154,7 @@ export default function UsersPage() {
                     <SelectTrigger className="col-span-3">
                         <SelectValue placeholder="Select a role" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent position="popper">
                         {roles.map(role => <SelectItem key={role} value={role}>{role}</SelectItem>)}
                     </SelectContent>
                 </Select>
@@ -185,7 +185,7 @@ export default function UsersPage() {
                     <SelectTrigger id="role-select" className="col-span-3">
                         <SelectValue placeholder="Select a role" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent position="popper">
                         {roles.map(role => <SelectItem key={role} value={role}>{role}</SelectItem>)}
                     </SelectContent>
                 </Select>
