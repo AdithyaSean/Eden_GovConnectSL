@@ -6,10 +6,11 @@ import type React from "react";
 import Link from "next/link";
 import { usePathname } from 'next/navigation';
 import { cn } from "@/lib/utils";
-import { Bell, Home, Users, Settings, LogOut, Shield, FileText, PenSquare, Building, BookUser, Car, Fingerprint, GraduationCap, HeartPulse, CreditCard, UserCircle, ReceiptText, ClipboardList } from "lucide-react";
+import { Bell, Home, Users, Settings, LogOut, Shield, FileText, PenSquare, Building, BookUser, Car, Fingerprint, GraduationCap, HeartPulse, CreditCard, UserCircle, ReceiptText, ClipboardList, Menu } from "lucide-react";
 import { Button } from "./ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 
 const adminNavItems = [
   { title: "Dashboard", href: "/admin/dashboard", icon: Home },
@@ -84,6 +85,36 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
       </div>
       <div className="flex flex-col">
         <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
+           <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon" className="md:hidden">
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Toggle navigation menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="flex flex-col">
+              <nav className="grid gap-4 text-base font-medium">
+                <Link href={logoHref} className="flex items-center gap-2 font-semibold mb-4">
+                  <LogoIcon className="h-6 w-6 text-primary" />
+                  <span>{logoText}</span>
+                </Link>
+                {navItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+                      pathname.startsWith(item.href) && "bg-muted text-primary"
+                    )}
+                  >
+                    <item.icon className="h-5 w-5" />
+                    {item.title}
+                  </Link>
+                ))}
+              </nav>
+            </SheetContent>
+          </Sheet>
+
           <div className="w-full flex-1">
              {/* Can add a global search here if needed */}
           </div>

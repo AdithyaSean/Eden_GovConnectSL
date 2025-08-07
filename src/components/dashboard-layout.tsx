@@ -64,29 +64,33 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                   <span className="sr-only">Toggle navigation menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="flex flex-col">
-                <nav className="grid gap-4 text-lg font-medium">
+              <SheetContent side="left" className="flex flex-col p-0">
+                <div className="p-6">
                   <Link
                     href="/dashboard"
                     className="flex items-center gap-2 text-lg font-semibold mb-4"
                   >
                     <UserSquare className="h-6 w-6 text-primary" />
-                    <span className="sr-only">e-Services</span>
+                    <span>e-Services</span>
                   </Link>
-                  {navItems.map((item) => (
-                    <Link
-                      key={item.title}
-                      href={item.href}
-                       className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-                        pathname === item.href && "text-primary bg-muted"
-                      )}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {item.title}
-                    </Link>
-                  ))}
-                </nav>
+                </div>
+                <ScrollArea className="flex-grow">
+                  <nav className="grid gap-2 text-base font-medium p-4 pt-0">
+                    {navItems.map((item) => (
+                      <Link
+                        key={item.title}
+                        href={item.href}
+                         className={cn(
+                          "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+                          pathname === item.href && "text-primary bg-muted"
+                        )}
+                      >
+                        <item.icon className="h-5 w-5" />
+                        {item.title}
+                      </Link>
+                    ))}
+                  </nav>
+                </ScrollArea>
               </SheetContent>
             </Sheet>
             <Link href="/dashboard" className="hidden md:flex items-center gap-2 font-bold text-lg">

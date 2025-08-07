@@ -16,9 +16,9 @@ const applications = [
 export default function WorkerTransportDashboard() {
   return (
     <AdminLayout workerMode>
-      <div className="flex-1 space-y-8 p-8 pt-6">
+      <div className="flex-1 space-y-8 p-4 md:p-8 pt-6">
         <h1 className="text-3xl font-bold tracking-tight">Transport Worker Dashboard</h1>
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Pending License Renewals</CardTitle>
@@ -56,42 +56,44 @@ export default function WorkerTransportDashboard() {
             <CardTitle>Assigned Applications</CardTitle>
           </CardHeader>
           <CardContent>
-             <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Ref ID</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Submitted On</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {applications.map((app) => (
-                  <TableRow key={app.id}>
-                    <TableCell>{app.id}</TableCell>
-                    <TableCell>{app.type}</TableCell>
-                    <TableCell>{app.submitted}</TableCell>
-                    <TableCell>
-                      <Badge variant={app.status === 'Paid' ? 'default' : 'secondary'}>{app.status}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button size="icon" variant="ghost"><MoreHorizontal /></Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuItem>View Application</DropdownMenuItem>
-                          <DropdownMenuItem>Approve</DropdownMenuItem>
-                          <DropdownMenuItem>Reject</DropdownMenuItem>
-                          <DropdownMenuItem>Request Documents</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Ref ID</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Submitted On</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {applications.map((app) => (
+                    <TableRow key={app.id}>
+                      <TableCell>{app.id}</TableCell>
+                      <TableCell>{app.type}</TableCell>
+                      <TableCell>{app.submitted}</TableCell>
+                      <TableCell>
+                        <Badge variant={app.status === 'Paid' ? 'default' : 'secondary'}>{app.status}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button size="icon" variant="ghost"><MoreHorizontal /></Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem>View Application</DropdownMenuItem>
+                            <DropdownMenuItem>Approve</DropdownMenuItem>
+                            <DropdownMenuItem>Reject</DropdownMenuItem>
+                            <DropdownMenuItem>Request Documents</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       </div>

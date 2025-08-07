@@ -62,6 +62,7 @@ export default function PaymentsPage() {
                 </CardDescription>
             </CardHeader>
             <CardContent>
+              <div className="overflow-x-auto">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -93,6 +94,7 @@ export default function PaymentsPage() {
                         ))}
                     </TableBody>
                 </Table>
+              </div>
             </CardContent>
              <CardFooter className="flex justify-end">
                 <Button variant="outline">Raise a Payment Issue</Button>

@@ -77,7 +77,7 @@ export default function PaymentPage() {
                 <h3 className="font-semibold text-lg">Payment Details</h3>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Service:</span>
-                  <span className="font-medium">{service}</span>
+                  <span className="font-medium text-right">{service}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Reference No:</span>
@@ -166,7 +166,7 @@ export default function PaymentPage() {
                       <CardTitle>Online Banking</CardTitle>
                       <CardDescription>Select your bank to proceed with the payment.</CardDescription>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-3 gap-4">
+                    <CardContent className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                         <Button variant="outline" className="h-20">Bank 1</Button>
                         <Button variant="outline" className="h-20">Bank 2</Button>
                         <Button variant="outline" className="h-20">Bank 3</Button>

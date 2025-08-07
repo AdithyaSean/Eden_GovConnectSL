@@ -91,7 +91,7 @@ export default function ProfilePage() {
                         Change your password here. After saving, you'll be logged out for security purposes.
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent className="space-y-4 max-w-2xl mx-auto">
                         <div className="space-y-2">
                             <Label htmlFor="current-password">Current Password</Label>
                             <Input id="current-password" type="password" />
@@ -105,7 +105,7 @@ export default function ProfilePage() {
                             <Input id="confirm-password" type="password" />
                         </div>
                     </CardContent>
-                    <CardFooter>
+                    <CardFooter className="justify-start max-w-2xl mx-auto">
                          <Button type="submit">Update Password</Button>
                     </CardFooter>
                 </Card>

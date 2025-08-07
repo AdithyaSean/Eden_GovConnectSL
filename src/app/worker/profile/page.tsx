@@ -15,11 +15,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
+import { FormEvent } from "react";
 
 export default function WorkerProfilePage() {
     const { toast } = useToast();
 
-    const handleUpdatePassword = (e) => {
+    const handleUpdatePassword = (e: FormEvent) => {
         e.preventDefault();
         toast({
             title: "Password Updated",
@@ -29,7 +30,7 @@ export default function WorkerProfilePage() {
 
   return (
     <AdminLayout workerMode>
-      <div className="flex-1 space-y-8 p-8 pt-6">
+      <div className="flex-1 space-y-8 p-4 md:p-8 pt-6">
         <div className="flex items-center justify-between space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">My Profile</h1>
         </div>

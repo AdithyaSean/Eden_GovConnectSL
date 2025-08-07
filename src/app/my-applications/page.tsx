@@ -17,9 +17,9 @@ export default function MyApplicationsPage() {
   return (
     <DashboardLayout>
       <div className="flex-1 space-y-8 p-4 md:p-8 pt-6">
-        <div className="flex items-center justify-between space-y-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <h1 className="text-3xl font-bold tracking-tight">My Applications</h1>
-           <Button>Apply for a New Service</Button>
+           <Button className="w-full sm:w-auto">Apply for a New Service</Button>
         </div>
         <Card>
             <CardHeader>
@@ -27,44 +27,46 @@ export default function MyApplicationsPage() {
                 <CardDescription>Track all your submitted applications and their progress.</CardDescription>
             </CardHeader>
             <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Service</TableHead>
-                            <TableHead>Reference ID</TableHead>
-                            <TableHead>Date Submitted</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead className="text-right">Action</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {applications.map((app) => (
-                             <TableRow key={app.id}>
-                                <TableCell className="font-medium">{app.service}</TableCell>
-                                <TableCell>{app.id}</TableCell>
-                                <TableCell>{app.submitted}</TableCell>
-                                <TableCell>
-                                    <Badge variant={
-                                        app.status === 'Approved' || app.status === 'Completed' ? 'default'
-                                        : app.status === 'In Review' ? 'secondary'
-                                        : app.status === 'Pending Payment' ? 'outline'
-                                        : 'destructive'
-                                    }
-                                     className={
-                                        app.status === 'Approved' || app.status === 'Completed' ? 'bg-green-600' : ''
-                                    }
-                                    >{app.status}</Badge>
-                                </TableCell>
-                                 <TableCell className="text-right">
-                                    <Button variant="ghost" size="icon">
-                                        <MoreHorizontal className="h-4 w-4" />
-                                        <span className="sr-only">View Details</span>
-                                    </Button>
-                                </TableCell>
+                <div className="overflow-x-auto">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Service</TableHead>
+                                <TableHead>Reference ID</TableHead>
+                                <TableHead>Date Submitted</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead className="text-right">Action</TableHead>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
+                        </TableHeader>
+                        <TableBody>
+                            {applications.map((app) => (
+                                 <TableRow key={app.id}>
+                                    <TableCell className="font-medium">{app.service}</TableCell>
+                                    <TableCell>{app.id}</TableCell>
+                                    <TableCell>{app.submitted}</TableCell>
+                                    <TableCell>
+                                        <Badge variant={
+                                            app.status === 'Approved' || app.status === 'Completed' ? 'default'
+                                            : app.status === 'In Review' ? 'secondary'
+                                            : app.status === 'Pending Payment' ? 'outline'
+                                            : 'destructive'
+                                        }
+                                         className={
+                                            app.status === 'Approved' || app.status === 'Completed' ? 'bg-green-600' : ''
+                                        }
+                                        >{app.status}</Badge>
+                                    </TableCell>
+                                     <TableCell className="text-right">
+                                        <Button variant="ghost" size="icon">
+                                            <MoreHorizontal className="h-4 w-4" />
+                                            <span className="sr-only">View Details</span>
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
             </CardContent>
         </Card>
       </div>

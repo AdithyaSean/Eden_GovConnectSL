@@ -29,7 +29,7 @@ const recentApplications = [
 export default function AdminDashboardPage() {
   return (
     <AdminLayout>
-      <div className="flex-1 space-y-8 p-8 pt-6">
+      <div className="flex-1 space-y-8 p-4 md:p-8 pt-6">
         <div className="flex items-center justify-between space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
         </div>
@@ -77,14 +77,14 @@ export default function AdminDashboardPage() {
         </div>
 
         <Card>
-          <CardHeader className="flex flex-row items-center">
+          <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
             <div className="grid gap-2">
               <CardTitle>Recent Applications</CardTitle>
               <CardDescription>
                 A quick look at the latest applications submitted by users.
               </CardDescription>
             </div>
-            <Button asChild size="sm" className="ml-auto gap-1">
+            <Button asChild size="sm" className="ml-auto gap-1 w-full sm:w-auto">
               <Link href="/admin/applications">
                 View All
                 <ArrowUpRight className="h-4 w-4" />
@@ -92,36 +92,38 @@ export default function AdminDashboardPage() {
             </Button>
           </CardHeader>
           <CardContent>
-             <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Application ID</TableHead>
-                  <TableHead>User Name</TableHead>
-                  <TableHead>Service</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recentApplications.map((app) => (
-                   <TableRow key={app.id}>
-                    <TableCell className="font-medium">{app.id}</TableCell>
-                    <TableCell>{app.user}</TableCell>
-                    <TableCell>{app.service}</TableCell>
-                    <TableCell>
-                        <Badge variant={
-                           app.status === 'Approved' ? 'default' 
-                           : app.status === 'Pending' ? 'secondary'
-                           : 'destructive'
-                        }
-                         className={
-                             app.status === 'Approved' ? 'bg-green-600' : ''
-                         }
-                        >{app.status}</Badge>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Application ID</TableHead>
+                    <TableHead>User Name</TableHead>
+                    <TableHead>Service</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {recentApplications.map((app) => (
+                     <TableRow key={app.id}>
+                      <TableCell className="font-medium">{app.id}</TableCell>
+                      <TableCell>{app.user}</TableCell>
+                      <TableCell>{app.service}</TableCell>
+                      <TableCell>
+                          <Badge variant={
+                             app.status === 'Approved' ? 'default' 
+                             : app.status === 'Pending' ? 'secondary'
+                             : 'destructive'
+                          }
+                           className={
+                               app.status === 'Approved' ? 'bg-green-600' : ''
+                           }
+                          >{app.status}</Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
 

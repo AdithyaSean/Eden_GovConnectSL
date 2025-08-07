@@ -62,16 +62,16 @@ export default function UsersPage() {
 
   return (
     <AdminLayout>
-      <div className="flex-1 space-y-8 p-8 pt-6">
-        <div className="flex items-center justify-between space-y-2">
+      <div className="flex-1 space-y-8 p-4 md:p-8 pt-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
-           <Button onClick={() => setIsAddUserDialogOpen(true)}><PlusCircle className="mr-2 h-4 w-4" />Add New User</Button>
+           <Button onClick={() => setIsAddUserDialogOpen(true)} className="w-full sm:w-auto"><PlusCircle className="mr-2 h-4 w-4" />Add New User</Button>
         </div>
         <Card>
           <CardHeader>
             <CardTitle>All Users</CardTitle>
             <CardDescription>Manage platform users and their roles.</CardDescription>
-             <div className="flex items-center gap-4 pt-4">
+             <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
                 <div className="relative w-full">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input 
@@ -82,7 +82,7 @@ export default function UsersPage() {
                     />
                 </div>
                 <Select value={roleFilter} onValueChange={setRoleFilter}>
-                    <SelectTrigger className="w-[200px]">
+                    <SelectTrigger className="w-full sm:w-[200px]">
                         <SelectValue placeholder="Filter by role" />
                     </SelectTrigger>
                     <SelectContent>
@@ -93,40 +93,42 @@ export default function UsersPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email / NIC</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Status</TableHead>
-                   <TableHead>
-                    <span className="sr-only">Actions</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">{user.name}</TableCell>
-                    <TableCell>{user.role === 'Citizen' ? user.nic : user.email}</TableCell>
-                    <TableCell>
-                      <Badge variant={user.role === 'Super Admin' ? 'destructive' : user.role.startsWith('worker_') ? 'outline' : 'secondary'}>{user.role}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={user.status === 'Active' ? 'default' : 'destructive'} className={user.status === 'Active' ? 'bg-green-600' : ''}>{user.status}</Badge>
-                    </TableCell>
-                     <TableCell className="text-right">
-                      <Button asChild variant="outline" size="sm">
-                          <Link href={`/admin/users/${user.id}`}>
-                              View Profile <ArrowRight className="ml-2 h-4 w-4" />
-                          </Link>
-                      </Button>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email / NIC</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Status</TableHead>
+                     <TableHead>
+                      <span className="sr-only">Actions</span>
+                    </TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredUsers.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium">{user.name}</TableCell>
+                      <TableCell>{user.role === 'Citizen' ? user.nic : user.email}</TableCell>
+                      <TableCell>
+                        <Badge variant={user.role === 'Super Admin' ? 'destructive' : user.role.startsWith('worker_') ? 'outline' : 'secondary'}>{user.role}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={user.status === 'Active' ? 'default' : 'destructive'} className={user.status === 'Active' ? 'bg-green-600' : ''}>{user.status}</Badge>
+                      </TableCell>
+                       <TableCell className="text-right">
+                        <Button asChild variant="outline" size="sm">
+                            <Link href={`/admin/users/${user.id}`}>
+                                View Profile <ArrowRight className="ml-2 h-4 w-4" />
+                            </Link>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       </div>
