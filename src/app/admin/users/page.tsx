@@ -29,19 +29,22 @@ const roles = [
 export default function UsersPage() {
   const [users, setUsers] = useState(initialUsers);
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
+  const [newUserRole, setNewUserRole] = useState("Citizen");
 
   const handleAddUser = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.target as HTMLFormElement);
     const userData = Object.fromEntries(formData.entries()) as { name: string; email: string; role: string, nic: string };
     const newUser = { 
-        ...userData, 
+        ...userData,
+        role: newUserRole,
         id: users.length + 1, 
         joined: new Date().toISOString().split('T')[0],
         status: "Active" 
     };
     setUsers([...users, newUser]);
     setIsAddUserDialogOpen(false);
+    setNewUserRole("Citizen");
   };
 
   return (
@@ -101,7 +104,7 @@ export default function UsersPage() {
             <DialogHeader>
               <DialogTitle>Add New User</DialogTitle>
               <DialogDescription>
-                Fill in the details for the new user.
+                Fill in the details for the new user. An email is required for Admins/Workers, and an NIC is required for Citizens.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -109,17 +112,9 @@ export default function UsersPage() {
                 <Label htmlFor="name" className="text-right">Name</Label>
                 <Input id="name" name="name" className="col-span-3" required />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="email" className="text-right">Email</Label>
-                <Input id="email" name="email" type="email" className="col-span-3" />
-              </div>
-               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="nic" className="text-right">NIC</Label>
-                <Input id="nic" name="nic" type="text" className="col-span-3" />
-              </div>
                <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="role" className="text-right">Role</Label>
-                <Select name="role" defaultValue="Citizen">
+                <Select name="role" value={newUserRole} onValueChange={setNewUserRole}>
                     <SelectTrigger className="col-span-3">
                         <SelectValue placeholder="Select a role" />
                     </SelectTrigger>
@@ -128,6 +123,17 @@ export default function UsersPage() {
                     </SelectContent>
                 </Select>
               </div>
+              {newUserRole === 'Citizen' ? (
+                 <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="nic" className="text-right">NIC</Label>
+                  <Input id="nic" name="nic" type="text" className="col-span-3" required />
+                </div>
+              ) : (
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="email" className="text-right">Email</Label>
+                  <Input id="email" name="email" type="email" className="col-span-3" required />
+                </div>
+              )}
             </div>
             <DialogFooter>
               <DialogClose asChild>
