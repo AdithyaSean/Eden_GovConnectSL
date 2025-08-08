@@ -26,20 +26,22 @@ export default function AdminLoginPage() {
     e.preventDefault();
     if (isAdmin) {
       router.push("/admin/dashboard");
-    } else {
-      // Logic to redirect worker based on email
-       if (email.includes("worker")) {
+      return;
+    }
+
+    // Logic to redirect worker based on email
+    if (email.includes("worker")) {
         const role = email.split("@")[0].split(".")[1];
         if (role) {
-          router.push(`/worker/${role}/dashboard`);
+            router.push(`/worker/${role}/dashboard`);
         } else {
-          // Default worker redirect if role can't be determined
-          router.push("/worker/transport/dashboard");
+            // Default worker redirect if role can't be determined
+            router.push("/worker/transport/dashboard");
         }
-       } else {
-         // Default to citizen login if email format is not recognized
-         router.push("/login");
-       }
+    } else {
+        // If not an admin and not a recognized worker email, do nothing or show an error.
+        // For this prototype, we'll just prevent redirection.
+        console.log("Not a valid worker email format.");
     }
   };
 
@@ -64,14 +66,15 @@ export default function AdminLoginPage() {
                   id="email"
                   type="email"
                   placeholder="admin@gov.lk or worker.transport@gov.lk"
-                  required
+                  required={!isAdmin}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  disabled={isAdmin}
                 />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" required />
+                <Input id="password" type="password" required={!isAdmin} disabled={isAdmin} />
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox id="is-admin" checked={isAdmin} onCheckedChange={(checked) => setIsAdmin(checked as boolean)} />
