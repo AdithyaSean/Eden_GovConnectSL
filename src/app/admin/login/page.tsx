@@ -15,26 +15,31 @@ import { Label } from "@/components/ui/label";
 import { Shield } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (email.includes("admin")) {
+    if (isAdmin) {
       router.push("/admin/dashboard");
-    } else if (email.includes("worker")) {
-      const role = email.split("@")[0].split(".")[1];
-      if (role) {
-        router.push(`/worker/${role}/dashboard`);
-      } else {
-        // Default worker redirect if role can't be determined
-        router.push("/worker/transport/dashboard");
-      }
     } else {
-        // Default citizen redirect or error
+      // Logic to redirect worker based on email
+       if (email.includes("worker")) {
+        const role = email.split("@")[0].split(".")[1];
+        if (role) {
+          router.push(`/worker/${role}/dashboard`);
+        } else {
+          // Default worker redirect if role can't be determined
+          router.push("/worker/transport/dashboard");
+        }
+       } else {
+         // Default to citizen login if email format is not recognized
          router.push("/login");
+       }
     }
   };
 
@@ -67,6 +72,12 @@ export default function AdminLoginPage() {
               <div className="grid gap-2">
                 <Label htmlFor="password">Password</Label>
                 <Input id="password" type="password" required />
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox id="is-admin" checked={isAdmin} onCheckedChange={(checked) => setIsAdmin(checked as boolean)} />
+                <Label htmlFor="is-admin" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Login as Admin
+                </Label>
               </div>
               <Button type="submit" className="w-full">
                 Login
