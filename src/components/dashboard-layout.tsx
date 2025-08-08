@@ -71,7 +71,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                     className="flex items-center gap-2 text-lg font-semibold mb-4"
                   >
                     <UserSquare className="h-6 w-6 text-primary" />
-                    <span>e-Citizen</span>
+                    <span>GovConnect SL</span>
                   </Link>
                 </div>
                 <ScrollArea className="flex-grow">
@@ -95,7 +95,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             </Sheet>
             <Link href="/dashboard" className="hidden md:flex items-center gap-2 font-bold text-lg">
               <UserSquare className="h-7 w-7 text-primary" />
-              <span>e-Citizen</span>
+              <span>GovConnect SL</span>
             </Link>
           </div>
 
@@ -177,7 +177,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       </main>
       <footer className="border-t">
         <div className="container mx-auto py-6 text-center text-muted-foreground text-sm">
-            <p>&copy; {new Date().getFullYear()} e-Citizen Platform. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} GovConnect SL. All rights reserved.</p>
         </div>
       </footer>
     </div>

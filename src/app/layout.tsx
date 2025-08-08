@@ -3,8 +3,8 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: 'e-Citizen Platform',
-  description: 'Your one-stop platform for government services in Sri Lanka.',
+  title: 'GovConnect SL',
+  description: 'GovConnect SL: Your one-stop platform for government services in Sri Lanka.',
 };
 
 export default function RootLayout({

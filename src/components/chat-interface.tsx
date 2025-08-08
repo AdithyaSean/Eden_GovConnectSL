@@ -67,9 +67,9 @@ export function ChatInterface() {
                     <AvatarImage data-ai-hint="avatar character" src="https://placehold.co/100x100/4A7C59/FFFFFF.png" />
                     <AvatarFallback><Bot /></AvatarFallback>
                 </Avatar>
-                <h2 className="text-2xl font-bold mb-2">e-Citizen AI Assistant</h2>
+                <h2 className="text-2xl font-bold mb-2">GovConnect SL AI Assistant</h2>
                 <p className="text-muted-foreground mb-2 max-w-md">
-                    Hello! I am your e-Citizen AI Assistant for Sri Lanka. How can I help you today? You can ask me about services like 'how to apply for a passport' or 'renew my driving license'.
+                    Hello! I am your GovConnect SL AI Assistant. How can I help you today? You can ask me about services like 'how to apply for a passport' or 'renew my driving license'.
                 </p>
                 <p className="text-muted-foreground mb-8">Or, get started with one of the suggestions below.</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl">
