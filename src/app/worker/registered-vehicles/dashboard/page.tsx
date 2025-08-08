@@ -8,8 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { MoreHorizontal } from "lucide-react";
 
 const applications = [
-  { id: "REG-001", type: "New Registration", submitted: "2024-07-22", user: "Sam Wilson", status: "Pending" },
-  { id: "TRN-002", type: "Ownership Transfer", submitted: "2024-07-21", user: "Emily Brown", status: "Approved" },
+  { id: "REG-001", type: "New Registration", submitted: "2024-07-22", user: "Kamal Fernando", status: "Pending" },
+  { id: "TRN-002", type: "Ownership Transfer", submitted: "2024-07-21", user: "Geetha Bandara", status: "Approved" },
 ];
 
 export default function WorkerRegisteredVehiclesDashboard() {

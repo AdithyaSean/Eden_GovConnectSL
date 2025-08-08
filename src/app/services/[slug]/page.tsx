@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import * as LucideIcons from "lucide-react";
 import { MissingDocumentsService } from "@/components/services/missing-documents-service";
 import { RenewDrivingLicenseService } from "@/components/services/renew-driving-license-service";
-import { TaqdeerService } from "@/components/services/taqdeer-service";
 import { NationalIdService } from "@/components/services/national-id-service";
 import { LandRegistryService } from "@/components/services/land-registry-service";
 import { ExamResultsService } from "@/components/services/exam-results-service";
@@ -21,7 +20,6 @@ const serviceComponentMap = {
   "missing-documents": MissingDocumentsService,
   "renew-driving-license": RenewDrivingLicenseService,
   "passport-renewal": PassportRenewalService,
-  "taqdeer": TaqdeerService,
   "national-id-services": NationalIdService,
   "land-registry": LandRegistryService,
   "exam-results": ExamResultsService,

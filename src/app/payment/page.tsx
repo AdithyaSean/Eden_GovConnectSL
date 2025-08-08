@@ -92,7 +92,7 @@ export default function PaymentPage() {
                 <h3 className="font-semibold text-lg">User Information</h3>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Name:</span>
-                  <span className="font-medium">Sri Lankan Citizen</span>
+                  <span className="font-medium">Nimal Silva</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">NIC:</span>
@@ -167,12 +167,12 @@ export default function PaymentPage() {
                       <CardDescription>Select your bank to proceed with the payment.</CardDescription>
                     </CardHeader>
                     <CardContent className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                        <Button variant="outline" className="h-20">Bank 1</Button>
-                        <Button variant="outline" className="h-20">Bank 2</Button>
-                        <Button variant="outline" className="h-20">Bank 3</Button>
-                        <Button variant="outline" className="h-20">Bank 4</Button>
-                        <Button variant="outline" className="h-20">Bank 5</Button>
-                        <Button variant="outline" className="h-20">Bank 6</Button>
+                        <Button variant="outline" className="h-20">Bank of Ceylon</Button>
+                        <Button variant="outline" className="h-20">People's Bank</Button>
+                        <Button variant="outline" className="h-20">Sampath Bank</Button>
+                        <Button variant="outline" className="h-20">Commercial Bank</Button>
+                        <Button variant="outline" className="h-20">HNB</Button>
+                        <Button variant="outline" className="h-20">NDB Bank</Button>
                     </CardContent>
                     <CardFooter>
                        <Button type="submit" className="w-full" size="lg">Proceed to Bank</Button>

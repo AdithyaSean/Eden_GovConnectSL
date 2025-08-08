@@ -9,7 +9,7 @@ import { MoreHorizontal } from "lucide-react";
 
 const applications = [
   { id: "PNS-01", name: "K. Perera", submitted: "2024-07-20", status: "Awaiting Dept. Approval" },
-  { id: "PNS-02", name: "S. Silva", submitted: "2024-07-18", status: "Approved" },
+  { id: "PNS-02", name: "W. S. Silva", submitted: "2024-07-18", status: "Approved" },
 ];
 
 export default function WorkerPensionDashboard() {

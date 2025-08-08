@@ -15,8 +15,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const initialUsers = [
-  { id: 1, name: "John Doe", email: "john.d@example.com", nic: "199012345V", role: "Citizen", joined: "2024-05-10", status: "Active" },
-  { id: 2, name: "Jane Smith", email: "jane.s@example.com", nic: "198567890V", role: "Citizen", joined: "2024-05-12", status: "Active" },
+  { id: 1, name: "Nimal Silva", email: "nimal.s@example.com", nic: "199012345V", role: "Citizen", joined: "2024-05-10", status: "Active" },
+  { id: 2, name: "Saman Perera", email: "saman.p@example.com", nic: "198567890V", role: "Citizen", joined: "2024-05-12", status: "Active" },
   { id: 3, name: "Admin User", email: "admin@gov.lk", nic: "", role: "Super Admin", joined: "2024-01-01", status: "Active" },
   { id: 4, name: "Transport Worker", email: "worker.transport@gov.lk", nic: "", role: "worker_transport", joined: "2024-02-15", status: "Active" },
   { id: 5, name: "Immigration Worker", email: "worker.immigration@gov.lk", nic: "", role: "worker_immigration", joined: "2024-02-16", status: "Suspended" },

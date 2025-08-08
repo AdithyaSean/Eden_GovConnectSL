@@ -110,35 +110,6 @@ export const services: Service[] = [
     }
   },
   {
-    title: "Taqdeer",
-    slug: "taqdeer",
-    description: "A government appreciation program for citizens.",
-    status: "Renewal Due",
-    statusVariant: "warning",
-    icon: "Landmark",
-    actions: [],
-    content: {
-        longDescription: "Taqdeer is a national appreciation program designed to recognize and reward the contributions of outstanding citizens and residents. The program aims to foster a culture of excellence and community service across various fields.",
-        sections: [
-            {
-                title: "About the Program",
-                content: "The Taqdeer program evaluates individuals based on their professional achievements, community involvement, and adherence to national values. It is open to all citizens who meet the eligibility criteria."
-            },
-            {
-                title: "How to Participate",
-                content: "Nominations can be submitted through the official Taqdeer portal. Applicants are required to provide detailed information about their accomplishments and contributions, supported by relevant documents.",
-                list: [
-                    "Visit the official Taqdeer program website.",
-                    "Create an account or log in.",
-                    "Complete the online nomination form with accurate details.",
-                    "Upload supporting documents, awards, and certificates.",
-                    "Submit the application before the deadline."
-                ]
-            }
-        ]
-    }
-  },
-  {
     title: "National ID Services",
     slug: "national-id-services",
     description: "Apply for or manage your National Identity Card.",

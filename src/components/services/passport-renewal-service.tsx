@@ -14,7 +14,7 @@ export function PassportRenewalService({ service }) {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    const trackingNumber = `PASS-${Date.now().toString().slice(-6)}`;
+    const trackingNumber = `PP-${Date.now().toString().slice(-6)}`;
     toast({
         title: "Renewal Request Submitted",
         description: `Your application has been received. Your tracking number is ${trackingNumber}.`,

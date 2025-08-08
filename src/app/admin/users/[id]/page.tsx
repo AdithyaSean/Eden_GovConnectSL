@@ -14,8 +14,8 @@ import { ShieldAlert, UserCog, UserX } from "lucide-react";
 // Mock data - in a real app, you'd fetch this based on params.id
 const user = {
   id: 1,
-  name: "John Doe",
-  email: "john.d@example.com",
+  name: "Nimal Silva",
+  email: "nimal.s@example.com",
   nic: "199012345V",
   role: "Citizen",
   joined: "2024-05-10",

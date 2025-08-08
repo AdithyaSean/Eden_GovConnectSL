@@ -7,11 +7,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { MoreHorizontal, File } from "lucide-react";
 
 const applications = [
-  { id: "APP-001", user: "John Doe", service: "Driving License", status: "Pending", submitted: "2024-07-20" },
-  { id: "APP-002", user: "Jane Smith", service: "Passport", status: "Approved", submitted: "2024-07-19" },
-  { id: "APP-003", user: "Sam Wilson", service: "National ID", status: "Rejected", submitted: "2024-07-18" },
-  { id: "APP-004", user: "Emily Brown", service: "Land Registry", status: "In Progress", submitted: "2024-07-21" },
-  { id: "APP-005", user: "Chris Green", service: "Tax Payment", status: "Completed", submitted: "2024-07-17" },
+  { id: "APP-DL-001", user: "Nimal Silva", service: "Driving License", status: "Pending", submitted: "2024-07-20" },
+  { id: "APP-PP-002", user: "Saman Perera", service: "Passport", status: "Approved", submitted: "2024-07-19" },
+  { id: "APP-NIC-003", user: "Anusha Kumari", service: "National ID", status: "Rejected", submitted: "2024-07-18" },
+  { id: "APP-LR-004", user: "Kamal Fernando", service: "Land Registry", status: "In Progress", submitted: "2024-07-21" },
+  { id: "APP-TP-005", user: "Geetha Bandara", service: "Tax Payment", status: "Completed", submitted: "2024-07-17" },
 ];
 
 export default function ApplicationsPage() {

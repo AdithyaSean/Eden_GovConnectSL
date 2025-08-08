@@ -64,7 +64,7 @@ export function LandRegistryService({ service }) {
                <CardFooter className="flex justify-between items-center">
                 <div>
                     <p className="font-semibold">Applicable Fees</p>
-                    <p className="text-muted-foreground">Stamp Duty: 4%, Registration Fee: LKR 1000</p>
+                    <p className="text-muted-foreground">Stamp Duty: 4%, Registration Fee: LKR 1,000</p>
                 </div>
                 <Button asChild>
                     <Link href="/payment?service=Land+Registration&amount=1000.00">Submit for Registration</Link>

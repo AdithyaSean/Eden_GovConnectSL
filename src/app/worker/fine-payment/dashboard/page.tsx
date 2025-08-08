@@ -8,8 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { MoreHorizontal } from "lucide-react";
 
 const payments = [
-  { id: "PAY-001", fineId: "TFC-2024-001", user: "John Doe", amount: "2000.00", date: "2024-07-22", status: "Verified" },
-  { id: "PAY-002", fineId: "MUN-2024-005", user: "Jane Smith", amount: "1000.00", date: "2024-07-21", status: "Pending" },
+  { id: "PAY-001", fineId: "TFC-2024-001", user: "Nimal Silva", amount: "2000.00", date: "2024-07-22", status: "Verified" },
+  { id: "PAY-002", fineId: "MUN-2024-005", user: "Saman Perera", amount: "1000.00", date: "2024-07-21", status: "Pending" },
 ];
 
 export default function WorkerFinePaymentDashboard() {

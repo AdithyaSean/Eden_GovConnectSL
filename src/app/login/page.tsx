@@ -19,7 +19,7 @@ export default function LoginPage() {
             <div className="flex justify-center mb-4">
                <UserSquare className="h-12 w-12 text-primary" />
             </div>
-          <CardTitle className="text-2xl">Login</CardTitle>
+          <CardTitle className="text-2xl">Citizen Login</CardTitle>
           <CardDescription>
             Enter your National ID number to login
           </CardDescription>
@@ -31,7 +31,7 @@ export default function LoginPage() {
               <Input
                 id="national-id"
                 type="text"
-                placeholder="e.g. 199812345678"
+                placeholder="e.g. 19981234567V"
                 required
               />
             </div>

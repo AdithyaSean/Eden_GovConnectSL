@@ -10,8 +10,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { MoreHorizontal, Search } from "lucide-react";
 
 const applications = [
-  { id: "MID-01", type: "Medical ID Card", submitted: "2024-07-22", status: "Pending", user: "John Doe", nic: "199012345V" },
-  { id: "APPT-02", type: "Appointment Booking", submitted: "2024-07-21", status: "Confirmed", user: "Jane Smith", nic: "198512345V" },
+  { id: "MID-01", type: "Medical ID Card", submitted: "2024-07-22", status: "Pending", user: "Nimal Silva", nic: "199012345V" },
+  { id: "APPT-02", type: "Appointment Booking", submitted: "2024-07-21", status: "Confirmed", user: "Saman Perera", nic: "198512345V" },
 ];
 
 export default function WorkerHealthDashboard() {

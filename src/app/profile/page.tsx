@@ -54,19 +54,19 @@ export default function ProfilePage() {
                     <CardHeader className="text-center">
                         <Avatar className="w-24 h-24 mx-auto mb-4">
                             <AvatarImage src="https://placehold.co/100x100" alt="User" data-ai-hint="avatar user" />
-                            <AvatarFallback>SL</AvatarFallback>
+                            <AvatarFallback>NS</AvatarFallback>
                         </Avatar>
-                        <CardTitle>Sri Lankan Citizen</CardTitle>
-                        <CardDescription>s.citizen@gov.lk</CardDescription>
+                        <CardTitle>Nimal Silva</CardTitle>
+                        <CardDescription>nimal.s@example.com</CardDescription>
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
                         <div className="space-y-1">
                             <Label>Full Name</Label>
-                            <p className="font-medium">Sri Lankan Citizen</p>
+                            <p className="font-medium">Nimal Silva</p>
                         </div>
                         <div className="space-y-1">
                             <Label>Email</Label>
-                            <p className="font-medium">s.citizen@gov.lk</p>
+                            <p className="font-medium">nimal.s@example.com</p>
                         </div>
                          <div className="space-y-1">
                             <Label>NIC Number</Label>

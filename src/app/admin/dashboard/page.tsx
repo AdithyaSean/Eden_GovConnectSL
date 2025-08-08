@@ -20,9 +20,9 @@ import { ArrowUpRight, Users, FileText, CircleDollarSign, CheckCircle } from "lu
 import Link from "next/link";
 
 const recentApplications = [
-    { id: "APP-001", user: "John Doe", service: "Driving License", status: "Pending"},
-    { id: "APP-002", user: "Jane Smith", service: "Passport", status: "Approved"},
-    { id: "APP-003", user: "Sam Wilson", service: "National ID", status: "Rejected"},
+    { id: "APP-DL-001", user: "Nimal Silva", service: "Driving License", status: "Pending"},
+    { id: "APP-PP-002", user: "Saman Perera", service: "Passport", status: "Approved"},
+    { id: "APP-NIC-003", user: "Anusha Kumari", service: "National ID", status: "Rejected"},
 ];
 
 
@@ -70,7 +70,7 @@ export default function AdminDashboardPage() {
               <CheckCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">8</div>
+              <div className="text-2xl font-bold">11</div>
               <p className="text-xs text-muted-foreground">All systems operational</p>
             </CardContent>
           </Card>
