@@ -11,7 +11,7 @@ skinparam activityArrowColor #30475E
 skinparam noteBorderColor #D4AF37
 skinparam noteBackgroundColor #FEF9E7
 
-title Sri Lanka e-Citizen Platform - User Flow Diagram
+title govconnect - User Flow Diagram
 
 start
 
@@ -130,21 +130,6 @@ elseif (Exam Results) then
   :Enter examination index number;
   :Select exam type (O/L or A/L);
   :View results;
-
-elseif (Taqdeer Program) then
-  :Navigate to Taqdeer;
-  if (Action?) then (Job Search)
-    :Search available jobs;
-    :Filter by location;
-    :Apply for position;
-  elseif (Worker Registration) then
-    :Fill registration form;
-    :Submit worker profile;
-  elseif (Lodge Complaint) then
-    :Fill complaint form;
-    :Upload supporting documents;
-    :Submit complaint;
-  endif
 endif
 
 if (Payment Required?) then (yes)
