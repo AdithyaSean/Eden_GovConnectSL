@@ -186,7 +186,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild><Link href="/profile">Profile</Link></DropdownMenuItem>
                 <DropdownMenuItem asChild><Link href="/payments">Payments</Link></DropdownMenuItem>
-                <DropdownMenuItem>Settings</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />Logout
