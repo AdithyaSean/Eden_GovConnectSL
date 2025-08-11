@@ -77,10 +77,6 @@ export function useAuth() {
         fetchUser();
     }, [fetchUser]);
     
-    const updateUserInState = (updatedUser: User | null) => {
-        setUser(updatedUser);
-    }
 
-
-    return { user, loading, refetch: fetchUser, updateUserInState };
+    return { user, loading, refetch: fetchUser };
 }

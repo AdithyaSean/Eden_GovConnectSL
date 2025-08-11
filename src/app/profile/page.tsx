@@ -27,12 +27,8 @@ import type { User } from "@/lib/types";
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("personal-info");
-  const { user, loading, refetch, updateUserInState } = useAuth();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
-  const [uploading, setUploading] = useState(false);
+  const { user, loading } = useAuth();
   
-  const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', nic: '', contactNumber: '+94 77 123 4567' });
 
   useEffect(() => {
@@ -53,71 +49,6 @@ export default function ProfilePage() {
     }
   }, [user]);
 
-  const handleAvatarClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !user) return;
-
-    setUploading(true);
-
-    const storageRef = ref(storage, `profile-pictures/${user.id}/${file.name}`);
-
-    try {
-        await uploadBytes(storageRef, file);
-        const photoURL = await getDownloadURL(storageRef);
-
-        const userDocRef = doc(db, "users", user.id);
-        await updateDoc(userDocRef, { photoURL });
-        
-        // Update user state locally for an instant UI update
-        updateUserInState({ ...user, photoURL });
-        
-        toast({
-            title: "Success",
-            description: "Profile picture updated successfully."
-        });
-
-    } catch (error) {
-        console.error("Error uploading file:", error);
-        toast({
-            title: "Upload Failed",
-            description: "Could not upload your profile picture. Please try again.",
-            variant: "destructive"
-        });
-    } finally {
-        setUploading(false);
-    }
-  };
-
-  const handleFormChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
-    setFormData(prev => ({ ...prev, [id]: value }));
-  };
-
-  const handleSaveChanges = async () => {
-    if (!user) return;
-    try {
-        const userDocRef = doc(db, "users", user.id);
-        const updatedData = {
-            name: formData.name,
-            // email and nic are typically not user-editable, but could be added here
-        };
-        await updateDoc(userDocRef, updatedData);
-        
-        // Update user state locally
-        updateUserInState({ ...user, ...updatedData });
-        
-        toast({ title: "Success", description: "Profile updated successfully." });
-        setIsEditing(false);
-    } catch(error) {
-        console.error("Error updating profile:", error);
-        toast({ title: "Update Failed", description: "Could not update your profile.", variant: "destructive"});
-    }
-  }
-  
   if (loading || !user) {
     return (
         <DashboardLayout>
@@ -163,15 +94,6 @@ export default function ProfilePage() {
                                 <AvatarImage src={user.photoURL || `https://placehold.co/100x100`} alt={user.name} data-ai-hint="avatar user" />
                                 <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                             </Avatar>
-                            <button 
-                                onClick={handleAvatarClick}
-                                disabled={uploading}
-                                className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                                <Camera className="w-8 h-8 text-white" />
-                                {uploading && <div className="absolute inset-0 bg-black/70 flex items-center justify-center rounded-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div></div>}
-                            </button>
-                            <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/png, image/jpeg" className="hidden" />
                          </div>
                         <CardTitle>{user.name}</CardTitle>
                         <CardDescription>{user.email}</CardDescription>
@@ -179,7 +101,7 @@ export default function ProfilePage() {
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
                         <div className="space-y-1">
                             <Label htmlFor="name">Full Name</Label>
-                             <Input id="name" value={formData.name} onChange={handleFormChange} disabled={!isEditing} />
+                             <Input id="name" value={formData.name} disabled />
                         </div>
                         <div className="space-y-1">
                             <Label htmlFor="email">Email</Label>
@@ -191,19 +113,9 @@ export default function ProfilePage() {
                         </div>
                          <div className="space-y-1">
                             <Label htmlFor="contactNumber">Contact Number</Label>
-                             <Input id="contactNumber" value={formData.contactNumber} onChange={handleFormChange} disabled={!isEditing} />
+                             <Input id="contactNumber" value={formData.contactNumber} disabled />
                         </div>
                     </CardContent>
-                    <CardFooter className="justify-center gap-2">
-                         {isEditing ? (
-                            <>
-                                <Button variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
-                                <Button onClick={handleSaveChanges}>Save Changes</Button>
-                            </>
-                         ) : (
-                            <Button onClick={() => setIsEditing(true)}>Edit Profile</Button>
-                         )}
-                    </CardFooter>
                 </Card>
             </TabsContent>
 
