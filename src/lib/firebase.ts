@@ -6,7 +6,12 @@ import {getAuth} from 'firebase/auth';
 import {getStorage} from 'firebase/storage';
 
 // Your web app's Firebase configuration is automatically provided by Firebase App Hosting.
-const firebaseConfig = JSON.parse(process.env.NEXT_PUBLIC_FIREBASE_CONFIG!);
+const firebaseConfigStr = process.env.NEXT_PUBLIC_FIREBASE_CONFIG;
+if (!firebaseConfigStr) {
+    throw new Error("Firebase config not found. Please check your environment variables.");
+}
+const firebaseConfig = JSON.parse(firebaseConfigStr);
+
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
