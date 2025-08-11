@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Bell, Settings, Search, LifeBuoy, ArrowRight, UserSquare, Car, BookUser } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { collection, query, where, getDocs, getCountFromServer } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,6 +24,7 @@ import Link from "next/link";
 export default function DashboardPage() {
   const [stats, setStats] = useState({ documents: 0, activeServices: 0, notifications: 0 });
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const { user } = useAuth();
 
   useEffect(() => {
@@ -60,6 +61,15 @@ export default function DashboardPage() {
     };
     fetchDashboardData();
   }, [user]);
+
+  const filteredServices = useMemo(() => {
+    if (!searchQuery) {
+      return services;
+    }
+    return services.filter(service =>
+      service.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [searchQuery]);
 
 
   return (
@@ -116,11 +126,16 @@ export default function DashboardPage() {
               <h2 className="text-2xl font-bold tracking-tight">Services</h2>
                <div className="relative w-full sm:w-auto sm:max-w-xs">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  <Input placeholder="Search services..." className="pl-10 h-11" />
+                  <Input 
+                    placeholder="Search services..." 
+                    className="pl-10 h-11"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
                 </div>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-              {services.map((service) => (
+              {filteredServices.map((service) => (
                 <ServiceCard key={service.title} service={service} />
               ))}
             </div>
