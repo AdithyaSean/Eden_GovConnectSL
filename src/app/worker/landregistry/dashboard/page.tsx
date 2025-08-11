@@ -7,25 +7,46 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useEffect, useState } from "react";
-import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
+import { collection, query, where, getDocs, getCountFromServer, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { Application } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
+import { FileText, Clock, CheckSquare } from "lucide-react";
 
 const landRegistryServices = ["Land Registry"];
 
 export default function WorkerLandRegistryDashboard() {
   const [applications, setApplications] = useState<Application[]>([]);
+  const [stats, setStats] = useState({ newRegistrations: 0, pendingVerifications: 0, completedTasks: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchApplications = async () => {
+      setLoading(true);
       const q = query(collection(db, "applications"), where("service", "in", landRegistryServices));
       try {
         const querySnapshot = await getDocs(q);
         const appsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
         setApplications(appsData);
+
+        // Stats
+        const newRegQuery = query(q, where("status", "==", "Pending Payment"));
+        const pendingQuery = query(q, where("status", "in", ["In Progress", "In Review"]));
+        const completedQuery = query(q, where("status", "==", "Completed"));
+
+        const [newRegSnapshot, pendingSnapshot, completedSnapshot] = await Promise.all([
+          getCountFromServer(newRegQuery),
+          getCountFromServer(pendingQuery),
+          getCountFromServer(completedQuery),
+        ]);
+
+        setStats({
+          newRegistrations: newRegSnapshot.data().count,
+          pendingVerifications: pendingSnapshot.data().count,
+          completedTasks: completedSnapshot.data().count,
+        });
+
       } catch (error) {
         console.error("Error fetching land registry applications: ", error);
       } finally {
@@ -46,6 +67,40 @@ export default function WorkerLandRegistryDashboard() {
     <AdminLayout workerMode>
       <div className="flex-1 space-y-8 p-8 pt-6">
         <h1 className="text-3xl font-bold tracking-tight">Land Registry Worker Dashboard</h1>
+        
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">New Registrations</CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {loading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{stats.newRegistrations}</div>}
+              <p className="text-xs text-muted-foreground">Awaiting payment confirmation</p>
+            </CardContent>
+          </Card>
+           <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pending Verifications</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+               {loading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{stats.pendingVerifications}</div>}
+              <p className="text-xs text-muted-foreground">Documents to be reviewed</p>
+            </CardContent>
+          </Card>
+           <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Completed Today</CardTitle>
+              <CheckSquare className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+               {loading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{stats.completedTasks}</div>}
+               <p className="text-xs text-muted-foreground">Successfully processed</p>
+            </CardContent>
+          </Card>
+        </div>
+
         <Card>
           <CardHeader>
             <CardTitle>Land Registry Requests</CardTitle>
@@ -97,5 +152,3 @@ export default function WorkerLandRegistryDashboard() {
     </AdminLayout>
   );
 }
-
-    

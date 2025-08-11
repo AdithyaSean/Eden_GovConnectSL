@@ -7,25 +7,44 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useEffect, useState } from "react";
-import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
+import { collection, query, where, getDocs, getCountFromServer, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { Application } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
+import { FileText, UserCheck, MessageSquare } from "lucide-react";
 
 const pensionServices = ["Pension Department"];
 
 export default function WorkerPensionDashboard() {
   const [applications, setApplications] = useState<Application[]>([]);
+  const [stats, setStats] = useState({ newApplications: 0, approvedPensions: 0, openInquiries: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchApplications = async () => {
+      setLoading(true);
       const q = query(collection(db, "applications"), where("service", "in", pensionServices));
       try {
         const querySnapshot = await getDocs(q);
         const appsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
         setApplications(appsData);
+
+        // Stats
+        const newAppsQuery = query(q, where("status", "==", "Pending"));
+        const approvedQuery = query(q, where("status", "==", "Approved"));
+        
+        const [newAppsSnapshot, approvedSnapshot] = await Promise.all([
+          getCountFromServer(newAppsQuery),
+          getCountFromServer(approvedQuery),
+        ]);
+
+        setStats({
+          newApplications: newAppsSnapshot.data().count,
+          approvedPensions: approvedSnapshot.data().count,
+          openInquiries: 0, // Placeholder
+        });
+
       } catch (error) {
         console.error("Error fetching pension applications: ", error);
       } finally {
@@ -45,6 +64,40 @@ export default function WorkerPensionDashboard() {
     <AdminLayout workerMode>
       <div className="flex-1 space-y-8 p-8 pt-6">
         <h1 className="text-3xl font-bold tracking-tight">Pension Worker Dashboard</h1>
+        
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">New Applications</CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {loading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{stats.newApplications}</div>}
+              <p className="text-xs text-muted-foreground">Awaiting document review</p>
+            </CardContent>
+          </Card>
+           <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Approved Pensions</CardTitle>
+              <UserCheck className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+               {loading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{stats.approvedPensions}</div>}
+              <p className="text-xs text-muted-foreground">Actively receiving payments</p>
+            </CardContent>
+          </Card>
+           <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Open Inquiries</CardTitle>
+              <MessageSquare className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+               {loading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{stats.openInquiries}</div>}
+               <p className="text-xs text-muted-foreground">From pensioners and applicants</p>
+            </CardContent>
+          </Card>
+        </div>
+
         <Card>
           <CardHeader>
             <CardTitle>Pension Applications</CardTitle>
@@ -96,5 +149,3 @@ export default function WorkerPensionDashboard() {
     </AdminLayout>
   );
 }
-
-    

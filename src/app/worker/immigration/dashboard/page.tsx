@@ -7,25 +7,46 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useEffect, useState } from "react";
-import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
+import { collection, query, where, getDocs, Timestamp, getCountFromServer } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { Application } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
+import { FileText, Clock, UserCheck } from "lucide-react";
 
 const immigrationServices = ["Passport Renewal"];
 
 export default function WorkerImmigrationDashboard() {
   const [applications, setApplications] = useState<Application[]>([]);
+  const [stats, setStats] = useState({ newApplications: 0, pendingInterviews: 0, approvedToday: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchApplications = async () => {
+      setLoading(true);
       const q = query(collection(db, "applications"), where("service", "in", immigrationServices));
       try {
         const querySnapshot = await getDocs(q);
         const appsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
         setApplications(appsData);
+        
+        // Fetch stats
+        const newAppsQuery = query(q, where("status", "==", "Pending"));
+        const approvedTodayQuery = query(q, where("status", "==", "Approved")); // Simplified for demo
+        const interviewsQuery = query(q, where("details.interviewScheduled", "==", true));
+
+        const [newAppsSnapshot, approvedTodaySnapshot, interviewsSnapshot] = await Promise.all([
+          getCountFromServer(newAppsQuery),
+          getCountFromServer(approvedTodayQuery),
+          getCountFromServer(interviewsQuery),
+        ]);
+        
+        setStats({
+          newApplications: newAppsSnapshot.data().count,
+          pendingInterviews: interviewsSnapshot.data().count,
+          approvedToday: approvedTodaySnapshot.data().count
+        });
+
       } catch (error) {
         console.error("Error fetching immigration applications: ", error);
       } finally {
@@ -45,6 +66,40 @@ export default function WorkerImmigrationDashboard() {
     <AdminLayout workerMode>
       <div className="flex-1 space-y-8 p-8 pt-6">
         <h1 className="text-3xl font-bold tracking-tight">Immigration Worker Dashboard</h1>
+        
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">New Applications</CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {loading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{stats.newApplications}</div>}
+              <p className="text-xs text-muted-foreground">Awaiting document verification</p>
+            </CardContent>
+          </Card>
+           <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pending Interviews</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+               {loading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{stats.pendingInterviews}</div>}
+              <p className="text-xs text-muted-foreground">Scheduled for in-person visits</p>
+            </CardContent>
+          </Card>
+           <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Approved Today</CardTitle>
+              <UserCheck className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+               {loading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{stats.approvedToday}</div>}
+               <p className="text-xs text-muted-foreground">Passports ready for issuance</p>
+            </CardContent>
+          </Card>
+        </div>
+
         <Card>
           <CardHeader>
             <CardTitle>Passport Applications</CardTitle>
@@ -96,5 +151,3 @@ export default function WorkerImmigrationDashboard() {
     </AdminLayout>
   );
 }
-
-    
