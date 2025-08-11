@@ -1,24 +1,26 @@
 
 "use client";
 
-import { UploadCloud, File, X } from 'lucide-react';
+import { UploadCloud, File, X, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { useState } from 'react';
 import { storage } from '@/lib/firebase';
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from './ui/progress';
+import { cn } from '@/lib/utils';
 
 interface FileUploadProps {
   label: string;
-  onUploadComplete: (url: string) => void;
+  onUploadComplete: (url: string, path: string) => void;
   id: string;
 }
 
 export function FileUpload({ label, onUploadComplete, id }: FileUploadProps) {
   const [file, setFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
-  const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const [filePath, setFilePath] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,7 +40,11 @@ export function FileUpload({ label, onUploadComplete, id }: FileUploadProps) {
   };
 
   const handleUpload = (fileToUpload: File) => {
-    const storageRef = ref(storage, `uploads/${Date.now()}-${fileToUpload.name}`);
+    setIsUploading(true);
+    setUploadProgress(0);
+    
+    const fullPath = `uploads/${Date.now()}-${fileToUpload.name.replace(/\s/g, '_')}`;
+    const storageRef = ref(storage, fullPath);
     const uploadTask = uploadBytesResumable(storageRef, fileToUpload);
 
     uploadTask.on('state_changed', 
@@ -47,19 +53,21 @@ export function FileUpload({ label, onUploadComplete, id }: FileUploadProps) {
         setUploadProgress(progress);
       }, 
       (error) => {
+        console.error("Upload error:", error);
         toast({
           variant: "destructive",
           title: "Upload Failed",
-          description: `An error occurred during upload: ${error.message}`,
+          description: `An error occurred during upload. Please check console for details.`,
         });
+        setIsUploading(false);
         setUploadProgress(null);
         setFile(null);
       }, 
       () => {
         getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-          setFileUrl(downloadURL);
-          onUploadComplete(downloadURL);
-          setUploadProgress(null);
+          setFilePath(fullPath);
+          onUploadComplete(downloadURL, fullPath);
+          setIsUploading(false);
           toast({
             title: "Upload Successful",
             description: `${fileToUpload.name} has been uploaded.`,
@@ -70,16 +78,28 @@ export function FileUpload({ label, onUploadComplete, id }: FileUploadProps) {
   };
 
   const handleRemoveFile = () => {
-    // Note: This doesn't delete the file from Firebase Storage.
-    // A more robust implementation would require a backend function to handle deletions.
-    setFile(null);
-    setFileUrl(null);
-    setUploadProgress(null);
-    onUploadComplete(""); // Clear the URL in the parent form
     const input = document.getElementById(id) as HTMLInputElement;
     if (input) {
       input.value = "";
     }
+    
+    if (filePath) {
+      const fileRef = ref(storage, filePath);
+      deleteObject(fileRef).catch((error) => {
+         console.error("Error removing file from storage: ", error);
+         toast({
+            variant: "destructive",
+            title: "Cleanup Failed",
+            description: "Could not remove the old file from storage.",
+         });
+      });
+    }
+    
+    setFile(null);
+    setFilePath(null);
+    setUploadProgress(null);
+    setIsUploading(false);
+    onUploadComplete("", ""); // Clear the URL and path in the parent form
   };
 
   return (
@@ -92,28 +112,43 @@ export function FileUpload({ label, onUploadComplete, id }: FileUploadProps) {
               <File className="w-5 h-5 flex-shrink-0" />
               <span className="text-sm font-medium truncate" title={file.name}>{file.name}</span>
             </div>
-            <Button variant="ghost" size="icon" onClick={handleRemoveFile} className="flex-shrink-0">
+            <Button variant="ghost" size="icon" onClick={handleRemoveFile} className="flex-shrink-0" disabled={isUploading}>
               <X className="w-4 h-4" />
             </Button>
           </div>
-          {uploadProgress !== null && (
-            <Progress value={uploadProgress} className="h-2" />
+          {isUploading && uploadProgress !== null && (
+            <div className="flex items-center gap-2">
+              <Progress value={uploadProgress} className="h-2 w-full" />
+              <span className="text-xs text-muted-foreground">{Math.round(uploadProgress)}%</span>
+            </div>
           )}
         </div>
       ) : (
         <div className="flex items-center justify-center w-full">
           <label
             htmlFor={id}
-            className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-card hover:bg-muted/50"
+            className={cn(
+                "flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg bg-card",
+                isUploading ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-muted/50"
+            )}
           >
             <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center">
-              <UploadCloud className="w-8 h-8 mb-2 text-muted-foreground" />
-              <p className="mb-1 text-sm text-muted-foreground">
-                <span className="font-semibold">Click to upload</span> or drag and drop
-              </p>
-              <p className="text-xs text-muted-foreground">PDF, PNG, JPG (MAX. 5MB)</p>
+              {isUploading ? (
+                <>
+                    <Loader2 className="w-8 h-8 mb-2 text-muted-foreground animate-spin" />
+                    <p className="text-sm text-muted-foreground">Uploading...</p>
+                </>
+              ) : (
+                <>
+                  <UploadCloud className="w-8 h-8 mb-2 text-muted-foreground" />
+                  <p className="mb-1 text-sm text-muted-foreground">
+                    <span className="font-semibold">Click to upload</span> or drag and drop
+                  </p>
+                  <p className="text-xs text-muted-foreground">PDF, PNG, JPG (MAX. 5MB)</p>
+                </>
+              )}
             </div>
-            <input id={id} type="file" className="hidden" onChange={handleFileChange} />
+            <input id={id} type="file" className="hidden" onChange={handleFileChange} disabled={isUploading} />
           </label>
         </div>
       )}
