@@ -14,6 +14,7 @@ import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { Label } from '../ui/label';
+import { Download } from 'lucide-react';
 
 type UploadedFilesState = {
   [key: string]: { url: string; path: string; };
