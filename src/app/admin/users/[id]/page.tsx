@@ -121,7 +121,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
              <Card>
                 <CardHeader className="items-center text-center">
                     <Avatar className="w-24 h-24 mb-4">
-                        <AvatarImage src={`https://placehold.co/100x100`} alt={user.name} data-ai-hint="avatar user" />
+                        <AvatarImage src={user.photoURL} alt={user.name} data-ai-hint="avatar user" />
                         <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <CardTitle>{user.name}</CardTitle>
