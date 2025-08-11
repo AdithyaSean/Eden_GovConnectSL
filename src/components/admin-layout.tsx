@@ -15,6 +15,7 @@ import { useEffect, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { User } from "@/lib/types";
+import { SriLankaTime } from "./sri-lanka-time";
 
 const adminNavItems = [
   { title: "Dashboard", href: "/admin/dashboard", icon: Home },
@@ -48,30 +49,33 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
   const pathname = usePathname();
   const [worker, setWorker] = useState<User | null>(null);
 
-  useEffect(() => {
-    const fetchWorkerData = async () => {
-        const roleFromStorage = localStorage.getItem("workerRole");
-        const idFromStorage = localStorage.getItem("workerId");
-        
-        if (workerMode && idFromStorage) {
-            const userDoc = await getDoc(doc(db, "users", idFromStorage));
-            if (userDoc.exists()) {
-                setWorker({ id: userDoc.id, ...userDoc.data() } as User);
-            }
-        } else if (!workerMode) {
-            // For admin, we can use a mock user object since auth is simulated
-            setWorker({
-                id: 'super-admin-01',
-                name: 'Admin User',
-                email: 'admin@gov.lk',
-                role: 'Super Admin',
-                status: 'Active',
-                joined: new Date().toISOString(),
-                nic: '',
-                photoURL: localStorage.getItem('adminAvatar') || undefined
-            });
+  const fetchWorkerData = async () => {
+    const roleFromStorage = localStorage.getItem("workerRole");
+    const idFromStorage = localStorage.getItem("workerId");
+    
+    if (workerMode && idFromStorage) {
+        const userDoc = await getDoc(doc(db, "users", idFromStorage));
+        if (userDoc.exists()) {
+            setWorker({ id: userDoc.id, ...userDoc.data() } as User);
         }
-    };
+    } else if (!workerMode) {
+        // For admin, we can use a mock user object since auth is simulated
+        // We'll use the profile pic from local storage if it exists
+        const adminAvatar = localStorage.getItem('adminAvatar');
+        setWorker({
+            id: 'super-admin-01',
+            name: 'Admin User',
+            email: 'admin@gov.lk',
+            role: 'Super Admin',
+            status: 'Active',
+            joined: new Date().toISOString(),
+            nic: '',
+            photoURL: adminAvatar || undefined
+        });
+    }
+  };
+
+  useEffect(() => {
     fetchWorkerData();
   }, [pathname, workerMode]);
 
@@ -175,6 +179,7 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
           <div className="w-full flex-1">
              {/* Can add a global search here if needed */}
           </div>
+           <SriLankaTime />
            <Button variant="ghost" size="icon" className="rounded-full">
               <Bell className="h-5 w-5" />
               <span className="sr-only">Notifications</span>

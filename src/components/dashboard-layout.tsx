@@ -28,10 +28,11 @@ import { useState, useEffect } from "react";
 import { db } from "@/lib/firebase";
 import { collection, query, where, onSnapshot, orderBy, doc, updateDoc, Timestamp } from "firebase/firestore";
 import type { Notification } from "@/lib/types";
+import { SriLankaTime } from "./sri-lanka-time";
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, refetch } = useAuth();
   const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   
@@ -135,6 +136,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           </nav>
           
           <div className="flex items-center gap-2 md:gap-4">
+            <SriLankaTime />
              <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="rounded-full relative">
