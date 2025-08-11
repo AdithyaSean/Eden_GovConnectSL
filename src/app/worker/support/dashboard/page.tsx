@@ -51,29 +51,50 @@ export default function WorkerSupportDashboard() {
     setSelectedTicket(ticket);
     setReplyMessage(ticket.reply || "");
   };
+  
+  const handleUpdateTicket = async (updates: Partial<SupportTicket>) => {
+    if (!selectedTicket) return;
+    try {
+      const ticketRef = doc(db, "supportTickets", selectedTicket.id);
+      await updateDoc(ticketRef, updates);
+      return true;
+    } catch (error) {
+      console.error("Error updating ticket: ", error);
+      toast({
+          title: "Error",
+          description: "Failed to update ticket. Please try again.",
+          variant: "destructive"
+      });
+      return false;
+    }
+  };
 
   const handleSendReply = async () => {
-    if (!selectedTicket) return;
-    
-    try {
-        const ticketRef = doc(db, "supportTickets", selectedTicket.id);
-        await updateDoc(ticketRef, { reply: replyMessage, status: "Closed" });
-        toast({
+    const success = await handleUpdateTicket({ reply: replyMessage, status: "In Progress" });
+    if(success) {
+       toast({
             title: "Reply Sent",
             description: "The user has been notified of your response.",
         });
         setSelectedTicket(null);
         setReplyMessage("");
         fetchTickets(); // Refresh the list
-    } catch (error) {
-        toast({
-            title: "Error",
-            description: "Failed to send reply. Please try again.",
-            variant: "destructive"
-        });
-        console.error("Error updating ticket: ", error);
     }
   };
+
+  const handleCloseTicket = async () => {
+    const success = await handleUpdateTicket({ status: "Closed" });
+    if(success) {
+        toast({
+            title: "Ticket Closed",
+            description: "The support ticket has been marked as closed.",
+        });
+        setSelectedTicket(null);
+        setReplyMessage("");
+        fetchTickets();
+    }
+  };
+
 
   return (
     <AdminLayout workerMode>
@@ -126,7 +147,7 @@ export default function WorkerSupportDashboard() {
                     </TableCell>
                     <TableCell className="text-right">
                        <Button variant="outline" size="sm" onClick={() => handleOpenReplyDialog(ticket)}>
-                           {ticket.reply ? 'View / Edit Reply' : 'Reply'}
+                           {ticket.reply ? 'View / Reply' : 'Reply'}
                        </Button>
                     </TableCell>
                   </TableRow>
@@ -147,11 +168,17 @@ export default function WorkerSupportDashboard() {
                             From: {selectedTicket.name} ({selectedTicket.email}) on {formatDate(selectedTicket.submittedAt)}
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4">
+                    <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto pr-6">
                         <Card className="bg-muted p-4">
                             <h4 className="font-semibold mb-2">User's Message:</h4>
-                            <p className="text-sm text-muted-foreground">{selectedTicket.message}</p>
+                            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedTicket.message}</p>
                         </Card>
+                        {selectedTicket.reply && (
+                             <Card className="bg-blue-50 p-4 border-blue-200">
+                                <h4 className="font-semibold mb-2 text-blue-900">Previous Replies:</h4>
+                                <p className="text-sm text-blue-800 whitespace-pre-wrap">{selectedTicket.reply}</p>
+                            </Card>
+                        )}
                         <div className="space-y-2">
                            <Label htmlFor="reply-message" className="text-left">
                                 Your Reply
@@ -165,11 +192,20 @@ export default function WorkerSupportDashboard() {
                             />
                         </div>
                     </div>
-                    <DialogFooter>
-                    <DialogClose asChild>
-                        <Button type="button" variant="outline">Cancel</Button>
-                    </DialogClose>
-                    <Button type="button" onClick={handleSendReply}>Send Reply & Close Ticket</Button>
+                    <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-between w-full">
+                        <div>
+                             {selectedTicket.status !== "Closed" && (
+                                <Button type="button" variant="destructive" onClick={handleCloseTicket}>
+                                    Mark as Closed
+                                </Button>
+                             )}
+                        </div>
+                        <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
+                            <DialogClose asChild>
+                                <Button type="button" variant="outline">Cancel</Button>
+                            </DialogClose>
+                            <Button type="button" onClick={handleSendReply}>Send Reply</Button>
+                        </div>
                     </DialogFooter>
                  </>
             )}
