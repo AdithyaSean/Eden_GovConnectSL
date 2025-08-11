@@ -5,12 +5,36 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { vehicles } from '@/lib/data';
 import { Download, Bell } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useState, useEffect } from 'react';
+import { db } from '@/lib/firebase';
+import { collection, query, getDocs } from 'firebase/firestore';
+import type { Vehicle } from '@/lib/types';
+import { Skeleton } from '../ui/skeleton';
+
 
 export function RegisteredVehiclesService({ service }) {
     const { toast } = useToast();
+    const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchVehicles = async () => {
+            // In a real app, filter by the current user's ID
+            const q = query(collection(db, "vehicles"));
+            try {
+                const querySnapshot = await getDocs(q);
+                const vehiclesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Vehicle));
+                setVehicles(vehiclesData);
+            } catch (error) {
+                console.error("Error fetching vehicles: ", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchVehicles();
+    }, []);
 
     const handleDownload = (plate) => {
         toast({
@@ -41,26 +65,36 @@ export function RegisteredVehiclesService({ service }) {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {vehicles.map((vehicle) => (
-                                <TableRow key={vehicle.id}>
-                                    <TableCell className="font-medium">{vehicle.licensePlate}</TableCell>
-                                    <TableCell>{vehicle.type}</TableCell>
-                                    <TableCell>{vehicle.registrationDate}</TableCell>
-                                    <TableCell>
-                                        <Badge variant={vehicle.status === 'Active' ? 'default' : 'secondary'}
-                                            className={vehicle.status === 'Active' ? 'bg-green-600' : ''}>
-                                            {vehicle.status}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="font-mono text-xs">{vehicle.chassisNumber}</TableCell>
-                                    <TableCell className="text-right">
-                                        <Button variant="ghost" size="icon" onClick={() => handleDownload(vehicle.licensePlate)}>
-                                            <Download className="h-4 w-4" />
-                                            <span className="sr-only">Download Certificate</span>
-                                        </Button>
+                            {loading ? (
+                                Array.from({ length: 2 }).map((_, i) => (
+                                <TableRow key={i}>
+                                    <TableCell colSpan={6}>
+                                        <Skeleton className="h-8 w-full" />
                                     </TableCell>
                                 </TableRow>
-                            ))}
+                                ))
+                            ) : (
+                                vehicles.map((vehicle) => (
+                                    <TableRow key={vehicle.id}>
+                                        <TableCell className="font-medium">{vehicle.licensePlate}</TableCell>
+                                        <TableCell>{vehicle.type}</TableCell>
+                                        <TableCell>{vehicle.registrationDate}</TableCell>
+                                        <TableCell>
+                                            <Badge variant={vehicle.status === 'Active' ? 'default' : 'secondary'}
+                                                className={vehicle.status === 'Active' ? 'bg-green-600' : ''}>
+                                                {vehicle.status}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className="font-mono text-xs">{vehicle.chassisNumber}</TableCell>
+                                        <TableCell className="text-right">
+                                            <Button variant="ghost" size="icon" onClick={() => handleDownload(vehicle.licensePlate)}>
+                                                <Download className="h-4 w-4" />
+                                                <span className="sr-only">Download Certificate</span>
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
                         </TableBody>
                     </Table>
                 </div>

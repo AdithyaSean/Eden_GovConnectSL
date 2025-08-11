@@ -1,20 +1,46 @@
+
+"use client";
+
 import { AdminLayout } from "@/components/admin-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { MoreHorizontal, File } from "lucide-react";
-
-const applications = [
-  { id: "APP-DL-001", user: "Nimal Silva", service: "Driving License", status: "Pending", submitted: "2024-07-20" },
-  { id: "APP-PP-002", user: "Saman Perera", service: "Passport", status: "Approved", submitted: "2024-07-19" },
-  { id: "APP-NIC-003", user: "Anusha Kumari", service: "National ID", status: "Rejected", submitted: "2024-07-18" },
-  { id: "APP-LR-004", user: "Kamal Fernando", service: "Land Registry", status: "In Progress", submitted: "2024-07-21" },
-  { id: "APP-TP-005", user: "Geetha Bandara", service: "Tax Payment", status: "Completed", submitted: "2024-07-17" },
-];
+import { MoreHorizontal } from "lucide-react";
+import { useEffect, useState } from "react";
+import { db } from "@/lib/firebase";
+import { collection, getDocs, Timestamp } from "firebase/firestore";
+import type { Application } from "@/lib/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ApplicationsPage() {
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "applications"));
+        const apps = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as Application));
+        setApplications(apps);
+      } catch (error) {
+        console.error("Error fetching applications: ", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchApplications();
+  }, []);
+
+  const formatDate = (date: Timestamp | string) => {
+    if (typeof date === 'string') return date;
+    return date.toDate().toLocaleDateString();
+  };
+
   return (
     <AdminLayout>
       <div className="flex-1 space-y-8 p-4 md:p-8 pt-6">
@@ -42,12 +68,20 @@ export default function ApplicationsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {applications.map((app) => (
+                  {loading ? (
+                    Array.from({ length: 5 }).map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell colSpan={6}>
+                          <Skeleton className="h-8 w-full" />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : applications.map((app) => (
                     <TableRow key={app.id}>
                       <TableCell className="font-medium">{app.id}</TableCell>
                       <TableCell>{app.user}</TableCell>
                       <TableCell>{app.service}</TableCell>
-                      <TableCell>{app.submitted}</TableCell>
+                      <TableCell>{formatDate(app.submitted)}</TableCell>
                       <TableCell>
                          <Badge variant={
                              app.status === 'Approved' || app.status === 'Completed' ? 'default' 

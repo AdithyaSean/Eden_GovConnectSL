@@ -5,10 +5,34 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { fines } from '@/lib/data';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
+import { db } from '@/lib/firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import type { Fine } from '@/lib/types';
+import { Skeleton } from '../ui/skeleton';
 
 export function FinePaymentService({ service }) {
+  const [fines, setFines] = useState<Fine[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFines = async () => {
+      // In a real app, you would filter by the current user's ID
+      const q = query(collection(db, "fines")); // No filter for prototype
+      try {
+        const querySnapshot = await getDocs(q);
+        const finesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Fine));
+        setFines(finesData);
+      } catch (error) {
+        console.error("Error fetching fines: ", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchFines();
+  }, []);
+
   return (
     <div className="space-y-8">
         <Card>
@@ -33,7 +57,16 @@ export function FinePaymentService({ service }) {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {fines.map((fine) => (
+                            {loading ? (
+                              Array.from({ length: 4 }).map((_, i) => (
+                                <TableRow key={i}>
+                                  <TableCell colSpan={7}>
+                                    <Skeleton className="h-8 w-full" />
+                                  </TableCell>
+                                </TableRow>
+                              ))
+                            ) : (
+                              fines.map((fine) => (
                                 <TableRow key={fine.id}>
                                     <TableCell className="font-medium">{fine.id}</TableCell>
                                     <TableCell>{fine.type}</TableCell>
@@ -57,7 +90,8 @@ export function FinePaymentService({ service }) {
                                         )}
                                     </TableCell>
                                 </TableRow>
-                            ))}
+                              ))
+                            )}
                         </TableBody>
                     </Table>
                 </div>

@@ -1,4 +1,5 @@
-import type { NavItem, Service, Fine, Vehicle } from "./types";
+
+import type { NavItem, Service } from "./types";
 import { Home, Briefcase, Users, MoreHorizontal, Landmark, FileQuestion, Car, Fingerprint, GraduationCap, FileText, HeartPulse, CreditCard, LifeBuoy, Zap, BookUser, ReceiptText } from 'lucide-react';
 
 export const navItems: NavItem[] = [
@@ -310,62 +311,4 @@ export const services: Service[] = [
       ]
     }
   }
-];
-
-export const fines: Fine[] = [
-    {
-        id: "TFC-2024-001",
-        type: "Traffic Violation (Speeding)",
-        issuedDate: "2024-07-10",
-        amount: "2000.00",
-        dueDate: "2024-07-24",
-        status: "Pending",
-    },
-    {
-        id: "MUN-2024-005",
-        type: "Municipal Fine (Parking)",
-        issuedDate: "2024-06-15",
-        amount: "1000.00",
-        dueDate: "2024-06-29",
-        status: "Pending",
-    },
-     {
-        id: "TFC-2024-002",
-        type: "Traffic Violation (Red Light)",
-        issuedDate: "2024-05-20",
-        amount: "3000.00",
-        dueDate: "2024-06-03",
-        status: "Paid",
-    },
-     {
-        id: "TFC-2023-089",
-        type: "Traffic Violation (Illegal U-Turn)",
-        issuedDate: "2023-11-01",
-        amount: "1500.00",
-        dueDate: "2023-11-15",
-        status: "Paid",
-    },
-];
-
-export const vehicles: Vehicle[] = [
-    {
-        id: "VEH-001",
-        type: "Toyota Aqua",
-        licensePlate: "WP-CAR-1234",
-        registrationDate: "2021-03-15",
-        chassisNumber: "DAA-NHP10-123456",
-        status: "Active",
-        insuranceExpiry: "2025-03-14",
-        emissionTestExpiry: "2025-03-14",
-    },
-    {
-        id: "VEH-002",
-        type: "Honda Vezel",
-        licensePlate: "SP-CAB-5678",
-        registrationDate: "2019-08-20",
-        chassisNumber: "RU3-987654",
-        status: "Active",
-        insuranceExpiry: "2024-08-19",
-        emissionTestExpiry: "2024-08-19",
-    }
 ];

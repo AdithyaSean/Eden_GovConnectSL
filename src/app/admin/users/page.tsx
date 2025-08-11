@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { AdminLayout } from "@/components/admin-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,52 +13,70 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-const initialUsers = [
-  { id: 1, name: "Nimal Silva", email: "nimal.s@example.com", nic: "199012345V", role: "Citizen", joined: "2024-05-10", status: "Active" },
-  { id: 2, name: "Saman Perera", email: "saman.p@example.com", nic: "198567890V", role: "Citizen", joined: "2024-05-12", status: "Active" },
-  { id: 3, name: "Admin User", email: "admin@gov.lk", nic: "", role: "Super Admin", joined: "2024-01-01", status: "Active" },
-  { id: 4, name: "Transport Worker", email: "worker.transport@gov.lk", nic: "", role: "worker_transport", joined: "2024-02-15", status: "Active" },
-  { id: 5, name: "Immigration Worker", email: "worker.immigration@gov.lk", nic: "", role: "worker_immigration", joined: "2024-02-16", status: "Suspended" },
-];
+import { collection, getDocs, addDoc, serverTimestamp, Timestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import type { User } from "@/lib/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const roles = [
     "Citizen", "Super Admin", "worker_transport", "worker_immigration", "worker_identity", "worker_health", "worker_tax", "worker_pension", "worker_landregistry", "worker_exams", "worker_finepayment", "worker_registeredvehicles"
 ];
 
 export default function UsersPage() {
-  const [users, setUsers] = useState(initialUsers);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
   const [newUserRole, setNewUserRole] = useState("Citizen");
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
 
-  const handleAddUser = (event: React.FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setLoading(true);
+      const querySnapshot = await getDocs(collection(db, "users"));
+      const usersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
+      setUsers(usersData);
+      setLoading(false);
+    };
+    fetchUsers();
+  }, []);
+
+  const handleAddUser = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.target as HTMLFormElement);
     const userData = Object.fromEntries(formData.entries()) as { name: string; email: string; role: string, nic: string };
-    const newUser = { 
-        ...userData,
-        role: newUserRole,
-        id: users.length + 1, 
-        joined: new Date().toISOString().split('T')[0],
-        status: "Active" 
-    };
-    setUsers([...users, newUser]);
-    setIsAddUserDialogOpen(false);
-    setNewUserRole("Citizen");
+    
+    try {
+      const newUser = { 
+          ...userData,
+          role: newUserRole,
+          joined: serverTimestamp(),
+          status: "Active" 
+      };
+      const docRef = await addDoc(collection(db, "users"), newUser);
+      setUsers([...users, { ...newUser, id: docRef.id, joined: new Date().toISOString() }]);
+      setIsAddUserDialogOpen(false);
+      setNewUserRole("Citizen");
+    } catch(e) {
+      console.error("Error adding document: ", e);
+    }
   };
 
   const filteredUsers = useMemo(() => {
     return users.filter(user => {
       const searchLower = searchQuery.toLowerCase();
       const matchesSearch = user.name.toLowerCase().includes(searchLower) ||
-                            user.email.toLowerCase().includes(searchLower) ||
-                            user.nic.toLowerCase().includes(searchLower);
+                            (user.email && user.email.toLowerCase().includes(searchLower)) ||
+                            (user.nic && user.nic.toLowerCase().includes(searchLower));
       const matchesRole = roleFilter === 'all' || user.role === roleFilter;
       return matchesSearch && matchesRole;
     });
   }, [users, searchQuery, roleFilter]);
+  
+  const formatDate = (date: Timestamp | string) => {
+    if (typeof date === 'string') return date;
+    return date.toDate().toLocaleDateString();
+  };
 
   return (
     <AdminLayout>
@@ -107,7 +125,15 @@ export default function UsersPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredUsers.map((user) => (
+                  {loading ? (
+                    Array.from({ length: 5 }).map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell colSpan={5}>
+                          <Skeleton className="h-8 w-full" />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : filteredUsers.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">{user.name}</TableCell>
                       <TableCell>{user.role === 'Citizen' ? user.nic : user.email}</TableCell>

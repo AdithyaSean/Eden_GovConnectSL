@@ -10,17 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { ShieldAlert, UserCog, UserX } from "lucide-react";
-
-// Mock data - in a real app, you'd fetch this based on params.id
-const user = {
-  id: 1,
-  name: "Nimal Silva",
-  email: "nimal.s@example.com",
-  nic: "199012345V",
-  role: "Citizen",
-  joined: "2024-05-10",
-  status: "Active"
-};
+import { useEffect, useState } from "react";
+import { db } from "@/lib/firebase";
+import { doc, getDoc, updateDoc, Timestamp } from "firebase/firestore";
+import type { User } from "@/lib/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const roles = [
     "Citizen", "Super Admin", "worker_transport", "worker_immigration", "worker_identity", "worker_health", "worker_tax", "worker_pension", "worker_landregistry", "worker_exams", "worker_finepayment", "worker_registeredvehicles"
@@ -29,12 +23,30 @@ const roles = [
 
 export default function UserProfilePage({ params }: { params: { id: string } }) {
   const { toast } = useToast();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const handleSaveChanges = () => {
-    toast({
-        title: "Success",
-        description: "User profile has been updated successfully.",
-    });
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (params.id) {
+        const userDoc = await getDoc(doc(db, "users", params.id));
+        if (userDoc.exists()) {
+          setUser({ id: userDoc.id, ...userDoc.data() } as User);
+        }
+      }
+      setLoading(false);
+    };
+    fetchUser();
+  }, [params.id]);
+
+  const handleSaveChanges = async () => {
+    if(user) {
+      await updateDoc(doc(db, "users", user.id), { ...user });
+      toast({
+          title: "Success",
+          description: "User profile has been updated successfully.",
+      });
+    }
   }
   
   const handleAction = (action: string) => {
@@ -43,6 +55,41 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
         description: `User has been ${action}.`,
         variant: action === 'deleted' ? 'destructive' : 'default',
     });
+  }
+  
+  const formatDate = (date: Timestamp | string) => {
+    if (!date) return 'N/A';
+    if (typeof date === 'string') return date;
+    return date.toDate().toLocaleDateString();
+  };
+  
+  if(loading) {
+      return (
+        <AdminLayout>
+            <div className="flex-1 space-y-8 p-8 pt-6">
+                <Skeleton className="h-10 w-1/2" />
+                 <div className="grid gap-8 md:grid-cols-3">
+                    <div className="md:col-span-1">
+                        <Skeleton className="h-64 w-full" />
+                    </div>
+                    <div className="md:col-span-2 space-y-8">
+                        <Skeleton className="h-48 w-full" />
+                        <Skeleton className="h-48 w-full" />
+                    </div>
+                 </div>
+            </div>
+        </AdminLayout>
+      )
+  }
+
+  if (!user) {
+    return (
+        <AdminLayout>
+            <div className="flex-1 flex items-center justify-center">
+                <p>User not found.</p>
+            </div>
+        </AdminLayout>
+    )
   }
 
   return (
@@ -77,7 +124,7 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
                     </div>
                      <div className="flex justify-between py-2">
                         <span className="text-muted-foreground">Joined</span>
-                        <span className="font-medium">{user.joined}</span>
+                        <span className="font-medium">{formatDate(user.joined)}</span>
                     </div>
                 </CardContent>
             </Card>
@@ -91,15 +138,15 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
                 <CardContent className="space-y-4">
                      <div className="grid grid-cols-3 items-center gap-4">
                         <Label htmlFor="name">Name</Label>
-                        <Input id="name" defaultValue={user.name} className="col-span-2" />
+                        <Input id="name" defaultValue={user.name} className="col-span-2" onChange={(e) => setUser({...user, name: e.target.value})} />
                     </div>
                     <div className="grid grid-cols-3 items-center gap-4">
                         <Label htmlFor="identifier">{user.role === 'Citizen' ? 'NIC Number' : 'Email'}</Label>
-                        <Input id="identifier" type="text" defaultValue={user.role === 'Citizen' ? user.nic : user.email} className="col-span-2" />
+                        <Input id="identifier" type="text" defaultValue={user.role === 'Citizen' ? user.nic : user.email} className="col-span-2" onChange={(e) => setUser({...user, [user.role === 'Citizen' ? 'nic' : 'email']: e.target.value})}/>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-4">
                         <Label htmlFor="role">Role</Label>
-                        <Select defaultValue={user.role}>
+                        <Select defaultValue={user.role} onValueChange={(value) => setUser({...user, role: value})}>
                             <SelectTrigger className="col-span-2">
                                 <SelectValue placeholder="Select a role" />
                             </SelectTrigger>

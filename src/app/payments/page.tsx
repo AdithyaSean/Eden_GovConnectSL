@@ -20,33 +20,39 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Download } from "lucide-react";
-
-const paymentHistory = [
-  {
-    id: "PAY756483",
-    service: "Driving License Renewal",
-    date: "2024-07-15",
-    amount: "2,500.00",
-    status: "Success",
-  },
-  {
-    id: "PAY648392",
-    service: "Land Registry Fee",
-    date: "2024-06-28",
-    amount: "1,000.00",
-    status: "Success",
-  },
-  {
-    id: "PAY583729",
-    service: "Tax Payment (Q1)",
-    date: "2024-04-14",
-    amount: "18,000.00",
-    status: "Success",
-  },
-];
+import { useEffect, useState } from "react";
+import { db } from "@/lib/firebase";
+import { collection, getDocs, Timestamp } from "firebase/firestore";
+import type { Payment } from "@/lib/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 
 export default function PaymentsPage() {
+    const [paymentHistory, setPaymentHistory] = useState<Payment[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchPayments = async () => {
+            setLoading(true);
+            try {
+                const querySnapshot = await getDocs(collection(db, "payments"));
+                const paymentsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Payment));
+                setPaymentHistory(paymentsData);
+            } catch (error) {
+                console.error("Error fetching payments:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchPayments();
+    }, []);
+    
+    const formatDate = (date: Timestamp | string) => {
+        if (typeof date === 'string') return date;
+        return date.toDate().toLocaleDateString();
+    };
+
   return (
     <DashboardLayout>
       <div className="flex-1 space-y-8 p-4 md:p-8 pt-6">
@@ -75,11 +81,20 @@ export default function PaymentsPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {paymentHistory.map((payment) => (
+                        {loading ? (
+                             Array.from({ length: 3 }).map((_, i) => (
+                                <TableRow key={i}>
+                                    <TableCell colSpan={6}>
+                                        <Skeleton className="h-8 w-full" />
+                                    </TableCell>
+                                </TableRow>
+                             ))
+                        ) : (
+                            paymentHistory.map((payment) => (
                             <TableRow key={payment.id}>
                                 <TableCell className="font-medium">{payment.id}</TableCell>
                                 <TableCell>{payment.service}</TableCell>
-                                <TableCell>{payment.date}</TableCell>
+                                <TableCell>{formatDate(payment.date)}</TableCell>
                                 <TableCell>{payment.amount}</TableCell>
                                 <TableCell>
                                     <span className={`px-2 py-1 text-xs rounded-full ${payment.status === 'Success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{payment.status}</span>
@@ -91,7 +106,7 @@ export default function PaymentsPage() {
                                     </Button>
                                 </TableCell>
                             </TableRow>
-                        ))}
+                        )))}
                     </TableBody>
                 </Table>
               </div>

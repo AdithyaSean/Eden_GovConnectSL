@@ -1,19 +1,53 @@
+
+"use client";
+
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { MoreHorizontal } from "lucide-react";
-
-const applications = [
-  { id: "DL-456", service: "Driving License Renewal", submitted: "2024-07-15", status: "Approved" },
-  { id: "NIC-789", service: "National ID Application", submitted: "2024-07-20", status: "In Review" },
-  { id: "PP-123", service: "Passport Application", submitted: "2024-07-22", status: "Pending Payment" },
-  { id: "LR-321", service: "Land Registry Update", submitted: "2024-06-30", status: "Completed" },
-  { id: "TAX-987", service: "Tax Return Q2", submitted: "2024-07-10", status: "Rejected" },
-];
+import { useEffect, useState } from "react";
+import { db } from "@/lib/firebase";
+import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
+import { auth } from "@/lib/firebase"; // Assuming you have a current user
+import type { Application } from "@/lib/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function MyApplicationsPage() {
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchApplications = async () => {
+      // In a real app, you would use the currently logged-in user's ID.
+      // For this prototype, we'll hardcode a user name to query.
+      const userId = "Nimal Silva"; // Replace with dynamic user ID from auth state
+
+      const q = query(collection(db, "applications"), where("user", "==", userId));
+      
+      try {
+        const querySnapshot = await getDocs(q);
+        const apps = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as Application));
+        setApplications(apps);
+      } catch (error) {
+        console.error("Error fetching applications: ", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchApplications();
+  }, []);
+  
+  const formatDate = (date: Timestamp | string) => {
+    if (typeof date === 'string') return date;
+    return date.toDate().toLocaleDateString();
+  };
+
   return (
     <DashboardLayout>
       <div className="flex-1 space-y-8 p-4 md:p-8 pt-6">
@@ -39,11 +73,20 @@ export default function MyApplicationsPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {applications.map((app) => (
+                            {loading ? (
+                              Array.from({ length: 5 }).map((_, i) => (
+                                <TableRow key={i}>
+                                  <TableCell colSpan={5}>
+                                    <Skeleton className="h-8 w-full" />
+                                  </TableCell>
+                                </TableRow>
+                              ))
+                            ) : (
+                              applications.map((app) => (
                                  <TableRow key={app.id}>
                                     <TableCell className="font-medium">{app.service}</TableCell>
                                     <TableCell>{app.id}</TableCell>
-                                    <TableCell>{app.submitted}</TableCell>
+                                    <TableCell>{formatDate(app.submitted)}</TableCell>
                                     <TableCell>
                                         <Badge variant={
                                             app.status === 'Approved' || app.status === 'Completed' ? 'default'
@@ -63,7 +106,7 @@ export default function MyApplicationsPage() {
                                         </Button>
                                     </TableCell>
                                 </TableRow>
-                            ))}
+                            )))}
                         </TableBody>
                     </Table>
                 </div>

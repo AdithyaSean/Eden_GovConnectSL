@@ -1,4 +1,6 @@
+
 import type { LucideIcon } from "lucide-react";
+import type { Timestamp } from "firebase/firestore";
 
 export interface NavItem {
   title: string;
@@ -56,4 +58,30 @@ export interface Vehicle {
     status: 'Active' | 'Inactive';
     insuranceExpiry: string;
     emissionTestExpiry: string;
+}
+
+export interface Application {
+    id: string;
+    user: string;
+    service: string;
+    status: 'Pending' | 'Approved' | 'Rejected' | 'In Progress' | 'Completed';
+    submitted: Timestamp | string;
+}
+
+export interface User {
+    id: string;
+    name: string;
+    email: string;
+    nic: string;
+    role: string;
+    joined: Timestamp | string;
+    status: 'Active' | 'Suspended';
+}
+
+export interface Payment {
+    id: string;
+    service: string;
+    date: Timestamp | string;
+    amount: string;
+    status: 'Success' | 'Failed';
 }
