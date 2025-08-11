@@ -116,7 +116,7 @@ export function FileUpload({ label, onUploadComplete, id }: FileUploadProps) {
               <X className="w-4 h-4" />
             </Button>
           </div>
-          {isUploading && uploadProgress !== null && (
+          {uploadProgress !== null && (
             <div className="flex items-center gap-2">
               <Progress value={uploadProgress} className="h-2 w-full" />
               <span className="text-xs text-muted-foreground">{Math.round(uploadProgress)}%</span>
