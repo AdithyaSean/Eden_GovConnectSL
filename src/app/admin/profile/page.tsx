@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { AdminLayout } from "@/components/admin-layout";
@@ -15,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { FormEvent, useRef, useState, ChangeEvent } from "react";
+import { FormEvent, useRef, useState, ChangeEvent, useEffect } from "react";
 import { Camera, Loader2 } from "lucide-react";
 
 export default function AdminProfilePage() {
@@ -23,6 +24,13 @@ export default function AdminProfilePage() {
     const [uploading, setUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [avatarSrc, setAvatarSrc] = useState("https://placehold.co/100x100");
+    
+    useEffect(() => {
+        const savedAvatar = localStorage.getItem('adminAvatar');
+        if (savedAvatar) {
+            setAvatarSrc(savedAvatar);
+        }
+    }, []);
 
 
     const handleUpdatePassword = (e: FormEvent) => {
@@ -50,14 +58,16 @@ export default function AdminProfilePage() {
             reader.readAsDataURL(file);
             reader.onload = () => {
                 const base64String = reader.result as string;
-                // In a real app with admin auth, you would update the admin's user doc in Firestore here.
-                // For this prototype, we'll just update the local state and show a toast.
+                // For the simulated admin, we'll use localStorage.
+                localStorage.setItem('adminAvatar', base64String);
                 setAvatarSrc(base64String);
                 toast({
                     title: "Profile Picture Updated",
                     description: "Your new avatar has been saved.",
                 });
                 setUploading(false);
+                // Force a reload to update the layout
+                window.location.reload();
             };
             reader.onerror = (error) => {
                  toast({ title: "File Read Error", variant: "destructive"});

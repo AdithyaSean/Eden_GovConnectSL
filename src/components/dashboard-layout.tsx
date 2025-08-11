@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import type React from "react";
@@ -178,7 +179,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               <DropdownMenuTrigger asChild>
                 <Avatar className="cursor-pointer h-9 w-9">
                   <AvatarImage src={user?.photoURL} alt={user?.name} data-ai-hint="avatar user" />
-                  <AvatarFallback>{user?.name ? user.name.charAt(0) : 'U'}</AvatarFallback>
+                  <AvatarFallback>{user?.name ? user.name.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">

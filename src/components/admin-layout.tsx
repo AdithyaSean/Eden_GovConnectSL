@@ -12,6 +12,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { useEffect, useState } from "react";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import type { User } from "@/lib/types";
 
 const adminNavItems = [
   { title: "Dashboard", href: "/admin/dashboard", icon: Home },
@@ -43,21 +46,39 @@ interface AdminLayoutProps {
 
 export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) {
   const pathname = usePathname();
-  const [workerRole, setWorkerRole] = useState<string | null>(null);
-  const [workerId, setWorkerId] = useState<string | null>(null);
+  const [worker, setWorker] = useState<User | null>(null);
 
   useEffect(() => {
-    if (workerMode) {
-      const roleFromStorage = localStorage.getItem("workerRole");
-      const idFromStorage = localStorage.getItem("workerId");
-      setWorkerRole(roleFromStorage);
-      setWorkerId(idFromStorage);
-    }
+    const fetchWorkerData = async () => {
+        const roleFromStorage = localStorage.getItem("workerRole");
+        const idFromStorage = localStorage.getItem("workerId");
+        
+        if (workerMode && idFromStorage) {
+            const userDoc = await getDoc(doc(db, "users", idFromStorage));
+            if (userDoc.exists()) {
+                setWorker({ id: userDoc.id, ...userDoc.data() } as User);
+            }
+        } else if (!workerMode) {
+            // For admin, we can use a mock user object since auth is simulated
+            setWorker({
+                id: 'super-admin-01',
+                name: 'Admin User',
+                email: 'admin@gov.lk',
+                role: 'Super Admin',
+                status: 'Active',
+                joined: new Date().toISOString(),
+                nic: '',
+                photoURL: localStorage.getItem('adminAvatar') || undefined
+            });
+        }
+    };
+    fetchWorkerData();
   }, [pathname, workerMode]);
 
+
   const getWorkerNavItems = () => {
-    if (workerRole) {
-      const navItem = allWorkerNavItems.find(item => item.role === workerRole);
+    if (worker?.role) {
+      const navItem = allWorkerNavItems.find(item => item.role === worker.role);
       return navItem ? [
           {...navItem, title: "Dashboard", href: navItem.href}
       ] : [];
@@ -69,8 +90,8 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
   
   const getDashboardHref = () => {
     if (!workerMode) return "/admin/dashboard";
-    if (workerRole) {
-        const item = allWorkerNavItems.find(i => i.role === workerRole);
+    if (worker?.role) {
+        const item = allWorkerNavItems.find(i => i.role === worker.role);
         return item ? item.href : '/admin/login';
     }
     return '/admin/login';
@@ -78,7 +99,7 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
 
   const getProfileHref = () => {
       if (!workerMode) return "/admin/profile";
-      if(workerId) return `/worker/profile/${workerId}`;
+      if(worker?.id) return `/worker/profile/${worker.id}`;
       return '/admin/login';
   }
 
@@ -86,6 +107,8 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
   const profileHref = getProfileHref();
   const logoText = workerMode ? "Worker Portal" : "Admin Panel";
   const LogoIcon = workerMode ? PenSquare : Shield;
+  
+  const fallbackInitial = worker ? worker.name?.charAt(0).toUpperCase() : (workerMode ? 'W' : 'A');
 
 
   return (
@@ -161,12 +184,13 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full">
                     <Avatar className="h-8 w-8">
-                       <AvatarFallback>{workerMode ? 'W' : 'A'}</AvatarFallback>
+                       <AvatarImage src={worker?.photoURL} alt={worker?.name} />
+                       <AvatarFallback>{fallbackInitial}</AvatarFallback>
                     </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuLabel>{worker?.name || "My Account"}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link href={profileHref}>
