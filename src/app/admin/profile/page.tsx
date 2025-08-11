@@ -15,13 +15,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { FormEvent, useRef, useState } from "react";
+import { FormEvent, useRef, useState, ChangeEvent } from "react";
 import { Camera, Loader2 } from "lucide-react";
 
 export default function AdminProfilePage() {
     const { toast } = useToast();
     const [uploading, setUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [avatarSrc, setAvatarSrc] = useState("https://placehold.co/100x100");
+
 
     const handleUpdatePassword = (e: FormEvent) => {
         e.preventDefault();
@@ -35,19 +37,32 @@ export default function AdminProfilePage() {
         fileInputRef.current?.click();
     };
 
-    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
+            if (file.size > 500 * 1024) { // 500KB limit
+                toast({ title: "File too large", description: "Please select an image smaller than 500KB.", variant: "destructive"});
+                return;
+            }
+
             setUploading(true);
-            // In a real app, you would upload this file to a storage service
-            // and get back a URL. For this prototype, we'll simulate it.
-            setTimeout(() => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => {
+                const base64String = reader.result as string;
+                // In a real app with admin auth, you would update the admin's user doc in Firestore here.
+                // For this prototype, we'll just update the local state and show a toast.
+                setAvatarSrc(base64String);
                 toast({
                     title: "Profile Picture Updated",
                     description: "Your new avatar has been saved.",
                 });
                 setUploading(false);
-            }, 1500);
+            };
+            reader.onerror = (error) => {
+                 toast({ title: "File Read Error", variant: "destructive"});
+                 setUploading(false);
+            }
         }
     };
 
@@ -64,7 +79,7 @@ export default function AdminProfilePage() {
                     <CardHeader className="text-center">
                         <div className="relative mx-auto w-24 h-24 mb-4 group cursor-pointer" onClick={handleAvatarClick}>
                             <Avatar className="w-24 h-24">
-                                <AvatarImage src="https://placehold.co/100x100" alt="Admin" data-ai-hint="avatar user" />
+                                <AvatarImage src={avatarSrc} alt="Admin" data-ai-hint="avatar user" />
                                 <AvatarFallback>A</AvatarFallback>
                             </Avatar>
                              <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">

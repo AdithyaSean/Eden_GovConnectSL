@@ -20,9 +20,8 @@ import { useEffect, useState, useRef, ChangeEvent } from 'react';
 import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { db, storage } from "@/lib/firebase";
+import { db } from "@/lib/firebase";
 import { doc, updateDoc } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import type { User } from "@/lib/types";
 
 export default function ProfilePage() {
@@ -62,28 +61,35 @@ export default function ProfilePage() {
     }
 
     const file = event.target.files[0];
-    if (file.size > 2 * 1024 * 1024) { // 2MB limit
-        toast({ title: "File too large", description: "Please select an image smaller than 2MB.", variant: "destructive"});
+    if (file.size > 500 * 1024) { // 500KB limit for base64
+        toast({ title: "File too large", description: "Please select an image smaller than 500KB.", variant: "destructive"});
         return;
     }
 
     setUploading(true);
-    try {
-        const storageRef = ref(storage, `profile-pictures/${user.id}/${file.name}`);
-        const uploadResult = await uploadBytes(storageRef, file);
-        const downloadURL = await getDownloadURL(uploadResult.ref);
 
-        const userDocRef = doc(db, "users", user.id);
-        await updateDoc(userDocRef, { photoURL: downloadURL });
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = async () => {
+        try {
+            const base64String = reader.result as string;
+            const userDocRef = doc(db, "users", user.id);
+            await updateDoc(userDocRef, { photoURL: base64String });
 
-        toast({ title: "Success", description: "Profile picture updated successfully!"});
-        refetch(); // Refetch user data to show the new picture
-    } catch (error) {
-        console.error("Error uploading file: ", error);
-        toast({ title: "Upload Failed", description: "Could not upload your profile picture. Please try again.", variant: "destructive" });
-    } finally {
+            toast({ title: "Success", description: "Profile picture updated successfully!"});
+            refetch(); // Refetch user data to show the new picture
+        } catch (error) {
+            console.error("Error uploading file: ", error);
+            toast({ title: "Upload Failed", description: "Could not upload your profile picture. Please try again.", variant: "destructive" });
+        } finally {
+            setUploading(false);
+        }
+    };
+    reader.onerror = (error) => {
+        console.error("Error reading file:", error);
+        toast({ variant: "destructive", title: "File Read Error", description: "Could not process the selected file." });
         setUploading(false);
-    }
+    };
   };
 
   if (loading || !user) {

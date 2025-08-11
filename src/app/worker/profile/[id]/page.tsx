@@ -10,12 +10,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { db, storage } from "@/lib/firebase";
+import { db } from "@/lib/firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import type { User } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Camera, Loader2 } from "lucide-react";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 export default function WorkerProfilePage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -72,27 +71,32 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
         }
 
         const file = event.target.files[0];
-        if (file.size > 2 * 1024 * 1024) { // 2MB limit
-            toast({ title: "File too large", description: "Please select an image smaller than 2MB.", variant: "destructive"});
+        if (file.size > 500 * 1024) { // 500KB limit
+            toast({ title: "File too large", description: "Please select an image smaller than 500KB.", variant: "destructive"});
             return;
         }
 
         setUploading(true);
-        try {
-            const storageRef = ref(storage, `profile-pictures/${worker.id}/${file.name}`);
-            const uploadResult = await uploadBytes(storageRef, file);
-            const downloadURL = await getDownloadURL(uploadResult.ref);
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async () => {
+            try {
+                const base64String = reader.result as string;
+                const userDocRef = doc(db, "users", worker.id);
+                await updateDoc(userDocRef, { photoURL: base64String });
 
-            const userDocRef = doc(db, "users", worker.id);
-            await updateDoc(userDocRef, { photoURL: downloadURL });
-
-            toast({ title: "Success", description: "Profile picture updated successfully!"});
-            fetchWorker(); // Refetch worker data
-        } catch (error) {
-            console.error("Error uploading file: ", error);
-            toast({ title: "Upload Failed", variant: "destructive" });
-        } finally {
-            setUploading(false);
+                toast({ title: "Success", description: "Profile picture updated successfully!"});
+                fetchWorker(); // Refetch worker data
+            } catch (error) {
+                console.error("Error uploading file: ", error);
+                toast({ title: "Upload Failed", variant: "destructive" });
+            } finally {
+                setUploading(false);
+            }
+        };
+        reader.onerror = (error) => {
+             toast({ title: "File Read Error", variant: "destructive"});
+             setUploading(false);
         }
     };
 
