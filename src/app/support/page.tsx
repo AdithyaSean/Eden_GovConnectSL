@@ -1,10 +1,29 @@
+
+"use client";
+
 import { DashboardLayout } from "@/components/dashboard-layout";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { LifeBuoy } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { FormEvent } from "react";
+
 
 export default function SupportPage() {
+    const { toast } = useToast();
+
+    const handleSubmit = (e: FormEvent) => {
+        e.preventDefault();
+        toast({
+            title: "Support Ticket Submitted",
+            description: "Thank you for contacting us. Our team will get back to you shortly.",
+        });
+        // Here you would typically handle the form submission, e.g., send to a backend service
+    }
+
   return (
     <DashboardLayout>
       <div className="flex-1 space-y-8 p-4 md:p-8 pt-6">
@@ -17,6 +36,7 @@ export default function SupportPage() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Frequently Asked Questions</CardTitle>
+                        <CardDescription>Find quick answers to common questions about our services.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Accordion type="single" collapsible className="w-full">
@@ -38,24 +58,47 @@ export default function SupportPage() {
                                  You can track the status of all your submitted applications under the "My Applications" section in the main navigation.
                                 </AccordionContent>
                             </AccordionItem>
+                            <AccordionItem value="item-4">
+                                <AccordionTrigger>Is my data secure on this platform?</AccordionTrigger>
+                                <AccordionContent>
+                                 Yes, we use industry-standard encryption and security protocols to protect all your personal information and application data.
+                                </AccordionContent>
+                            </AccordionItem>
                         </Accordion>
                     </CardContent>
                 </Card>
             </div>
+            
+            <form onSubmit={handleSubmit}>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Contact Support</CardTitle>
+                        <CardDescription>Can't find an answer? Fill out the form below to open a support ticket.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="name">Name</Label>
+                            <Input id="name" placeholder="Your Name" required/>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="email">Email</Label>
+                            <Input id="email" type="email" placeholder="Your Email Address" required/>
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="subject">Subject</Label>
+                            <Input id="subject" placeholder="e.g., Issue with Passport Application" required/>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="message">Message</Label>
+                            <Textarea id="message" placeholder="Please describe your issue in detail." required/>
+                        </div>
+                    </CardContent>
+                    <CardFooter>
+                        <Button type="submit" className="w-full">Submit Ticket</Button>
+                    </CardFooter>
+                </Card>
+            </form>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Contact Support</CardTitle>
-                    <CardDescription>Can't find an answer?</CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-col items-center text-center space-y-4">
-                    <LifeBuoy className="w-16 h-16 text-primary" />
-                    <p className="text-muted-foreground">
-                        Our support team is here to help you.
-                    </p>
-                    <Button size="lg" className="w-full">Contact Us</Button>
-                </CardContent>
-            </Card>
         </div>
 
       </div>
