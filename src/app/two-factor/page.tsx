@@ -21,7 +21,7 @@ export default function TwoFactorPage() {
             </div>
           <CardTitle className="text-2xl">Two-Factor Authentication</CardTitle>
           <CardDescription>
-            Enter the code from your authenticator app
+            We've sent a verification code to your registered mobile number ending in ****567.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -40,9 +40,7 @@ export default function TwoFactorPage() {
             </Button>
           </div>
            <div className="mt-4 text-center text-sm">
-            <Link href="/login" className="underline">
-              Back to Login
-            </Link>
+            <button className="underline text-sm">Resend code</button>
           </div>
         </CardContent>
       </Card>
