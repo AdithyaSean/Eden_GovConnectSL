@@ -16,7 +16,7 @@ import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 
 type UploadedFilesState = {
-  [key: string]: { url: string; path: string; };
+  [key: string]: string;
 };
 
 export function NationalIdService({ service }) {
@@ -31,9 +31,17 @@ export function NationalIdService({ service }) {
     setDate(new Date());
   }, []);
 
-  const handleUploadComplete = (docName: string, url: string, path: string) => {
-    setUploadedFiles(prev => ({ ...prev, [docName]: { url, path } }));
+  const handleUploadComplete = (docName: string, base64: string) => {
+    setUploadedFiles(prev => ({ ...prev, [docName]: base64 }));
   };
+  
+  const handleFileRemove = (docName: string) => {
+      setUploadedFiles(prev => {
+          const newFiles = { ...prev };
+          delete newFiles[docName];
+          return newFiles;
+      });
+  }
   
   const getDocumentsForServiceType = () => {
     switch (serviceType) {
@@ -62,10 +70,6 @@ export function NationalIdService({ service }) {
         return;
     }
 
-    const documentsForFirestore = Object.fromEntries(
-        Object.entries(uploadedFiles).map(([key, value]) => [key, value.url])
-    );
-
     try {
         await addDoc(collection(db, "applications"), {
             service: service.title,
@@ -73,7 +77,7 @@ export function NationalIdService({ service }) {
             user: user.name,
             status: "Pending",
             submitted: serverTimestamp(),
-            documents: documentsForFirestore,
+            documents: uploadedFiles,
             details: {
                 serviceType,
                 appointmentDate: date
@@ -132,13 +136,15 @@ export function NationalIdService({ service }) {
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                          {requiredDocs.map(doc => {
-                             const id = `file-upload-${serviceType}-${doc.replace(/\s+/g, '-')}`;
+                             const docId = doc.replace(/\s+/g, '-');
+                             const id = `file-upload-${serviceType}-${docId}`;
                              return (
                                  <FileUpload
                                      key={id}
                                      id={id}
                                      label={doc}
-                                     onUploadComplete={(url, path) => handleUploadComplete(doc, url, path)}
+                                     onUploadComplete={(base64) => handleUploadComplete(docId, base64)}
+                                     onFileRemove={() => handleFileRemove(docId)}
                                  />
                              )
                          })}

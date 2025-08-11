@@ -17,7 +17,7 @@ import { Label } from '../ui/label';
 import { Download } from 'lucide-react';
 
 type UploadedFilesState = {
-  [key: string]: { url: string; path: string; };
+  [key: string]: string;
 };
 
 const vaccinationRecords = [
@@ -42,9 +42,17 @@ export function HealthServicesService({ service }) {
         setAppointmentDate(new Date());
     }, []);
 
-    const handleUploadComplete = (docName: string, url: string, path: string) => {
-        setUploadedFiles(prev => ({ ...prev, [docName]: { url, path } }));
+    const handleUploadComplete = (docName: string, base64: string) => {
+        setUploadedFiles(prev => ({ ...prev, [docName]: base64 }));
     };
+    
+    const handleFileRemove = (docName: string) => {
+        setUploadedFiles(prev => {
+            const newFiles = { ...prev };
+            delete newFiles[docName];
+            return newFiles;
+        });
+    }
 
     const handleIdCardSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -56,10 +64,6 @@ export function HealthServicesService({ service }) {
             toast({ title: "Please upload both documents.", variant: "destructive" });
             return;
         }
-
-        const documentsForFirestore = Object.fromEntries(
-            Object.entries(uploadedFiles).map(([key, value]) => [key, value.url])
-        );
         
         try {
             await addDoc(collection(db, "applications"), {
@@ -68,7 +72,7 @@ export function HealthServicesService({ service }) {
                 user: user.name,
                 status: "In Review",
                 submitted: serverTimestamp(),
-                documents: documentsForFirestore,
+                documents: uploadedFiles,
             });
             toast({ title: "Application Submitted", description: "Your Medical ID Card application is under review." });
             router.push('/my-applications');
@@ -203,12 +207,14 @@ export function HealthServicesService({ service }) {
                     <FileUpload
                         id="nic-bc-upload"
                         label="Upload Copy of NIC/Birth Certificate" 
-                        onUploadComplete={(url, path) => handleUploadComplete("nicOrBirthCert", url, path)}
+                        onUploadComplete={(base64) => handleUploadComplete("nicOrBirthCert", base64)}
+                        onFileRemove={() => handleFileRemove("nicOrBirthCert")}
                     />
                     <FileUpload
                         id="photo-upload-medical"
                         label="Upload Passport-size Photograph"
-                        onUploadComplete={(url, path) => handleUploadComplete("photo", url, path)}
+                        onUploadComplete={(base64) => handleUploadComplete("photo", base64)}
+                        onFileRemove={() => handleFileRemove("photo")}
                     />
                 </CardContent>
                 <CardFooter>

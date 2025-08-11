@@ -19,7 +19,7 @@ const documentsMap = {
 };
 
 type UploadedFilesState = {
-  [key: string]: { url: string; path: string; };
+  [key: string]: string;
 };
 
 
@@ -31,11 +31,19 @@ export function MissingDocumentsService({ service }) {
   const router = useRouter();
 
   const requiredDocs = selectedService ? documentsMap[selectedService] : [];
-  const isReadyToSubmit = requiredDocs.length > 0 && requiredDocs.every(doc => uploadedFiles[doc]);
+  const isReadyToSubmit = requiredDocs.length > 0 && requiredDocs.every(doc => uploadedFiles[doc.replace(/\s+/g, '-')]);
 
-  const handleUploadComplete = (docName: string, url: string, path: string) => {
-    setUploadedFiles(prev => ({ ...prev, [docName]: { url, path } }));
+  const handleUploadComplete = (docName: string, base64: string) => {
+    setUploadedFiles(prev => ({ ...prev, [docName]: base64 }));
   };
+  
+  const handleFileRemove = (docName: string) => {
+    setUploadedFiles(prev => {
+        const newFiles = { ...prev };
+        delete newFiles[docName];
+        return newFiles;
+    });
+  }
   
   const handleSubmit = async () => {
     if (!user) {
@@ -47,10 +55,6 @@ export function MissingDocumentsService({ service }) {
         return;
     }
     
-    const documentsForFirestore = Object.fromEntries(
-        Object.entries(uploadedFiles).map(([key, value]) => [key, value.url])
-    );
-
     try {
         await addDoc(collection(db, "applications"), {
             service: service.title,
@@ -58,7 +62,7 @@ export function MissingDocumentsService({ service }) {
             user: user.name,
             status: "Pending",
             submitted: serverTimestamp(),
-            documents: documentsForFirestore
+            documents: uploadedFiles
         });
 
         toast({
@@ -106,13 +110,14 @@ export function MissingDocumentsService({ service }) {
             <h3 className="font-semibold pt-4 border-t">Upload Your Documents:</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {requiredDocs.map(doc => {
-                    const id = `file-upload-${doc.replace(/\s+/g, '-')}`;
+                    const docId = doc.replace(/\s+/g, '-');
                     return (
                         <FileUpload 
-                            key={id} 
-                            id={id}
+                            key={docId} 
+                            id={`file-upload-${docId}`}
                             label={doc}
-                            onUploadComplete={(url, path) => handleUploadComplete(doc, url, path)}
+                            onUploadComplete={(base64) => handleUploadComplete(docId, base64)}
+                            onFileRemove={() => handleFileRemove(docId)}
                         />
                     )
                 })}

@@ -20,7 +20,7 @@ const taxPayments = [
 ];
 
 type UploadedFilesState = {
-  [key: string]: { url: string; path: string; };
+  [key: string]: string;
 };
 
 export function TaxPaymentsService({ service }) {
@@ -29,9 +29,17 @@ export function TaxPaymentsService({ service }) {
     const { toast } = useToast();
     const router = useRouter();
 
-    const handleUploadComplete = (docName: string, url: string, path: string) => {
-        setUploadedFiles(prev => ({ ...prev, [docName]: { url, path } }));
+    const handleUploadComplete = (docName: string, base64: string) => {
+        setUploadedFiles(prev => ({ ...prev, [docName]: base64 }));
     };
+
+    const handleFileRemove = (docName: string) => {
+        setUploadedFiles(prev => {
+            const newFiles = { ...prev };
+            delete newFiles[docName];
+            return newFiles;
+        });
+    }
 
     const handleFileUploadSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -44,10 +52,6 @@ export function TaxPaymentsService({ service }) {
             return;
         }
         
-        const documentsForFirestore = Object.fromEntries(
-            Object.entries(uploadedFiles).map(([key, value]) => [key, value.url])
-        );
-
         try {
             await addDoc(collection(db, "applications"), {
                 service: "Tax Document Submission", // More specific service name
@@ -55,7 +59,7 @@ export function TaxPaymentsService({ service }) {
                 user: user.name,
                 status: "In Review",
                 submitted: serverTimestamp(),
-                documents: documentsForFirestore,
+                documents: uploadedFiles,
             });
             toast({
                 title: "Documents Submitted",
@@ -119,12 +123,14 @@ export function TaxPaymentsService({ service }) {
                     <FileUpload 
                         id="salary-slips-upload"
                         label="Salary Slips"
-                        onUploadComplete={(url, path) => handleUploadComplete("salarySlips", url, path)}
+                        onUploadComplete={(base64) => handleUploadComplete("salarySlips", base64)}
+                        onFileRemove={() => handleFileRemove("salarySlips")}
                     />
                     <FileUpload
                         id="other-income-upload"
                         label="Other Income Proof"
-                        onUploadComplete={(url, path) => handleUploadComplete("otherIncomeProof", url, path)}
+                        onUploadComplete={(base64) => handleUploadComplete("otherIncomeProof", base64)}
+                        onFileRemove={() => handleFileRemove("otherIncomeProof")}
                     />
                 </CardContent>
                 <CardFooter>

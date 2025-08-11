@@ -16,7 +16,7 @@ import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 
 type UploadedFilesState = {
-  [key: string]: { url: string; path: string; };
+  [key: string]: string;
 };
 
 export function PensionDepartmentService({ service }) {
@@ -25,12 +25,20 @@ export function PensionDepartmentService({ service }) {
   const { user } = useAuth();
   const router = useRouter();
 
-  const handleUploadComplete = (docName: string, url: string, path: string) => {
-    setUploadedFiles(prev => ({ ...prev, [docName]: { url, path } }));
+  const handleUploadComplete = (docName: string, base64: string) => {
+    setUploadedFiles(prev => ({ ...prev, [docName]: base64 }));
   };
+
+  const handleFileRemove = (docName: string) => {
+    setUploadedFiles(prev => {
+        const newFiles = { ...prev };
+        delete newFiles[docName];
+        return newFiles;
+    });
+  }
   
   const requiredDocs = ["Service Certificate", "Retirement Letter", "Copy of NIC", "Bank Account Details Confirmation"];
-  const isReadyToSubmit = requiredDocs.every(doc => uploadedFiles[doc]);
+  const isReadyToSubmit = requiredDocs.every(doc => uploadedFiles[doc.replace(/\s/g, "")]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -43,10 +51,6 @@ export function PensionDepartmentService({ service }) {
         return;
     }
 
-    const documentsForFirestore = Object.fromEntries(
-        Object.entries(uploadedFiles).map(([key, value]) => [key, value.url])
-    );
-
     try {
         await addDoc(collection(db, "applications"), {
             service: service.title,
@@ -54,7 +58,7 @@ export function PensionDepartmentService({ service }) {
             user: user.name,
             status: "Pending",
             submitted: serverTimestamp(),
-            documents: documentsForFirestore,
+            documents: uploadedFiles,
         });
 
         toast({
@@ -125,13 +129,15 @@ export function PensionDepartmentService({ service }) {
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {requiredDocs.map(doc => {
-                           const id = `file-upload-pension-${doc.replace(/\s+/g, '-')}`;
+                           const docId = doc.replace(/\s/g, "");
+                           const id = `file-upload-pension-${docId}`;
                            return (
                                <FileUpload
                                    key={id}
                                    id={id}
                                    label={doc}
-                                   onUploadComplete={(url, path) => handleUploadComplete(doc, url, path)}
+                                   onUploadComplete={(base64) => handleUploadComplete(docId, base64)}
+                                   onFileRemove={() => handleFileRemove(docId)}
                                />
                            )
                         })}

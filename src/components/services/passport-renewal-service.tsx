@@ -14,7 +14,7 @@ import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 
 type UploadedFilesState = {
-  [key: string]: { url: string; path: string; };
+  [key: string]: string;
 };
 
 const requiredDocs = ["oldPassport", "photo", "nic"];
@@ -27,9 +27,17 @@ export function PassportRenewalService({ service }) {
   
   const isReadyToSubmit = requiredDocs.every(doc => uploadedFiles[doc]);
 
-  const handleUploadComplete = (docName: string, url: string, path: string) => {
-    setUploadedFiles(prev => ({ ...prev, [docName]: { url, path } }));
+  const handleUploadComplete = (docName: string, base64: string) => {
+    setUploadedFiles(prev => ({ ...prev, [docName]: base64 }));
   };
+  
+  const handleFileRemove = (docName: string) => {
+    setUploadedFiles(prev => {
+        const newFiles = { ...prev };
+        delete newFiles[docName];
+        return newFiles;
+    });
+  }
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -46,10 +54,6 @@ export function PassportRenewalService({ service }) {
     const formData = new FormData(e.target as HTMLFormElement);
     const formDetails = Object.fromEntries(formData.entries());
     
-    const documentsForFirestore = Object.fromEntries(
-        Object.entries(uploadedFiles).map(([key, value]) => [key, value.url])
-    );
-
     try {
          await addDoc(collection(db, "applications"), {
             service: service.title,
@@ -57,7 +61,7 @@ export function PassportRenewalService({ service }) {
             user: user.name,
             status: "Pending",
             submitted: serverTimestamp(),
-            documents: documentsForFirestore,
+            documents: uploadedFiles,
             details: formDetails
         });
 
@@ -116,17 +120,20 @@ export function PassportRenewalService({ service }) {
                     <FileUpload 
                         id="old-passport-upload"
                         label="Scanned Copy of Old Passport"
-                        onUploadComplete={(url, path) => handleUploadComplete("oldPassport", url, path)}
+                        onUploadComplete={(base64) => handleUploadComplete("oldPassport", base64)}
+                        onFileRemove={() => handleFileRemove("oldPassport")}
                     />
                     <FileUpload 
                         id="photo-upload"
                         label="Recent Passport-size Photograph"
-                        onUploadComplete={(url, path) => handleUploadComplete("photo", url, path)}
+                        onUploadComplete={(base64) => handleUploadComplete("photo", base64)}
+                        onFileRemove={() => handleFileRemove("photo")}
                     />
                     <FileUpload
                         id="nic-upload"
                         label="Copy of NIC"
-                        onUploadComplete={(url, path) => handleUploadComplete("nic", url, path)}
+                        onUploadComplete={(base64) => handleUploadComplete("nic", base64)}
+                        onFileRemove={() => handleFileRemove("nic")}
                     />
                 </CardContent>
             </Card>

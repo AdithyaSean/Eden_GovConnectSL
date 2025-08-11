@@ -18,7 +18,7 @@ import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 type UploadedFilesState = {
-  [key: string]: { url: string; path: string; };
+  [key: string]: string;
 };
 
 const requiredDocs = ["oldLicense", "medicalReport"];
@@ -36,9 +36,17 @@ export function RenewDrivingLicenseService({ service }) {
 
     const isReadyToSubmit = requiredDocs.every(doc => uploadedFiles[doc]);
 
-    const handleUploadComplete = (docName: string, url: string, path: string) => {
-        setUploadedFiles(prev => ({ ...prev, [docName]: { url, path } }));
+    const handleUploadComplete = (docName: string, base64: string) => {
+        setUploadedFiles(prev => ({ ...prev, [docName]: base64 }));
     };
+    
+    const handleFileRemove = (docName: string) => {
+        setUploadedFiles(prev => {
+            const newFiles = { ...prev };
+            delete newFiles[docName];
+            return newFiles;
+        });
+    }
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -54,10 +62,6 @@ export function RenewDrivingLicenseService({ service }) {
         const formData = new FormData(e.target as HTMLFormElement);
         const formDetails = Object.fromEntries(formData.entries());
         
-        const documentsForFirestore = Object.fromEntries(
-            Object.entries(uploadedFiles).map(([key, value]) => [key, value.url])
-        );
-
         try {
             await addDoc(collection(db, "applications"), {
                 service: service.title,
@@ -65,7 +69,7 @@ export function RenewDrivingLicenseService({ service }) {
                 user: user.name,
                 status: "Pending Payment",
                 submitted: serverTimestamp(),
-                documents: documentsForFirestore,
+                documents: uploadedFiles,
                 details: { ...formDetails, appointmentDate: date }
             });
             toast({
@@ -147,12 +151,14 @@ export function RenewDrivingLicenseService({ service }) {
                     <FileUpload 
                         id="old-license-upload"
                         label="Copy of Old Driving License"
-                        onUploadComplete={(url, path) => handleUploadComplete("oldLicense", url, path)}
+                        onUploadComplete={(base64) => handleUploadComplete("oldLicense", base64)}
+                        onFileRemove={() => handleFileRemove("oldLicense")}
                     />
                     <FileUpload 
                         id="medical-report-upload"
                         label="Medical Fitness Report" 
-                        onUploadComplete={(url, path) => handleUploadComplete("medicalReport", url, path)}
+                        onUploadComplete={(base64) => handleUploadComplete("medicalReport", base64)}
+                        onFileRemove={() => handleFileRemove("medicalReport")}
                     />
                 </CardContent>
             </Card>
