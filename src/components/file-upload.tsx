@@ -44,6 +44,7 @@ export function FileUpload({ label, onUploadComplete, id }: FileUploadProps) {
     setUploadProgress(0);
     
     const fullPath = `uploads/${Date.now()}-${fileToUpload.name.replace(/\s/g, '_')}`;
+    setFilePath(fullPath);
     const storageRef = ref(storage, fullPath);
     const uploadTask = uploadBytesResumable(storageRef, fileToUpload);
 
@@ -62,10 +63,10 @@ export function FileUpload({ label, onUploadComplete, id }: FileUploadProps) {
         setIsUploading(false);
         setUploadProgress(null);
         setFile(null);
+        setFilePath(null);
       }, 
       () => {
         getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-          setFilePath(fullPath);
           onUploadComplete(downloadURL, fullPath);
           setIsUploading(false);
           toast({

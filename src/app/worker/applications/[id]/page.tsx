@@ -192,9 +192,9 @@ export default function WorkerApplicationDetailsPage({ params }: { params: Promi
                                   <span className="text-sm font-medium">{key}</span>
                                </div>
                                 <Button asChild variant="ghost" size="icon">
-                                    <Link href={value} target="_blank" rel="noopener noreferrer">
+                                    <a href={value} target="_blank" rel="noopener noreferrer">
                                         <Download className="h-4 w-4"/>
-                                    </Link>
+                                    </a>
                                 </Button>
                             </div>
                         ))
