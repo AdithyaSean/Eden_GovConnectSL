@@ -21,15 +21,10 @@ import {
 } from "@/components/ui/table";
 import { Bar, BarChart, CartesianGrid, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Clock, AlertTriangle, FileCheck2, Hourglass } from "lucide-react";
-import { useState, useEffect } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { useState, useEffect, useMemo } from "react";
+import { collection, getDocs, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { Application } from "@/lib/types";
-
-const peakHoursData = Array.from({ length: 24 }, (_, i) => ({
-  hour: `${i.toString().padStart(2, '0')}:00`,
-  applications: Math.floor(Math.random() * 20) + (i > 8 && i < 17 ? 10 : 0), // Simulate peak during work hours
-}));
 
 const processingTimeData = [
     { month: "Jan", time: 7.2 },
@@ -54,6 +49,56 @@ export default function AdminAnalyticsPage() {
         }
         fetchApps();
     }, []);
+
+    const analyticsData = useMemo(() => {
+        if (applications.length === 0) {
+            return {
+                docReadiness: 0,
+                peakHour: "N/A",
+                peakHoursData: Array.from({ length: 24 }, (_, i) => ({
+                  hour: `${i.toString().padStart(2, '0')}:00`,
+                  applications: 0,
+                })),
+            };
+        }
+
+        // Doc Readiness
+        const readyDocsCount = applications.filter(app => app.documents && Object.keys(app.documents).length > 0).length;
+        const docReadiness = Math.round((readyDocsCount / applications.length) * 100);
+
+        // Peak Hours
+        const submissionsByHour: { [key: number]: number } = {};
+        for(let i=0; i<24; i++) { submissionsByHour[i] = 0; }
+
+        applications.forEach(app => {
+            if (app.submitted && typeof app.submitted !== 'string') {
+                const hour = (app.submitted as Timestamp).toDate().getHours();
+                submissionsByHour[hour]++;
+            }
+        });
+        
+        let peakHour = 0;
+        let maxSubmissions = 0;
+        for (const hour in submissionsByHour) {
+            if (submissionsByHour[hour] > maxSubmissions) {
+                maxSubmissions = submissionsByHour[hour];
+                peakHour = parseInt(hour, 10);
+            }
+        }
+
+        const peakHoursData = Object.entries(submissionsByHour).map(([hour, count]) => ({
+            hour: `${hour.toString().padStart(2, '0')}:00`,
+            applications: count
+        }));
+        
+
+        return {
+            docReadiness,
+            peakHour: `${peakHour.toString().padStart(2, '0')}:00`,
+            peakHoursData,
+        }
+
+    }, [applications]);
 
   return (
     <AdminLayout>
@@ -89,17 +134,17 @@ export default function AdminAnalyticsPage() {
                     <FileCheck2 className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">88%</div>
+                    <div className="text-2xl font-bold">{analyticsData.docReadiness}%</div>
                     <p className="text-xs text-muted-foreground">Applications with all docs on first submission</p>
                 </CardContent>
             </Card>
              <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Peak Hour (Today)</CardTitle>
+                    <CardTitle className="text-sm font-medium">Peak Hour</CardTitle>
                     <Clock className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">11:00 AM</div>
+                    <div className="text-2xl font-bold">{analyticsData.peakHour}</div>
                     <p className="text-xs text-muted-foreground">Highest application traffic</p>
                 </CardContent>
             </Card>
@@ -109,14 +154,14 @@ export default function AdminAnalyticsPage() {
              <Card>
                 <CardHeader>
                     <CardTitle>Application Submissions by Hour</CardTitle>
-                    <CardDescription>This chart shows the peak hours for user activity.</CardDescription>
+                    <CardDescription>This chart shows the peak hours for user activity based on all submissions.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={peakHoursData}>
+                        <BarChart data={analyticsData.peakHoursData}>
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis dataKey="hour" fontSize={12} tickLine={false} axisLine={false} />
-                            <YAxis fontSize={12} tickLine={false} axisLine={false} />
+                            <YAxis fontSize={12} tickLine={false} axisLine={false} allowDecimals={false}/>
                             <Tooltip />
                             <Bar dataKey="applications" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                         </BarChart>
