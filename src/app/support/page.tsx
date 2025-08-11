@@ -9,15 +9,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { FormEvent } from "react";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { FormEvent, useEffect, useState } from "react";
+import { collection, addDoc, serverTimestamp, query, where, getDocs, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/hooks/use-auth";
+import type { SupportTicket } from "@/lib/types";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 
 
 export default function SupportPage() {
     const { toast } = useToast();
-    const { user } = useAuth();
+    const { user, loading: authLoading } = useAuth();
+    const [tickets, setTickets] = useState<SupportTicket[]>([]);
+    const [loadingTickets, setLoadingTickets] = useState(true);
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -40,6 +45,7 @@ export default function SupportPage() {
                 description: "Thank you for contacting us. Our team will get back to you shortly.",
             });
             (e.target as HTMLFormElement).reset();
+            fetchTickets(); // Refresh the list after submission
         } catch (error) {
              toast({
                 title: "Submission Failed",
@@ -49,6 +55,32 @@ export default function SupportPage() {
             console.error("Error adding document: ", error);
         }
     }
+    
+    const fetchTickets = async () => {
+        if (!user) {
+            setLoadingTickets(false);
+            return;
+        };
+
+        setLoadingTickets(true);
+        try {
+            const q = query(collection(db, "supportTickets"), where("userNic", "==", user.nic));
+            const querySnapshot = await getDocs(q);
+            const userTickets = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SupportTicket))
+                .sort((a, b) => (b.submittedAt as Timestamp).toMillis() - (a.submittedAt as Timestamp).toMillis());
+            setTickets(userTickets);
+        } catch (error) {
+            console.error("Error fetching tickets:", error);
+        } finally {
+            setLoadingTickets(false);
+        }
+    }
+    
+    useEffect(() => {
+        if(!authLoading){
+            fetchTickets();
+        }
+    }, [user, authLoading]);
 
   return (
     <DashboardLayout>
@@ -57,8 +89,46 @@ export default function SupportPage() {
           <h1 className="text-3xl font-bold tracking-tight">Support & Resources</h1>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            <div className="lg:col-span-2 space-y-8">
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>My Support Tickets</CardTitle>
+                        <CardDescription>View your past inquiries and responses from our support team.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Accordion type="single" collapsible className="w-full">
+                           {loadingTickets ? (
+                             <Skeleton className="h-20 w-full" />
+                           ) : tickets.length === 0 ? (
+                                <p className="text-sm text-muted-foreground text-center py-4">You have not submitted any support tickets yet.</p>
+                           ) : (
+                                tickets.map(ticket => (
+                                    <AccordionItem value={ticket.id} key={ticket.id}>
+                                        <AccordionTrigger>
+                                            <div className="flex items-center justify-between w-full pr-4">
+                                                <span className="truncate">{ticket.subject}</span>
+                                                <Badge variant={ticket.status === 'Open' ? 'destructive' : 'default'}  className={ticket.status === 'Closed' ? 'bg-green-600' : ''}>{ticket.status}</Badge>
+                                            </div>
+                                        </AccordionTrigger>
+                                        <AccordionContent className="space-y-4">
+                                            <div>
+                                                <h4 className="font-semibold text-sm mb-1">Your Message:</h4>
+                                                <p className="text-sm text-muted-foreground bg-muted p-3 rounded-md">{ticket.message}</p>
+                                            </div>
+                                             {ticket.reply && (
+                                                <div>
+                                                    <h4 className="font-semibold text-sm mb-1">Support Reply:</h4>
+                                                    <p className="text-sm text-muted-foreground bg-primary/10 p-3 rounded-md">{ticket.reply}</p>
+                                                </div>
+                                            )}
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                ))
+                           )}
+                        </Accordion>
+                    </CardContent>
+                </Card>
                 <Card>
                     <CardHeader>
                         <CardTitle>Frequently Asked Questions</CardTitle>
@@ -95,7 +165,7 @@ export default function SupportPage() {
                 </Card>
             </div>
             
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} className="lg:col-span-1">
                 <Card>
                     <CardHeader>
                         <CardTitle>Contact Support</CardTitle>
