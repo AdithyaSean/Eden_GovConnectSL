@@ -18,13 +18,13 @@ import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 type UploadedFilesState = {
-  [key: string]: string;
+  [key: string]: { url: string; path: string; };
 };
 
 const requiredDocs = ["oldLicense", "medicalReport"];
 
 export function RenewDrivingLicenseService({ service }) {
-    const [date, setDate] = useState<Date | undefined>();
+    const [date, setDate] = useState<Date | undefined>(undefined);
     const [uploadedFiles, setUploadedFiles] = useState<UploadedFilesState>({});
     const { user } = useAuth();
     const { toast } = useToast();
@@ -36,8 +36,8 @@ export function RenewDrivingLicenseService({ service }) {
 
     const isReadyToSubmit = requiredDocs.every(doc => uploadedFiles[doc]);
 
-    const handleUploadComplete = (docName: string, url: string) => {
-        setUploadedFiles(prev => ({ ...prev, [docName]: url }));
+    const handleUploadComplete = (docName: string, url: string, path: string) => {
+        setUploadedFiles(prev => ({ ...prev, [docName]: { url, path } }));
     };
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -53,6 +53,10 @@ export function RenewDrivingLicenseService({ service }) {
 
         const formData = new FormData(e.target as HTMLFormElement);
         const formDetails = Object.fromEntries(formData.entries());
+        
+        const documentsForFirestore = Object.fromEntries(
+            Object.entries(uploadedFiles).map(([key, value]) => [key, value.url])
+        );
 
         try {
             await addDoc(collection(db, "applications"), {
@@ -61,7 +65,7 @@ export function RenewDrivingLicenseService({ service }) {
                 user: user.name,
                 status: "Pending Payment",
                 submitted: serverTimestamp(),
-                documents: uploadedFiles,
+                documents: documentsForFirestore,
                 details: { ...formDetails, appointmentDate: date }
             });
             toast({
@@ -143,12 +147,12 @@ export function RenewDrivingLicenseService({ service }) {
                     <FileUpload 
                         id="old-license-upload"
                         label="Copy of Old Driving License"
-                        onUploadComplete={(url) => handleUploadComplete("oldLicense", url)}
+                        onUploadComplete={(url, path) => handleUploadComplete("oldLicense", url, path)}
                     />
                     <FileUpload 
                         id="medical-report-upload"
                         label="Medical Fitness Report" 
-                        onUploadComplete={(url) => handleUploadComplete("medicalReport", url)}
+                        onUploadComplete={(url, path) => handleUploadComplete("medicalReport", url, path)}
                     />
                 </CardContent>
             </Card>
@@ -172,7 +176,7 @@ export function RenewDrivingLicenseService({ service }) {
                     <CardTitle>Payment & Submission</CardTitle>
                 </CardHeader>
                  <CardContent>
-                    <p className="text-muted-foreground mb-4">The total renewal fee is LKR 2,500.00. Please complete the form and upload documents, then proceed to payment by clicking the button below.</p>
+                    <p className="text-sm text-muted-foreground mb-4">The total renewal fee is LKR 2,500.00. Please complete the form and upload documents, then proceed to payment by clicking the button below.</p>
                 </CardContent>
                 <CardFooter>
                     <Button size="lg" type="submit" disabled={!isReadyToSubmit}>

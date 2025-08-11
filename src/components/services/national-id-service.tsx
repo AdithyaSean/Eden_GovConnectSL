@@ -16,11 +16,11 @@ import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 
 type UploadedFilesState = {
-  [key: string]: string;
+  [key: string]: { url: string; path: string; };
 };
 
 export function NationalIdService({ service }) {
-  const [date, setDate] = useState<Date | undefined>();
+  const [date, setDate] = useState<Date | undefined>(undefined);
   const [serviceType, setServiceType] = useState("new-id");
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFilesState>({});
   const { toast } = useToast();
@@ -31,8 +31,8 @@ export function NationalIdService({ service }) {
     setDate(new Date());
   }, []);
 
-  const handleUploadComplete = (docName: string, url: string) => {
-    setUploadedFiles(prev => ({ ...prev, [docName]: url }));
+  const handleUploadComplete = (docName: string, url: string, path: string) => {
+    setUploadedFiles(prev => ({ ...prev, [docName]: { url, path } }));
   };
   
   const getDocumentsForServiceType = () => {
@@ -62,6 +62,10 @@ export function NationalIdService({ service }) {
         return;
     }
 
+    const documentsForFirestore = Object.fromEntries(
+        Object.entries(uploadedFiles).map(([key, value]) => [key, value.url])
+    );
+
     try {
         await addDoc(collection(db, "applications"), {
             service: service.title,
@@ -69,7 +73,7 @@ export function NationalIdService({ service }) {
             user: user.name,
             status: "Pending",
             submitted: serverTimestamp(),
-            documents: uploadedFiles,
+            documents: documentsForFirestore,
             details: {
                 serviceType,
                 appointmentDate: date
@@ -134,7 +138,7 @@ export function NationalIdService({ service }) {
                                      key={id}
                                      id={id}
                                      label={doc}
-                                     onUploadComplete={(url) => handleUploadComplete(doc, url)}
+                                     onUploadComplete={(url, path) => handleUploadComplete(doc, url, path)}
                                  />
                              )
                          })}

@@ -16,7 +16,7 @@ import { useRouter } from 'next/navigation';
 import { Label } from '../ui/label';
 
 type UploadedFilesState = {
-  [key: string]: string;
+  [key: string]: { url: string; path: string; };
 };
 
 const vaccinationRecords = [
@@ -31,7 +31,7 @@ const medicalReports = [
 ]
 
 export function HealthServicesService({ service }) {
-    const [appointmentDate, setAppointmentDate] = useState<Date | undefined>();
+    const [appointmentDate, setAppointmentDate] = useState<Date | undefined>(undefined);
     const [uploadedFiles, setUploadedFiles] = useState<UploadedFilesState>({});
     const { user } = useAuth();
     const { toast } = useToast();
@@ -41,8 +41,8 @@ export function HealthServicesService({ service }) {
         setAppointmentDate(new Date());
     }, []);
 
-    const handleUploadComplete = (docName: string, url: string) => {
-        setUploadedFiles(prev => ({ ...prev, [docName]: url }));
+    const handleUploadComplete = (docName: string, url: string, path: string) => {
+        setUploadedFiles(prev => ({ ...prev, [docName]: { url, path } }));
     };
 
     const handleIdCardSubmit = async (e: FormEvent) => {
@@ -55,6 +55,10 @@ export function HealthServicesService({ service }) {
             toast({ title: "Please upload both documents.", variant: "destructive" });
             return;
         }
+
+        const documentsForFirestore = Object.fromEntries(
+            Object.entries(uploadedFiles).map(([key, value]) => [key, value.url])
+        );
         
         try {
             await addDoc(collection(db, "applications"), {
@@ -63,7 +67,7 @@ export function HealthServicesService({ service }) {
                 user: user.name,
                 status: "In Review",
                 submitted: serverTimestamp(),
-                documents: uploadedFiles,
+                documents: documentsForFirestore,
             });
             toast({ title: "Application Submitted", description: "Your Medical ID Card application is under review." });
             router.push('/my-applications');
@@ -137,7 +141,7 @@ export function HealthServicesService({ service }) {
             </CardContent>
              <CardFooter>
                 <Button variant="outline">Download Full Report</Button>
-            </CardFooter>
+             </CardFooter>
         </Card>
         
         <form onSubmit={handleAppointmentSubmit}>
@@ -198,12 +202,12 @@ export function HealthServicesService({ service }) {
                     <FileUpload
                         id="nic-bc-upload"
                         label="Upload Copy of NIC/Birth Certificate" 
-                        onUploadComplete={(url) => handleUploadComplete("nicOrBirthCert", url)}
+                        onUploadComplete={(url, path) => handleUploadComplete("nicOrBirthCert", url, path)}
                     />
                     <FileUpload
                         id="photo-upload-medical"
                         label="Upload Passport-size Photograph"
-                        onUploadComplete={(url) => handleUploadComplete("photo", url)}
+                        onUploadComplete={(url, path) => handleUploadComplete("photo", url, path)}
                     />
                 </CardContent>
                 <CardFooter>
@@ -254,5 +258,3 @@ export function HealthServicesService({ service }) {
     </div>
   );
 }
-
-    
