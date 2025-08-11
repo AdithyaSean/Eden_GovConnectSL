@@ -49,7 +49,7 @@ export default function WorkerSupportDashboard() {
 
   const handleOpenReplyDialog = (ticket: SupportTicket) => {
     setSelectedTicket(ticket);
-    setReplyMessage(ticket.reply || "");
+    setReplyMessage(""); // Clear previous reply message
   };
   
   const handleUpdateTicket = async (updates: Partial<SupportTicket>) => {
@@ -70,7 +70,9 @@ export default function WorkerSupportDashboard() {
   };
 
   const handleSendReply = async () => {
-    const success = await handleUpdateTicket({ reply: replyMessage, status: "In Progress" });
+    if (!replyMessage.trim()) return;
+    const newReply = `${selectedTicket.reply || ''}\n\n[Support Reply on ${new Date().toLocaleString()}]:\n${replyMessage}`;
+    const success = await handleUpdateTicket({ reply: newReply, status: "In Progress" });
     if(success) {
        toast({
             title: "Reply Sent",
@@ -147,7 +149,7 @@ export default function WorkerSupportDashboard() {
                     </TableCell>
                     <TableCell className="text-right">
                        <Button variant="outline" size="sm" onClick={() => handleOpenReplyDialog(ticket)}>
-                           {ticket.reply ? 'View / Reply' : 'Reply'}
+                           {'View / Reply'}
                        </Button>
                     </TableCell>
                   </TableRow>
@@ -170,18 +172,18 @@ export default function WorkerSupportDashboard() {
                     </DialogHeader>
                     <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto pr-6">
                         <Card className="bg-muted p-4">
-                            <h4 className="font-semibold mb-2">User's Message:</h4>
+                            <h4 className="font-semibold mb-2">User's Message History:</h4>
                             <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedTicket.message}</p>
                         </Card>
                         {selectedTicket.reply && (
                              <Card className="bg-blue-50 p-4 border-blue-200">
-                                <h4 className="font-semibold mb-2 text-blue-900">Previous Replies:</h4>
+                                <h4 className="font-semibold mb-2 text-blue-900">Your Reply History:</h4>
                                 <p className="text-sm text-blue-800 whitespace-pre-wrap">{selectedTicket.reply}</p>
                             </Card>
                         )}
                         <div className="space-y-2">
-                           <Label htmlFor="reply-message" className="text-left">
-                                Your Reply
+                           <Label htmlFor="reply-message" className="text-left font-semibold">
+                                Your New Reply
                            </Label>
                            <Textarea
                                 id="reply-message"

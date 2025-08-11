@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { FormEvent, useEffect, useState } from "react";
-import { collection, addDoc, serverTimestamp, query, where, getDocs, Timestamp } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, query, where, getDocs, Timestamp, doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/hooks/use-auth";
 import type { SupportTicket } from "@/lib/types";
@@ -23,6 +23,7 @@ export default function SupportPage() {
     const { user, loading: authLoading } = useAuth();
     const [tickets, setTickets] = useState<SupportTicket[]>([]);
     const [loadingTickets, setLoadingTickets] = useState(true);
+    const [userReply, setUserReply] = useState("");
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -75,6 +76,32 @@ export default function SupportPage() {
             setLoadingTickets(false);
         }
     }
+
+    const handleUserReply = async (ticketId: string, currentMessage: string) => {
+        if (!userReply.trim()) return;
+        const ticketRef = doc(db, "supportTickets", ticketId);
+        
+        try {
+            const newMessage = `${currentMessage}\n\n[User Reply on ${new Date().toLocaleString()}]:\n${userReply}`;
+            await updateDoc(ticketRef, {
+                message: newMessage,
+                status: "Open" // Re-open the ticket for the worker to see
+            });
+            toast({
+                title: "Reply Sent",
+                description: "Your reply has been sent to the support team."
+            });
+            setUserReply("");
+            fetchTickets(); // Refresh to show the updated message
+        } catch (error) {
+            console.error("Error sending reply:", error);
+            toast({
+                title: "Reply Failed",
+                description: "Could not send your reply. Please try again.",
+                variant: "destructive"
+            });
+        }
+    };
     
     useEffect(() => {
         if(!authLoading){
@@ -108,18 +135,35 @@ export default function SupportPage() {
                                         <AccordionTrigger>
                                             <div className="flex items-center justify-between w-full pr-4">
                                                 <span className="truncate">{ticket.subject}</span>
-                                                <Badge variant={ticket.status === 'Open' ? 'destructive' : 'default'}  className={ticket.status === 'Closed' ? 'bg-green-600' : ''}>{ticket.status}</Badge>
+                                                <Badge variant={ticket.status === 'Open' ? 'destructive' : ticket.status === 'Closed' ? 'default' : 'secondary'}  
+                                                className={ticket.status === 'Closed' ? 'bg-green-600' : ''}
+                                                >
+                                                    {ticket.status}
+                                                </Badge>
                                             </div>
                                         </AccordionTrigger>
                                         <AccordionContent className="space-y-4">
                                             <div>
-                                                <h4 className="font-semibold text-sm mb-1">Your Message:</h4>
-                                                <p className="text-sm text-muted-foreground bg-muted p-3 rounded-md">{ticket.message}</p>
+                                                <h4 className="font-semibold text-sm mb-1">Your Message History:</h4>
+                                                <p className="text-sm text-muted-foreground whitespace-pre-wrap bg-muted p-3 rounded-md">{ticket.message}</p>
                                             </div>
                                              {ticket.reply && (
                                                 <div>
-                                                    <h4 className="font-semibold text-sm mb-1">Support Reply:</h4>
-                                                    <p className="text-sm text-muted-foreground bg-primary/10 p-3 rounded-md">{ticket.reply}</p>
+                                                    <h4 className="font-semibold text-sm mb-1">Support Reply History:</h4>
+                                                    <p className="text-sm text-muted-foreground whitespace-pre-wrap bg-primary/10 p-3 rounded-md">{ticket.reply}</p>
+                                                </div>
+                                            )}
+                                            {ticket.status !== 'Closed' && (
+                                                <div className="pt-4 border-t">
+                                                    <Label htmlFor="user-reply" className="font-semibold">Send a Reply</Label>
+                                                    <Textarea 
+                                                        id="user-reply"
+                                                        className="mt-2"
+                                                        placeholder="Type your reply here..."
+                                                        value={userReply}
+                                                        onChange={(e) => setUserReply(e.target.value)}
+                                                    />
+                                                    <Button className="mt-2" onClick={() => handleUserReply(ticket.id, ticket.message)}>Send Reply</Button>
                                                 </div>
                                             )}
                                         </AccordionContent>
