@@ -151,12 +151,12 @@ export function NationalIdService({ service }) {
                         <p className="text-sm text-muted-foreground">Schedule a visit to your nearest Divisional Secretariat for fingerprint and photo capture.</p>
                     </CardHeader>
                     <CardContent className="flex justify-center">
-                        <Calendar
+                        {date && <Calendar
                             mode="single"
                             selected={date}
                             onSelect={setDate}
                             className="rounded-md border"
-                            />
+                            />}
                     </CardContent>
                 </Card>
                  <div className="flex justify-end">
