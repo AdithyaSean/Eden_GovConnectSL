@@ -4,10 +4,9 @@
 import { AdminLayout } from "@/components/admin-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { MoreHorizontal, FileText, CheckCircle, Clock } from "lucide-react";
+import { FileText, CheckCircle, Clock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { collection, query, where, getDocs, getCountFromServer, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -22,28 +21,55 @@ const transportServices = [
     "Registered Vehicles",
 ];
 
+const appointmentServices = ["Renew Driving License"];
+
 export default function WorkerTransportDashboard() {
   const [applications, setApplications] = useState<Application[]>([]);
-  const [stats, setStats] = useState({ pendingRenewals: 0, pendingRegistrations: 0, appointments: 0 });
+  const [appointments, setAppointments] = useState<Application[]>([]);
+  const [stats, setStats] = useState({ pendingRenewals: 0, pendingRegistrations: 0, appointmentsToday: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
-        // Fetch applications for this worker type
+        // Fetch general applications
         const appsQuery = query(collection(db, "applications"), where("service", "in", transportServices));
         const appsSnapshot = await getDocs(appsQuery);
         const appsData = appsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
         setApplications(appsData);
 
+        // Fetch appointments
+        const appointmentsQuery = query(collection(db, "applications"), where("service", "in", appointmentServices), where("details.appointmentDate", "!=", null));
+        const appointmentsSnapshot = await getDocs(appointmentsQuery);
+        const appointmentsData = appointmentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
+        setAppointments(appointmentsData);
+
         // Fetch stats
         const renewalsQuery = query(collection(db, "applications"), where("service", "==", "Renew Driving License"), where("status", "in", ["Pending", "In Progress", "Pending Payment"]));
-        const renewalsSnapshot = await getCountFromServer(renewalsQuery);
-        setStats(prev => ({ ...prev, pendingRenewals: renewalsSnapshot.data().count }));
-        
         const registrationsQuery = query(collection(db, "applications"), where("service", "==", "Registered Vehicles"), where("status", "in", ["Pending", "In Progress", "Pending Payment"]));
-        const registrationsSnapshot = await getCountFromServer(registrationsQuery);
-        setStats(prev => ({ ...prev, pendingRegistrations: registrationsSnapshot.data().count }));
+        
+        const [renewalsSnapshot, registrationsSnapshot] = await Promise.all([
+          getCountFromServer(renewalsQuery),
+          getCountFromServer(registrationsQuery)
+        ]);
+        
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        const appointmentsTodayCount = appointmentsData.filter(app => {
+            if (!app.details?.appointmentDate) return false;
+            const appDate = (app.details.appointmentDate as Timestamp).toDate();
+            return appDate >= today && appDate < tomorrow;
+        }).length;
+
+        setStats({ 
+          pendingRenewals: renewalsSnapshot.data().count, 
+          pendingRegistrations: registrationsSnapshot.data().count,
+          appointmentsToday: appointmentsTodayCount
+        });
 
       } catch (error) {
         console.error("Error fetching transport data: ", error);
@@ -54,10 +80,11 @@ export default function WorkerTransportDashboard() {
     fetchData();
   }, []);
   
-  const formatDate = (date: Timestamp | string) => {
+  const formatDate = (date: Timestamp | string | undefined) => {
     if (!date) return 'N/A';
-    if (typeof date === 'string') return date;
-    return date.toDate().toLocaleDateString();
+    if (typeof date === 'string') return new Date(date).toLocaleDateString();
+    if (date instanceof Timestamp) return date.toDate().toLocaleDateString();
+    return 'Invalid Date';
   };
 
   return (
@@ -91,64 +118,107 @@ export default function WorkerTransportDashboard() {
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">3</div>
-               <p className="text-xs text-muted-foreground">For driving tests</p>
+               {loading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{stats.appointmentsToday}</div>}
+               <p className="text-xs text-muted-foreground">For driving tests & biometrics</p>
             </CardContent>
           </Card>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Assigned Applications</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Ref ID</TableHead>
-                    <TableHead>Service</TableHead>
-                    <TableHead>User</TableHead>
-                    <TableHead>Submitted On</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading ? (
-                    Array.from({ length: 5 }).map((_, i) => (
-                      <TableRow key={i}>
-                        <TableCell colSpan={6}><Skeleton className="h-8 w-full" /></TableCell>
-                      </TableRow>
-                    ))
-                  ) : applications.length === 0 ? (
+        <div className="grid gap-8 lg:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Upcoming Appointments</CardTitle>
+              <CardDescription>All scheduled biometrics and driving test appointments.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center h-24">No transport-related applications found.</TableCell>
+                      <TableHead>User</TableHead>
+                      <TableHead>Appointment Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
-                  ) : ( applications.map((app) => (
-                    <TableRow key={app.id}>
-                      <TableCell className="font-medium">{app.id}</TableCell>
-                      <TableCell>{app.service}</TableCell>
-                      <TableCell>{app.user}</TableCell>
-                      <TableCell>{formatDate(app.submitted)}</TableCell>
-                      <TableCell>
-                        <Badge variant={app.status === 'Paid' || app.status === 'Approved' || app.status === 'Completed' ? 'default' : 'secondary'} className={app.status === 'Paid' || app.status === 'Approved' ? 'bg-green-600' : ''}>{app.status}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Button asChild variant="outline" size="sm">
-                            <Link href={`/worker/applications/${app.id}?from=/worker/transport/dashboard`}>View Application</Link>
-                        </Button>
-                      </TableCell>
+                  </TableHeader>
+                  <TableBody>
+                    {loading ? (
+                      Array.from({ length: 3 }).map((_, i) => (
+                        <TableRow key={i}>
+                          <TableCell colSpan={4}><Skeleton className="h-8 w-full" /></TableCell>
+                        </TableRow>
+                      ))
+                    ) : appointments.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center h-24">No upcoming appointments.</TableCell>
+                      </TableRow>
+                    ) : ( appointments.map((app) => (
+                      <TableRow key={app.id}>
+                        <TableCell className="font-medium">{app.user}</TableCell>
+                        <TableCell>{formatDate(app.details?.appointmentDate)}</TableCell>
+                        <TableCell>
+                          <Badge variant={app.status === 'Approved' ? 'default' : 'secondary'} className={app.status === 'Approved' ? 'bg-green-600' : ''}>{app.status}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button asChild variant="outline" size="sm">
+                              <Link href={`/worker/applications/${app.id}?from=/worker/transport/dashboard`}>View Details</Link>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    )))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>General Applications</CardTitle>
+               <CardDescription>Other non-appointment based applications.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Service</TableHead>
+                      <TableHead>User</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
-                  )))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+                  </TableHeader>
+                  <TableBody>
+                    {loading ? (
+                      Array.from({ length: 3 }).map((_, i) => (
+                        <TableRow key={i}>
+                          <TableCell colSpan={4}><Skeleton className="h-8 w-full" /></TableCell>
+                        </TableRow>
+                      ))
+                    ) : applications.filter(a => !a.details?.appointmentDate).length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center h-24">No general applications found.</TableCell>
+                      </TableRow>
+                    ) : ( applications.filter(a => !a.details?.appointmentDate).map((app) => (
+                      <TableRow key={app.id}>
+                        <TableCell className="font-medium">{app.service}</TableCell>
+                        <TableCell>{app.user}</TableCell>
+                        <TableCell>
+                          <Badge variant={app.status === 'Paid' || app.status === 'Approved' || app.status === 'Completed' ? 'default' : 'secondary'} className={app.status === 'Paid' || app.status === 'Approved' ? 'bg-green-600' : ''}>{app.status}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button asChild variant="outline" size="sm">
+                              <Link href={`/worker/applications/${app.id}?from=/worker/transport/dashboard`}>View Details</Link>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    )))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </AdminLayout>
   );
 }
-
-    

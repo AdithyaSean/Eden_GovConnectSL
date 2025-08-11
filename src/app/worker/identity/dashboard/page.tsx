@@ -35,10 +35,11 @@ export default function WorkerIdentityDashboard() {
     fetchApplications();
   }, []);
   
-  const formatDate = (date: Timestamp | string) => {
+  const formatDate = (date: Timestamp | string | undefined) => {
     if (!date) return 'N/A';
-    if (typeof date === 'string') return date;
-    return date.toDate().toLocaleDateString();
+    if (typeof date === 'string') return new Date(date).toLocaleDateString();
+    if (date instanceof Timestamp) return date.toDate().toLocaleDateString();
+    return 'Invalid Date';
   };
 
 
@@ -46,18 +47,18 @@ export default function WorkerIdentityDashboard() {
     <AdminLayout workerMode>
       <div className="flex-1 space-y-8 p-8 pt-6">
         <h1 className="text-3xl font-bold tracking-tight">Identity Worker Dashboard</h1>
+        
         <Card>
           <CardHeader>
-            <CardTitle>National ID Applications</CardTitle>
-            <CardDescription>Review and process applications related to the National Identity Card.</CardDescription>
+            <CardTitle>Biometrics Appointments</CardTitle>
+            <CardDescription>Upcoming appointments for fingerprint and photo capture for National ID cards.</CardDescription>
           </CardHeader>
           <CardContent>
              <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Ref ID</TableHead>
                   <TableHead>User</TableHead>
-                  <TableHead>Submitted On</TableHead>
+                  <TableHead>Appointment Date</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -66,19 +67,18 @@ export default function WorkerIdentityDashboard() {
                 {loading ? (
                   Array.from({ length: 3 }).map((_, i) => (
                     <TableRow key={i}>
-                      <TableCell colSpan={5}><Skeleton className="h-8 w-full" /></TableCell>
+                      <TableCell colSpan={4}><Skeleton className="h-8 w-full" /></TableCell>
                     </TableRow>
                   ))
                 ) : applications.length === 0 ? (
                     <TableRow>
-                        <TableCell colSpan={5} className="text-center h-24">No identity-related applications found.</TableCell>
+                        <TableCell colSpan={4} className="text-center h-24">No identity-related applications or appointments found.</TableCell>
                     </TableRow>
                 ) : (
                 applications.map((app) => (
                   <TableRow key={app.id}>
-                    <TableCell className="font-medium">{app.id}</TableCell>
-                    <TableCell>{app.user}</TableCell>
-                    <TableCell>{formatDate(app.submitted)}</TableCell>
+                    <TableCell className="font-medium">{app.user}</TableCell>
+                    <TableCell>{formatDate(app.details?.appointmentDate)}</TableCell>
                     <TableCell>
                       <Badge variant={app.status === 'Approved' ? 'default' : 'secondary'} className={app.status === 'Approved' ? 'bg-green-600' : ''}>{app.status}</Badge>
                     </TableCell>
@@ -97,5 +97,3 @@ export default function WorkerIdentityDashboard() {
     </AdminLayout>
   );
 }
-
-    

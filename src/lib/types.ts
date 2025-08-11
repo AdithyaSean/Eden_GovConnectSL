@@ -68,6 +68,7 @@ export interface Application {
     status: 'Pending' | 'Approved' | 'Rejected' | 'In Progress' | 'Completed' | 'In Review' | 'Pending Payment';
     submitted: Timestamp | string;
     documents?: { [key: string]: string };
+    details?: { [key: string]: any };
 }
 
 export interface User {
