@@ -96,7 +96,9 @@ export function FileUpload({ label, onUploadComplete, id }: FileUploadProps) {
               <X className="w-4 h-4" />
             </Button>
           </div>
-          {uploadProgress !== null && <Progress value={uploadProgress} className="h-2" />}
+          {uploadProgress !== null && (
+            <Progress value={uploadProgress} className="h-2" />
+          )}
         </div>
       ) : (
         <div className="flex items-center justify-center w-full">
