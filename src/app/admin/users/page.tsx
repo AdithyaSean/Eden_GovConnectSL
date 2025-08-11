@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, FormEvent } from "react";
 import { AdminLayout } from "@/components/admin-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,10 +13,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { collection, getDocs, addDoc, serverTimestamp, Timestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { collection, getDocs, addDoc, serverTimestamp, Timestamp, doc, setDoc } from "firebase/firestore";
+import { db, auth } from "@/lib/firebase";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import type { User } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 
 const roles = [
     "Citizen", "Super Admin", "worker_transport", "worker_immigration", "worker_identity", "worker_health", "worker_tax", "worker_pension", "worker_landregistry", "worker_exams", "worker_finepayment", "worker_registeredvehicles", "worker_missingdocuments", "worker_support"
@@ -29,36 +31,75 @@ export default function UsersPage() {
   const [newUserRole, setNewUserRole] = useState("Citizen");
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
+  const { toast } = useToast();
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+        const querySnapshot = await getDocs(collection(db, "users"));
+        const usersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
+        setUsers(usersData);
+    } catch(e) {
+        console.error("Error fetching users: ", e);
+    } finally {
+        setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      setLoading(true);
-      const querySnapshot = await getDocs(collection(db, "users"));
-      const usersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
-      setUsers(usersData);
-      setLoading(false);
-    };
     fetchUsers();
   }, []);
 
-  const handleAddUser = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleAddUser = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.target as HTMLFormElement);
-    const userData = Object.fromEntries(formData.entries()) as { name: string; email: string; role: string, nic: string };
-    
+    const formValues = Object.fromEntries(formData.entries()) as { name: string; email: string; nic: string; password: string};
+
+    let authEmail = '';
+    let userData: Partial<User> = {
+        name: formValues.name,
+        role: newUserRole,
+        status: "Active",
+    };
+
+    if (newUserRole === 'Citizen') {
+        if (!formValues.nic) {
+            toast({ title: "NIC is required for Citizens", variant: "destructive" });
+            return;
+        }
+        authEmail = `${formValues.nic}@citizen.gov.lk`;
+        userData.nic = formValues.nic;
+        userData.email = ""; // Citizens don't have a login email
+    } else {
+        if (!formValues.email || !formValues.email.includes('@')) {
+            toast({ title: "A valid email is required for Workers/Admins", variant: "destructive" });
+            return;
+        }
+        authEmail = formValues.email;
+        userData.email = formValues.email;
+        userData.nic = ""; // Workers don't use NIC for login
+    }
+
     try {
-      const newUser = { 
-          ...userData,
-          role: newUserRole,
-          joined: serverTimestamp(),
-          status: "Active" 
-      };
-      const docRef = await addDoc(collection(db, "users"), newUser);
-      setUsers([...users, { ...newUser, id: docRef.id, joined: new Date().toISOString() }]);
-      setIsAddUserDialogOpen(false);
-      setNewUserRole("Citizen");
-    } catch(e) {
+        // 1. Create user in Firebase Auth
+        const userCredential = await createUserWithEmailAndPassword(auth, authEmail, formValues.password);
+        const authUser = userCredential.user;
+
+        // 2. Create user profile in Firestore
+        const userRef = doc(db, "users", authUser.uid);
+        await setDoc(userRef, {
+            ...userData,
+            id: authUser.uid,
+            joined: serverTimestamp(),
+        });
+        
+        toast({ title: "User Created Successfully", description: `${formValues.name} has been added.`});
+        setIsAddUserDialogOpen(false);
+        fetchUsers(); // Refresh the user list
+        
+    } catch(e: any) {
       console.error("Error adding document: ", e);
+      toast({ title: "Failed to create user", description: e.message, variant: "destructive"});
     }
   };
 
@@ -74,7 +115,7 @@ export default function UsersPage() {
   }, [users, searchQuery, roleFilter]);
   
   const formatDate = (date: Timestamp | string) => {
-    if (typeof date === 'string') return date;
+    if (typeof date === 'string') return new Date(date).toLocaleDateString();
     if (!date) return 'N/A';
     return date.toDate().toLocaleDateString();
   };
@@ -175,9 +216,9 @@ export default function UsersPage() {
                 <Input id="name" name="name" className="col-span-3" required />
               </div>
                <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="role" className="text-right">Role</Label>
+                <Label htmlFor="role-select" className="text-right">Role</Label>
                 <Select name="role" value={newUserRole} onValueChange={setNewUserRole}>
-                    <SelectTrigger className="col-span-3">
+                    <SelectTrigger id="role-select" className="col-span-3">
                         <SelectValue placeholder="Select a role" />
                     </SelectTrigger>
                     <SelectContent position="popper">

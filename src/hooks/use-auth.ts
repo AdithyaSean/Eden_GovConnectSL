@@ -18,17 +18,14 @@ export function useAuth() {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             setFirebaseUser(user);
+            setLoading(false); // Auth state is now known
         });
         return () => unsubscribe();
     }, []);
 
 
     const fetchUser = useCallback(async () => {
-        // Don't fetch if we are in the initial loading state for auth
-        if (firebaseUser === undefined) {
-           setLoading(true);
-           return;
-        }
+        if (loading) return; // Don't fetch if auth state is still loading
 
         setLoading(true);
         if (firebaseUser) {
@@ -47,31 +44,12 @@ export function useAuth() {
                 setUser(null);
              }
         } else {
-            // For prototype purposes, fall back to localStorage if no Firebase user
-            // In a real app, you would likely just set user to null here.
-            const loggedInNic = localStorage.getItem("loggedInNic");
-            if (loggedInNic) {
-                 try {
-                    const usersRef = collection(db, "users");
-                    const q = query(usersRef, where("nic", "==", loggedInNic), limit(1));
-                    const querySnapshot = await getDocs(q);
-                    if (!querySnapshot.empty) {
-                        const userDoc = querySnapshot.docs[0];
-                        setUser({ id: userDoc.id, ...userDoc.data() } as User);
-                    } else {
-                        setUser(null);
-                    }
-                 } catch(e) {
-                     console.error("Error fetching user by NIC:", e);
-                     setUser(null);
-                 }
-            } else {
-                setUser(null);
-            }
+            // No firebase user, so no app user
+            setUser(null);
         }
         setLoading(false);
 
-    }, [firebaseUser]);
+    }, [firebaseUser, loading]);
         
     useEffect(() => {
         fetchUser();
