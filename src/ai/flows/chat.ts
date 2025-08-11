@@ -3,7 +3,6 @@
  * @fileOverview Defines the AI flow for the main chat interface.
  */
 import {ai} from '@/ai/genkit';
-import { generate } from 'genkit';
 import {z} from 'zod';
 
 // Define the schema for a single chat message
@@ -34,7 +33,7 @@ const chatFlow = ai.defineFlow(
     const systemPrompt = `You are a helpful and friendly AI assistant for GovConnect SL, a platform for Sri Lankan government services. Your goal is to provide clear, concise, and accurate information to citizens. Answer based on the user's query and the conversation history.`;
     
     // Generate the response from the Gemini model
-    const response = await generate({
+    const response = await ai.generate({
       model: 'googleai/gemini-2.0-flash',
       prompt: newMessage,
       history: history,
