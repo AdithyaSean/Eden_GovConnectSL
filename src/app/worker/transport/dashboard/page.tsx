@@ -33,17 +33,17 @@ export default function WorkerTransportDashboard() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch general applications
+        // Fetch all applications related to transport services
         const appsQuery = query(collection(db, "applications"), where("service", "in", transportServices));
         const appsSnapshot = await getDocs(appsQuery);
         const appsData = appsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
-        setApplications(appsData);
+        
+        // Separate applications with appointments from general ones
+        const allAppointments = appsData.filter(app => appointmentServices.includes(app.service) && app.details?.appointmentDate);
+        const generalApplications = appsData.filter(app => !allAppointments.some(appt => appt.id === app.id));
 
-        // Fetch appointments
-        const appointmentsQuery = query(collection(db, "applications"), where("service", "in", appointmentServices), where("details.appointmentDate", "!=", null));
-        const appointmentsSnapshot = await getDocs(appointmentsQuery);
-        const appointmentsData = appointmentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
-        setAppointments(appointmentsData);
+        setAppointments(allAppointments);
+        setApplications(generalApplications);
 
         // Fetch stats
         const renewalsQuery = query(collection(db, "applications"), where("service", "==", "Renew Driving License"), where("status", "in", ["Pending", "In Progress", "Pending Payment"]));
@@ -59,7 +59,7 @@ export default function WorkerTransportDashboard() {
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
 
-        const appointmentsTodayCount = appointmentsData.filter(app => {
+        const appointmentsTodayCount = allAppointments.filter(app => {
             if (!app.details?.appointmentDate) return false;
             const appDate = (app.details.appointmentDate as Timestamp).toDate();
             return appDate >= today && appDate < tomorrow;
@@ -194,16 +194,16 @@ export default function WorkerTransportDashboard() {
                           <TableCell colSpan={4}><Skeleton className="h-8 w-full" /></TableCell>
                         </TableRow>
                       ))
-                    ) : applications.filter(a => !a.details?.appointmentDate).length === 0 ? (
+                    ) : applications.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={4} className="text-center h-24">No general applications found.</TableCell>
                       </TableRow>
-                    ) : ( applications.filter(a => !a.details?.appointmentDate).map((app) => (
+                    ) : ( applications.map((app) => (
                       <TableRow key={app.id}>
                         <TableCell className="font-medium">{app.service}</TableCell>
                         <TableCell>{app.user}</TableCell>
                         <TableCell>
-                          <Badge variant={app.status === 'Paid' || app.status === 'Approved' || app.status === 'Completed' ? 'default' : 'secondary'} className={app.status === 'Paid' || app.status === 'Approved' ? 'bg-green-600' : ''}>{app.status}</Badge>
+                          <Badge variant={app.status === 'Paid' || app.status === 'Approved' || app.status === 'Completed' ? 'default' : 'secondary'} className={app.status === 'Paid' || app.status === 'Approved' || app.status === 'Completed' ? 'bg-green-600' : ''}>{app.status}</Badge>
                         </TableCell>
                         <TableCell>
                           <Button asChild variant="outline" size="sm">
