@@ -34,7 +34,8 @@ const roleDisplayNames = {
     support: "Support"
 };
 
-export default function WorkerProfilePage({ params }: { params: { role: string } }) {
+export default function WorkerProfilePage({ params }: { params: Promise<{ role: string }> }) {
+    const { role: roleFromParams } = use(params);
     const { toast } = useToast();
     const [role, setRole] = useState<string | null>(null);
 
@@ -42,15 +43,15 @@ export default function WorkerProfilePage({ params }: { params: { role: string }
         // On the client-side, we can confirm the role from localStorage as a fallback/check
         // This makes the component more robust if the param somehow doesn't match the session
         const storedRole = localStorage.getItem('workerRole');
-        if (params.role && roleDisplayNames[params.role]) {
-            setRole(params.role);
+        if (roleFromParams && roleDisplayNames[roleFromParams]) {
+            setRole(roleFromParams);
         } else if (storedRole && roleDisplayNames[storedRole]) {
             setRole(storedRole);
         } else {
             // If no valid role can be determined, this page is not accessible
             notFound();
         }
-    }, [params.role]);
+    }, [roleFromParams]);
 
     const handleUpdatePassword = (e: FormEvent) => {
         e.preventDefault();
