@@ -27,7 +27,7 @@ import type { User } from "@/lib/types";
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("personal-info");
-  const { user, loading, refetch } = useAuth();
+  const { user, loading, refetch, updateUserInState } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
@@ -72,7 +72,9 @@ export default function ProfilePage() {
         const userDocRef = doc(db, "users", user.id);
         await updateDoc(userDocRef, { photoURL });
         
-        await refetch(); // Refetch user data to update the UI
+        // Update user state locally for an instant UI update
+        updateUserInState({ ...user, photoURL });
+        
         toast({
             title: "Success",
             description: "Profile picture updated successfully."
@@ -99,11 +101,15 @@ export default function ProfilePage() {
     if (!user) return;
     try {
         const userDocRef = doc(db, "users", user.id);
-        await updateDoc(userDocRef, {
+        const updatedData = {
             name: formData.name,
             // email and nic are typically not user-editable, but could be added here
-        });
-        await refetch();
+        };
+        await updateDoc(userDocRef, updatedData);
+        
+        // Update user state locally
+        updateUserInState({ ...user, ...updatedData });
+        
         toast({ title: "Success", description: "Profile updated successfully." });
         setIsEditing(false);
     } catch(error) {

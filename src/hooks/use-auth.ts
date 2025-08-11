@@ -76,6 +76,11 @@ export function useAuth() {
     useEffect(() => {
         fetchUser();
     }, [fetchUser]);
+    
+    const updateUserInState = (updatedUser: User | null) => {
+        setUser(updatedUser);
+    }
 
-    return { user, loading, refetch: fetchUser };
+
+    return { user, loading, refetch: fetchUser, updateUserInState };
 }
