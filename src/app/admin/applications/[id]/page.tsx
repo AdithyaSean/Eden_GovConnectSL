@@ -68,7 +68,7 @@ export default function ApplicationDetailsPage({ params }: { params: { id: strin
       }
     };
     fetchApplication();
-  }, [params.id]);
+  }, [params]);
 
   const handleStatusUpdate = async (status: Application['status']) => {
     if(application) {
