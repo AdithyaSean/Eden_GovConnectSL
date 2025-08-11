@@ -177,7 +177,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Avatar className="cursor-pointer h-9 w-9">
-                  <AvatarImage src="https://placehold.co/100x100" alt={user?.name} data-ai-hint="avatar user" />
+                  <AvatarImage src={user?.photoURL} alt={user?.name} data-ai-hint="avatar user" />
                   <AvatarFallback>{user?.name ? user.name.charAt(0) : 'U'}</AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>

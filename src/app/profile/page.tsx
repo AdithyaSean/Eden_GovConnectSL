@@ -23,14 +23,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Download } from "lucide-react";
-import { useEffect, useState } from 'react';
+import { Camera, Download } from "lucide-react";
+import { useEffect, useState, useRef } from 'react';
 import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
+import { db, storage } from "@/lib/firebase";
+import { doc, updateDoc } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("personal-info");
-  const { user, loading } = useAuth();
+  const { user, loading, refetch } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+  const [uploading, setUploading] = useState(false);
   
   useEffect(() => {
     const hash = window.location.hash.replace('#', '');
@@ -38,6 +45,43 @@ export default function ProfilePage() {
       setActiveTab(hash);
     }
   }, []);
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    setUploading(true);
+
+    const storageRef = ref(storage, `profile-pictures/${user.id}/${file.name}`);
+
+    try {
+        await uploadBytes(storageRef, file);
+        const photoURL = await getDownloadURL(storageRef);
+
+        const userDocRef = doc(db, "users", user.id);
+        await updateDoc(userDocRef, { photoURL });
+        
+        await refetch(); // Refetch user data to update the UI
+        toast({
+            title: "Success",
+            description: "Profile picture updated successfully."
+        });
+
+    } catch (error) {
+        console.error("Error uploading file:", error);
+        toast({
+            title: "Upload Failed",
+            description: "Could not upload your profile picture. Please try again.",
+            variant: "destructive"
+        });
+    } finally {
+        setUploading(false);
+    }
+  };
   
   if (loading || !user) {
     return (
@@ -79,10 +123,21 @@ export default function ProfilePage() {
             <TabsContent value="personal-info">
                 <Card>
                     <CardHeader className="text-center">
-                        <Avatar className="w-24 h-24 mx-auto mb-4">
-                            <AvatarImage src="https://placehold.co/100x100" alt="User" data-ai-hint="avatar user" />
-                            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
+                         <div className="relative mx-auto w-24 h-24 mb-4 group">
+                            <Avatar className="w-24 h-24">
+                                <AvatarImage src={user.photoURL || `https://placehold.co/100x100`} alt={user.name} data-ai-hint="avatar user" />
+                                <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <button 
+                                onClick={handleAvatarClick}
+                                disabled={uploading}
+                                className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                                <Camera className="w-8 h-8 text-white" />
+                                {uploading && <div className="absolute inset-0 bg-black/70 flex items-center justify-center rounded-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div></div>}
+                            </button>
+                            <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/png, image/jpeg" className="hidden" />
+                         </div>
                         <CardTitle>{user.name}</CardTitle>
                         <CardDescription>{user.email}</CardDescription>
                     </CardHeader>

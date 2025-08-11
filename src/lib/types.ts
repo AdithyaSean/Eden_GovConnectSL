@@ -78,6 +78,7 @@ export interface User {
     role: string;
     joined: Timestamp | string;
     status: 'Active' | 'Suspended';
+    photoURL?: string;
 }
 
 export interface Payment {
