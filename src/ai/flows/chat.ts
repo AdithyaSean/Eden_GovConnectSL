@@ -37,9 +37,7 @@ const chatFlow = ai.defineFlow(
       model: 'googleai/gemini-2.0-flash',
       prompt: newMessage,
       history: history,
-      config: {
-        systemInstruction: systemPrompt
-      }
+      systemInstruction: systemPrompt
     });
 
     return response.text;
