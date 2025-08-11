@@ -2,8 +2,9 @@
 "use client";
 
 import { useState } from "react";
-import { db } from "@/lib/firebase";
-import { collection, writeBatch, Timestamp, doc } from "firebase/firestore";
+import { db, auth } from "@/lib/firebase";
+import { collection, writeBatch, Timestamp, doc, getDoc, setDoc } from "firebase/firestore";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -61,58 +62,97 @@ const seedData = {
     ]
 };
 
+const PASSWORD = "password123";
 
 export default function SeedPage() {
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
+    const [logs, setLogs] = useState<string[]>([]);
+
+    const addLog = (message: string) => {
+        setLogs(prevLogs => [...prevLogs, message]);
+    };
 
     const handleSeed = async () => {
         setLoading(true);
         setStatus("idle");
+        setLogs([]);
+
+        addLog("Starting database reset...");
 
         try {
+            // Step 1: Create/Update all users in Firebase Auth and Firestore
+            addLog(`Found ${seedData.users.length} users to process...`);
+            for (const user of seedData.users) {
+                try {
+                    const authEmail = user.role === 'Citizen' ? `${user.nic}@citizen.gov.lk` : user.email;
+                    addLog(`Processing user: ${user.name} (${authEmail})`);
+
+                    // Try to create the user
+                    const userCredential = await createUserWithEmailAndPassword(auth, authEmail, PASSWORD);
+                    const authUser = userCredential.user;
+                    addLog(` -> Successfully created auth user: ${authUser.uid}`);
+
+                    // Create user document in Firestore with the new UID
+                    const userRef = doc(db, "users", authUser.uid);
+                    await setDoc(userRef, { ...user, id: authUser.uid, joined: Timestamp.now() });
+                    addLog(` -> Successfully created Firestore profile for ${user.name}.`);
+
+                } catch (error: any) {
+                    if (error.code === 'auth/email-already-in-use') {
+                        // If user exists, sign in to get their UID, then update their Firestore data
+                        addLog(` -> Auth user already exists. Signing in to get UID...`);
+                        const userCredential = await signInWithEmailAndPassword(auth, user.role === 'Citizen' ? `${user.nic}@citizen.gov.lk` : user.email, PASSWORD);
+                        const authUser = userCredential.user;
+                        addLog(` -> UID is ${authUser.uid}. Updating Firestore profile.`);
+
+                        const userRef = doc(db, "users", authUser.uid);
+                        await setDoc(userRef, { ...user, id: authUser.uid, joined: Timestamp.now() }, { merge: true });
+                        addLog(` -> Successfully updated Firestore profile for ${user.name}.`);
+                        await signOut(auth); // Sign out after operation
+
+                    } else {
+                        addLog(` -> Error creating user ${user.name}: ${error.message}`);
+                        throw error; // Stop if it's a critical error
+                    }
+                }
+            }
+
+            // Step 2: Seed other collections
+            addLog("Seeding other collections (applications, fines, etc.)...");
             const batch = writeBatch(db);
 
-            // Seed Users
-            seedData.users.forEach(user => {
-                const userRef = doc(db, "users", user.id);
-                batch.set(userRef, { ...user, joined: Timestamp.now() });
-            });
-
-            // Seed Applications
             seedData.applications.forEach(app => {
-                const appRef = doc(collection(db, "applications")); // Auto-generates ID
+                const appRef = doc(collection(db, "applications"));
                 batch.set(appRef, { ...app, submitted: Timestamp.fromDate(app.submitted) });
             });
 
-            // Seed Fines
             seedData.fines.forEach(fine => {
                 const fineRef = doc(db, "fines", fine.id);
                 batch.set(fineRef, fine);
             });
 
-            // Seed Vehicles
             seedData.vehicles.forEach(vehicle => {
                 const vehicleRef = doc(db, "vehicles", vehicle.id);
                 batch.set(vehicleRef, vehicle);
             });
             
-             // Seed Payments
             seedData.payments.forEach(payment => {
-                const paymentRef = doc(collection(db, "payments")); // Auto-generates ID
+                const paymentRef = doc(collection(db, "payments"));
                 batch.set(paymentRef, { ...payment, date: Timestamp.fromDate(payment.date) });
             });
             
-             // Seed Support Tickets
             seedData.supportTickets.forEach(ticket => {
                 const ticketRef = doc(collection(db, "supportTickets"));
                 batch.set(ticketRef, { ...ticket, submittedAt: Timestamp.fromDate(ticket.submittedAt) });
             });
 
             await batch.commit();
+            addLog("All collections seeded successfully.");
             setStatus("success");
         } catch (error) {
             console.error("Error seeding database: ", error);
+            addLog(`Seeding failed: ${error}`);
             setStatus("error");
         } finally {
             setLoading(false);
@@ -120,29 +160,42 @@ export default function SeedPage() {
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-muted">
-            <Card className="max-w-xl w-full">
+        <div className="flex items-center justify-center min-h-screen bg-muted p-4">
+            <Card className="max-w-3xl w-full">
                 <CardHeader>
-                    <CardTitle>Database Seeder</CardTitle>
+                    <CardTitle>Database Seeder & Resetter</CardTitle>
                     <CardDescription>
-                        Use this utility to populate your Firestore database with sample data.
-                        This will create users, applications, fines, vehicles, and payment records.
+                        Use this utility to populate your Firestore database with a clean set of sample data.
+                        It creates auth users and overwrites database records.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    <p className="text-sm text-muted-foreground">
-                        Click the button below to start the seeding process. This action is irreversible and will overwrite any existing data with the same IDs.
+                    <p className="text-sm text-destructive-foreground bg-destructive p-3 rounded-md">
+                        <span className="font-bold">Warning:</span> This action is irreversible. It will create new users if they don't exist and completely overwrite existing Firestore data for all sample users and related collections.
                     </p>
-                    <Button onClick={handleSeed} disabled={loading} className="w-full">
-                        {loading ? "Seeding..." : "Seed Database"}
+                    <Button onClick={handleSeed} disabled={loading} className="w-full text-lg py-6">
+                        {loading ? "Resetting and Seeding..." : "Reset & Seed Database"}
                     </Button>
+
+                    {logs.length > 0 && (
+                        <Card className="bg-background">
+                            <CardHeader>
+                                <CardTitle className="text-lg">Seeder Log</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <pre className="text-xs bg-muted p-4 rounded-lg max-h-60 overflow-y-auto font-mono">
+                                    {logs.join('\n')}
+                                </pre>
+                            </CardContent>
+                        </Card>
+                    )}
 
                     {status === 'success' && (
                         <Alert variant="default" className="bg-green-50 border-green-200">
                            <CheckCircle className="h-4 w-4 text-green-600" />
                            <AlertTitle className="text-green-800">Seeding Successful!</AlertTitle>
                            <AlertDescription className="text-green-700">
-                               Your database has been populated with sample data. You can now use the application.
+                               Your database has been reset and populated with sample data. You can now use the application. The default password for all users is `password123`.
                                 <div className="mt-4 flex gap-4">
                                      <Button asChild variant="outline">
                                          <Link href="/login">Go to Citizen Login</Link>
@@ -160,7 +213,7 @@ export default function SeedPage() {
                            <AlertTriangle className="h-4 w-4" />
                            <AlertTitle>Seeding Failed</AlertTitle>
                            <AlertDescription>
-                             There was an error populating the database. Check the browser console for more details.
+                             There was an error populating the database. Check the seeder log above and the browser console for more details.
                            </AlertDescription>
                         </Alert>
                     )}
@@ -169,3 +222,5 @@ export default function SeedPage() {
         </div>
     );
 }
+
+    
