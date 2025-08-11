@@ -1,3 +1,6 @@
+
+"use client";
+
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { ServiceCard } from "@/components/service-card";
 import { services } from "@/lib/data";
@@ -10,8 +13,49 @@ import {
 import { Button } from "@/components/ui/button";
 import { Bell, Settings, Search, LifeBuoy, ArrowRight, UserSquare, Car, BookUser } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { useEffect, useState } from "react";
+import { collection, query, where, getDocs, getCountFromServer } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { Skeleton } from "@/components/ui/skeleton";
+
 
 export default function DashboardPage() {
+  const [stats, setStats] = useState({ documents: 0, activeServices: 0, notifications: 0 });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      // In a real app, you would use the current user's ID
+      const userId = "Nimal Silva"; // Placeholder for prototype
+
+      try {
+        const activeServicesQuery = query(
+          collection(db, "applications"),
+          where("user", "==", userId),
+          where("status", "in", ["Pending", "In Progress", "In Review"])
+        );
+        
+        const activeServicesSnapshot = await getCountFromServer(activeServicesQuery);
+        
+        // These are just examples, you'd create more specific queries
+        const documentsCount = 3; // Example
+        const notificationsCount = 2; // Example
+
+        setStats({
+          documents: documentsCount,
+          activeServices: activeServicesSnapshot.data().count,
+          notifications: notificationsCount,
+        });
+
+      } catch (error) {
+        console.error("Error fetching dashboard data: ", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDashboardData();
+  }, []);
+
 
   return (
     <DashboardLayout>
@@ -28,7 +72,7 @@ export default function DashboardPage() {
                  <UserSquare className="h-5 w-5 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">3</div>
+                {loading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{stats.documents}</div>}
                 <p className="text-xs text-muted-foreground">
                   Available for use
                 </p>
@@ -42,7 +86,7 @@ export default function DashboardPage() {
                 <BookUser className="h-5 w-5 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">5</div>
+                {loading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{stats.activeServices}</div>}
                  <p className="text-xs text-muted-foreground">
                   Currently in-progress
                 </p>
@@ -54,7 +98,7 @@ export default function DashboardPage() {
                 <Bell className="h-5 w-5 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">2</div>
+                {loading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{stats.notifications}</div>}
                 <p className="text-xs text-muted-foreground">
                   1 unread
                 </p>
