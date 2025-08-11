@@ -7,7 +7,8 @@ import Link from "next/link";
 import { usePathname } from 'next/navigation'
 import { cn } from "@/lib/utils";
 import { navItems } from "@/lib/data";
-import { Bell, Menu, MessageCircle, Search, UserSquare, CheckCircle, CreditCard, Calendar, LogOut } from "lucide-react";
+import { Bell, Menu, MessageCircle, Search, UserSquare, LogOut, CheckCircle, CreditCard, Calendar } from "lucide-react";
+import * as LucideIcons from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import {
   DropdownMenu,
@@ -22,39 +23,48 @@ import { ScrollArea } from "./ui/scroll-area";
 import { Badge } from "./ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
-
-const notifications = [
-    {
-        title: "Application Approved",
-        description: "Your Driving License renewal is complete.",
-        time: "2 hours ago",
-        href: "/my-applications",
-        icon: CheckCircle,
-    },
-    {
-        title: "Payment Received",
-        description: "Payment for National ID application was successful.",
-        time: "1 day ago",
-        href: "/payments",
-        icon: CreditCard,
-    },
-    {
-        title: "Appointment Reminder",
-        description: "Biometrics for NIC on Aug 28, 2024.",
-        time: "/services/national-id-services",
-        icon: Calendar,
-    }
-]
+import { useState, useEffect } from "react";
+import { db } from "@/lib/firebase";
+import { collection, query, where, onSnapshot, orderBy, doc, updateDoc, Timestamp } from "firebase/firestore";
+import type { Notification } from "@/lib/types";
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user } = useAuth();
   const router = useRouter();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  
+  useEffect(() => {
+    if (!user) return;
+
+    const q = query(
+        collection(db, "notifications"), 
+        where("userId", "==", user.id),
+        orderBy("createdAt", "desc")
+    );
+    
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const notifs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification));
+        setNotifications(notifs);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
 
   const handleLogout = () => {
       localStorage.removeItem("loggedInNic");
       router.push('/login');
   }
+
+  const handleNotificationClick = async (notification: Notification) => {
+      if (!notification.read) {
+          const notifRef = doc(db, "notifications", notification.id);
+          await updateDoc(notifRef, { read: true });
+      }
+      router.push(notification.href);
+  }
+
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
     <div className="min-h-screen w-full bg-background text-foreground">
@@ -132,25 +142,32 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                     <Button variant="ghost" size="icon" className="rounded-full relative">
                         <Bell className="h-5 w-5" />
                         <span className="sr-only">Notifications</span>
-                        <Badge className="absolute top-1 right-1 h-4 w-4 shrink-0 justify-center rounded-full p-0 text-xs">{notifications.length}</Badge>
+                        {unreadCount > 0 && <Badge className="absolute top-1 right-1 h-4 w-4 shrink-0 justify-center rounded-full p-0 text-xs">{unreadCount}</Badge>}
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-80">
                     <DropdownMenuLabel className="px-3 py-2">Notifications</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <ScrollArea className="h-72">
-                    {notifications.map((notification, index) => (
-                        <DropdownMenuItem key={index} asChild className="p-0">
-                           <Link href={notification.href} className="flex items-start gap-3 p-3 w-full">
-                                <notification.icon className="h-5 w-5 mt-1 text-primary flex-shrink-0" />
-                                <div className="flex flex-col gap-1">
-                                    <p className="font-medium leading-tight">{notification.title}</p>
-                                    <p className="text-sm text-muted-foreground">{notification.description}</p>
-                                    <p className="text-xs text-muted-foreground/70">{notification.time}</p>
-                               </div>
-                           </Link>
-                        </DropdownMenuItem>
-                    ))}
+                    {notifications.length > 0 ? (
+                        notifications.map((notification) => {
+                            const Icon = LucideIcons[notification.icon] || CheckCircle;
+                            return (
+                                <DropdownMenuItem key={notification.id} asChild className="p-0 cursor-pointer">
+                                   <div onClick={() => handleNotificationClick(notification)} className={cn("flex items-start gap-3 p-3 w-full", !notification.read && "bg-muted/50")}>
+                                        <Icon className="h-5 w-5 mt-1 text-primary flex-shrink-0" />
+                                        <div className="flex flex-col gap-1">
+                                            <p className="font-medium leading-tight">{notification.title}</p>
+                                            <p className="text-sm text-muted-foreground">{notification.description}</p>
+                                            <p className="text-xs text-muted-foreground/70">{(notification.createdAt as Timestamp).toDate().toLocaleString()}</p>
+                                       </div>
+                                   </div>
+                                </DropdownMenuItem>
+                            )
+                        })
+                    ) : (
+                        <p className="text-sm text-muted-foreground text-center p-4">No notifications yet.</p>
+                    )}
                     </ScrollArea>
                 </DropdownMenuContent>
              </DropdownMenu>

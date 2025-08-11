@@ -7,6 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { FileUpload } from '../file-upload';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useRouter } from 'next/navigation';
 
 const documentsMap = {
   nic: ["Police Report", "Birth Certificate", "Certified Photograph"],
@@ -23,20 +27,47 @@ export function MissingDocumentsService({ service }) {
   const [selectedService, setSelectedService] = useState('');
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFilesState>({});
   const { toast } = useToast();
+  const { user } = useAuth();
+  const router = useRouter();
 
   const requiredDocs = selectedService ? documentsMap[selectedService] : [];
+  const isReadyToSubmit = requiredDocs.length > 0 && requiredDocs.every(doc => uploadedFiles[doc]);
 
   const handleUploadComplete = (docName: string, url: string) => {
     setUploadedFiles(prev => ({ ...prev, [docName]: url }));
   };
   
-  const handleSubmit = () => {
-    // In a real app, you would save the `uploadedFiles` state to Firestore
-    console.log("Submitting with files:", uploadedFiles);
-    toast({
-        title: "Application Submitted",
-        description: "Your request to replace a missing document has been submitted.",
-    });
+  const handleSubmit = async () => {
+    if (!user) {
+        toast({ title: "Please log in to submit.", variant: "destructive" });
+        return;
+    }
+    if (!isReadyToSubmit) {
+        toast({ title: "Please upload all required documents.", variant: "destructive" });
+        return;
+    }
+
+    try {
+        await addDoc(collection(db, "applications"), {
+            service: service.title,
+            userId: user.id,
+            user: user.name,
+            status: "Pending",
+            submitted: serverTimestamp(),
+            documents: uploadedFiles
+        });
+
+        toast({
+            title: "Application Submitted",
+            description: "Your request to replace a missing document has been submitted.",
+        });
+        
+        router.push("/my-applications");
+
+    } catch (error) {
+        console.error("Error submitting application: ", error);
+        toast({ title: "Submission Failed", description: "An error occurred. Please try again.", variant: "destructive"});
+    }
   }
 
   return (
@@ -87,7 +118,7 @@ export function MissingDocumentsService({ service }) {
       </CardContent>
       <CardFooter className="flex justify-end gap-2">
         <Button variant="outline">Save Progress</Button>
-        <Button disabled={!selectedService} onClick={handleSubmit}>Submit Application</Button>
+        <Button disabled={!isReadyToSubmit} onClick={handleSubmit}>Submit Application</Button>
       </CardFooter>
     </Card>
   );

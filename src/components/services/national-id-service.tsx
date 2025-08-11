@@ -10,6 +10,10 @@ import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Calendar } from '../ui/calendar';
 import { useState, FormEvent } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useRouter } from 'next/navigation';
 
 type UploadedFilesState = {
   [key: string]: string;
@@ -20,20 +24,13 @@ export function NationalIdService({ service }) {
   const [serviceType, setServiceType] = useState("new-id");
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFilesState>({});
   const { toast } = useToast();
+  const { user } = useAuth();
+  const router = useRouter();
 
   const handleUploadComplete = (docName: string, url: string) => {
     setUploadedFiles(prev => ({ ...prev, [docName]: url }));
   };
-
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    console.log("Submitting with files:", uploadedFiles);
-    toast({
-        title: "Application Submitted",
-        description: "Your National ID application has been received.",
-    })
-  }
-
+  
   const getDocumentsForServiceType = () => {
     switch (serviceType) {
         case 'new-id':
@@ -48,6 +45,42 @@ export function NationalIdService({ service }) {
   }
 
   const requiredDocs = getDocumentsForServiceType();
+  const isReadyToSubmit = requiredDocs.length > 0 && requiredDocs.every(doc => uploadedFiles[doc]);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+        toast({ title: "Please log in to submit.", variant: "destructive" });
+        return;
+    }
+     if (!isReadyToSubmit) {
+        toast({ title: "Please upload all required documents.", variant: "destructive" });
+        return;
+    }
+
+    try {
+        await addDoc(collection(db, "applications"), {
+            service: service.title,
+            userId: user.id,
+            user: user.name,
+            status: "Pending",
+            submitted: serverTimestamp(),
+            documents: uploadedFiles,
+            details: {
+                serviceType,
+                appointmentDate: date
+            }
+        });
+        toast({
+            title: "Application Submitted",
+            description: "Your National ID application has been received.",
+        });
+        router.push("/my-applications");
+    } catch (error) {
+        console.error("Error submitting application: ", error);
+        toast({ title: "Submission Failed", description: "An error occurred. Please try again.", variant: "destructive"});
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -119,7 +152,7 @@ export function NationalIdService({ service }) {
                     </CardContent>
                 </Card>
                  <div className="flex justify-end">
-                    <Button type="submit" size="lg">Submit Application</Button>
+                    <Button type="submit" size="lg" disabled={!isReadyToSubmit}>Submit Application</Button>
                 </div>
             </div>
         </form>

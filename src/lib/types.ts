@@ -63,6 +63,7 @@ export interface Vehicle {
 export interface Application {
     id: string;
     user: string;
+    userId?: string; // Add userId to link back to the user
     service: string;
     status: 'Pending' | 'Approved' | 'Rejected' | 'In Progress' | 'Completed' | 'In Review' | 'Pending Payment';
     submitted: Timestamp | string;
@@ -96,5 +97,17 @@ export interface SupportTicket {
     status: 'Open' | 'In Progress' | 'Closed';
     submittedAt: Timestamp | string;
     userNic: string;
+    userId?: string; // Add userId
     reply: string;
+}
+
+export interface Notification {
+    id: string;
+    userId: string;
+    title: string;
+    description: string;
+    href: string;
+    icon: keyof typeof import("lucide-react");
+    read: boolean;
+    createdAt: Timestamp;
 }

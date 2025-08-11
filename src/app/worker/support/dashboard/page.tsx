@@ -9,10 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { MoreHorizontal } from "lucide-react";
 import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
-import { collection, getDocs, Timestamp, doc, updateDoc } from "firebase/firestore";
+import { collection, getDocs, Timestamp, doc, updateDoc, addDoc, serverTimestamp } from "firebase/firestore";
 import type { SupportTicket } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
@@ -36,6 +35,22 @@ export default function WorkerSupportDashboard() {
       setLoading(false);
     }
   };
+  
+  const createNotification = async (userId: string, title: string, description: string, href: string) => {
+    try {
+        await addDoc(collection(db, "notifications"), {
+            userId,
+            title,
+            description,
+            href,
+            icon: "MessageSquare",
+            read: false,
+            createdAt: serverTimestamp()
+        });
+    } catch (error) {
+        console.error("Error creating notification:", error);
+    }
+  }
 
   useEffect(() => {
     fetchTickets();
@@ -70,7 +85,7 @@ export default function WorkerSupportDashboard() {
   };
 
   const handleSendReply = async () => {
-    if (!replyMessage.trim()) return;
+    if (!replyMessage.trim() || !selectedTicket) return;
     const newReply = `${selectedTicket.reply || ''}\n\n[Support Reply on ${new Date().toLocaleString()}]:\n${replyMessage}`;
     const success = await handleUpdateTicket({ reply: newReply, status: "In Progress" });
     if(success) {
@@ -78,6 +93,16 @@ export default function WorkerSupportDashboard() {
             title: "Reply Sent",
             description: "The user has been notified of your response.",
         });
+        
+        if (selectedTicket.userId) {
+            await createNotification(
+                selectedTicket.userId,
+                "Reply to your support ticket",
+                `You have a new reply for your ticket: "${selectedTicket.subject}"`,
+                "/support"
+            );
+        }
+
         setSelectedTicket(null);
         setReplyMessage("");
         fetchTickets(); // Refresh the list
@@ -85,12 +110,23 @@ export default function WorkerSupportDashboard() {
   };
 
   const handleCloseTicket = async () => {
+    if (!selectedTicket) return;
     const success = await handleUpdateTicket({ status: "Closed" });
     if(success) {
         toast({
             title: "Ticket Closed",
             description: "The support ticket has been marked as closed.",
         });
+        
+        if (selectedTicket.userId) {
+            await createNotification(
+                selectedTicket.userId,
+                "Support ticket closed",
+                `Your support ticket "${selectedTicket.subject}" has been closed.`,
+                "/support"
+            );
+        }
+
         setSelectedTicket(null);
         setReplyMessage("");
         fetchTickets();

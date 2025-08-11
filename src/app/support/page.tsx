@@ -27,6 +27,15 @@ export default function SupportPage() {
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        if(!user) {
+            toast({
+                title: "Not Logged In",
+                description: "You must be logged in to submit a ticket.",
+                variant: "destructive"
+            });
+            return;
+        }
+
         const formData = new FormData(e.target as HTMLFormElement);
         const ticketData = {
           name: formData.get("name") as string,
@@ -35,7 +44,8 @@ export default function SupportPage() {
           message: formData.get("message") as string,
           status: "Open",
           submittedAt: serverTimestamp(),
-          userNic: user?.nic || "N/A",
+          userNic: user.nic,
+          userId: user.id,
           reply: ""
         };
 
@@ -104,7 +114,7 @@ export default function SupportPage() {
     };
     
     useEffect(() => {
-        if(!authLoading){
+        if(!authLoading && user){
             fetchTickets();
         }
     }, [user, authLoading]);

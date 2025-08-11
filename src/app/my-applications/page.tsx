@@ -13,6 +13,7 @@ import { collection, query, where, getDocs, Timestamp } from "firebase/firestore
 import type { Application } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
+import Link from "next/link";
 
 export default function MyApplicationsPage() {
   const [applications, setApplications] = useState<Application[]>([]);
@@ -26,7 +27,7 @@ export default function MyApplicationsPage() {
         return;
       }
       
-      const q = query(collection(db, "applications"), where("user", "==", user.name));
+      const q = query(collection(db, "applications"), where("userId", "==", user.id));
       
       try {
         const querySnapshot = await getDocs(q);
@@ -55,7 +56,7 @@ export default function MyApplicationsPage() {
       <div className="flex-1 space-y-8 p-4 md:p-8 pt-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <h1 className="text-3xl font-bold tracking-tight">My Applications</h1>
-           <Button className="w-full sm:w-auto">Apply for a New Service</Button>
+           <Button asChild className="w-full sm:w-auto"><Link href="/dashboard">Apply for a New Service</Link></Button>
         </div>
         <Card>
             <CardHeader>
