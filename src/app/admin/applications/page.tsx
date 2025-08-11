@@ -5,14 +5,13 @@ import { AdminLayout } from "@/components/admin-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { MoreHorizontal } from "lucide-react";
 import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
 import { collection, getDocs, Timestamp } from "firebase/firestore";
 import type { Application } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
 
 export default function ApplicationsPage() {
   const [applications, setApplications] = useState<Application[]>([]);
@@ -37,6 +36,7 @@ export default function ApplicationsPage() {
   }, []);
 
   const formatDate = (date: Timestamp | string) => {
+    if (!date) return 'N/A';
     if (typeof date === 'string') return date;
     return date.toDate().toLocaleDateString();
   };
@@ -78,7 +78,7 @@ export default function ApplicationsPage() {
                     ))
                   ) : applications.map((app) => (
                     <TableRow key={app.id}>
-                      <TableCell className="font-medium">{app.id}</TableCell>
+                      <TableCell className="font-medium truncate max-w-28">{app.id}</TableCell>
                       <TableCell>{app.user}</TableCell>
                       <TableCell>{app.service}</TableCell>
                       <TableCell>{formatDate(app.submitted)}</TableCell>
@@ -86,7 +86,7 @@ export default function ApplicationsPage() {
                          <Badge variant={
                              app.status === 'Approved' || app.status === 'Completed' ? 'default' 
                              : app.status === 'Pending' ? 'secondary'
-                             : app.status === 'In Progress' ? 'outline'
+                             : app.status === 'In Progress' || app.status === 'In Review' ? 'outline'
                              : 'destructive'
                           }
                           className={
@@ -97,22 +97,11 @@ export default function ApplicationsPage() {
                           </Badge>
                       </TableCell>
                       <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button aria-haspopup="true" size="icon" variant="ghost">
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">Toggle menu</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem>View Details</DropdownMenuItem>
-                            <DropdownMenuItem>Approve</DropdownMenuItem>
-                            <DropdownMenuItem>Reject</DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem>Contact User</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <Button asChild variant="outline" size="sm">
+                            <Link href={`/admin/applications/${app.id}`}>
+                                View Details
+                            </Link>
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -125,3 +114,5 @@ export default function ApplicationsPage() {
     </AdminLayout>
   );
 }
+
+    

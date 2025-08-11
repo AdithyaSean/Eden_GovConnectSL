@@ -10,6 +10,10 @@ import { Progress } from '../ui/progress';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { useToast } from '@/hooks/use-toast';
 import { useState, FormEvent } from 'react';
+import { useAuth } from '@/hooks/use-auth';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useRouter } from 'next/navigation';
 
 type UploadedFilesState = {
   [key: string]: string;
@@ -18,18 +22,46 @@ type UploadedFilesState = {
 export function PensionDepartmentService({ service }) {
   const { toast } = useToast();
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFilesState>({});
+  const { user } = useAuth();
+  const router = useRouter();
 
   const handleUploadComplete = (docName: string, url: string) => {
     setUploadedFiles(prev => ({ ...prev, [docName]: url }));
   };
+  
+  const requiredDocs = ["Service Certificate", "Retirement Letter", "Copy of NIC", "Bank Account Details Confirmation"];
+  const isReadyToSubmit = requiredDocs.every(doc => uploadedFiles[doc]);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    console.log("Submitting with files:", uploadedFiles);
-    toast({
-        title: "Application Submitted",
-        description: "Your pension application has been successfully submitted for review.",
-    });
+    if (!user) {
+        toast({ title: "Please log in to submit.", variant: "destructive" });
+        return;
+    }
+     if (!isReadyToSubmit) {
+        toast({ title: "Please upload all required documents.", variant: "destructive" });
+        return;
+    }
+
+    try {
+        await addDoc(collection(db, "applications"), {
+            service: service.title,
+            userId: user.id,
+            user: user.name,
+            status: "Pending",
+            submitted: serverTimestamp(),
+            documents: uploadedFiles,
+        });
+
+        toast({
+            title: "Application Submitted",
+            description: "Your pension application has been successfully submitted for review.",
+        });
+        router.push("/my-applications");
+    } catch(error) {
+         console.error("Error submitting application: ", error);
+         toast({ title: "Submission Failed", description: "An error occurred. Please try again.", variant: "destructive"});
+    }
   }
 
   const handleSaveBankDetails = () => {
@@ -38,8 +70,6 @@ export function PensionDepartmentService({ service }) {
         description: "Your bank details have been saved successfully.",
     });
   }
-  
-  const requiredDocs = ["Service Certificate", "Retirement Letter", "Copy of NIC", "Bank Account Details Confirmation"];
 
   return (
     <div className="space-y-8">
@@ -68,11 +98,11 @@ export function PensionDepartmentService({ service }) {
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="pensionerName">Name of Retiree</Label>
-                            <Input id="pensionerName" required/>
+                            <Input id="pensionerName" required defaultValue={user?.name}/>
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="pensionerNIC">NIC Number</Label>
-                            <Input id="pensionerNIC" required/>
+                            <Input id="pensionerNIC" required defaultValue={user?.nic}/>
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="lastWorkplace">Last Place of Work</Label>
@@ -128,7 +158,7 @@ export function PensionDepartmentService({ service }) {
                 </Card>
 
                  <div className="flex justify-end">
-                    <Button type="submit" size="lg">Submit Application</Button>
+                    <Button type="submit" size="lg" disabled={!isReadyToSubmit}>Submit Application</Button>
                 </div>
             </div>
         </form>
@@ -157,3 +187,5 @@ export function PensionDepartmentService({ service }) {
     </div>
   );
 }
+
+    

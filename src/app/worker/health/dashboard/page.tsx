@@ -1,20 +1,46 @@
 
+"use client";
+
 import { AdminLayout } from "@/components/admin-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { MoreHorizontal, Search } from "lucide-react";
+import { useEffect, useState } from "react";
+import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import type { Application } from "@/lib/types";
+import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
 
-const applications = [
-  { id: "MID-01", type: "Medical ID Card", submitted: "2024-07-22", status: "Pending", user: "Nimal Silva", nic: "199012345V" },
-  { id: "APPT-02", type: "Appointment Booking", submitted: "2024-07-21", status: "Confirmed", user: "Saman Perera", nic: "198512345V" },
-];
+const healthServices = ["Health Services"];
 
 export default function WorkerHealthDashboard() {
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchApplications = async () => {
+      const q = query(collection(db, "applications"), where("service", "in", healthServices));
+      try {
+        const querySnapshot = await getDocs(q);
+        const appsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
+        setApplications(appsData);
+      } catch (error) {
+        console.error("Error fetching health applications: ", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchApplications();
+  }, []);
+  
+  const formatDate = (date: Timestamp | string) => {
+    if (!date) return 'N/A';
+    if (typeof date === 'string') return date;
+    return date.toDate().toLocaleDateString();
+  };
+
   return (
     <AdminLayout workerMode>
       <div className="flex-1 space-y-8 p-8 pt-6">
@@ -22,23 +48,7 @@ export default function WorkerHealthDashboard() {
         <Card>
           <CardHeader>
             <CardTitle>Health Service Requests</CardTitle>
-            <div className="flex items-center gap-4 mt-4">
-                <div className="relative w-full">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input placeholder="Search by NIC or Name..." className="pl-10" />
-                </div>
-                <Select>
-                    <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Filter by type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Types</SelectItem>
-                        <SelectItem value="medical-id">Medical ID Card</SelectItem>
-                        <SelectItem value="appointment">Appointment Booking</SelectItem>
-                    </SelectContent>
-                </Select>
-                 <Button>Search</Button>
-            </div>
+            <CardDescription>Review and process health-related applications from citizens.</CardDescription>
           </CardHeader>
           <CardContent>
              <Table>
@@ -46,38 +56,38 @@ export default function WorkerHealthDashboard() {
                 <TableRow>
                   <TableHead>Ref ID</TableHead>
                   <TableHead>User</TableHead>
-                  <TableHead>NIC</TableHead>
-                  <TableHead>Type</TableHead>
                   <TableHead>Submitted On</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {applications.map((app) => (
+                {loading ? (
+                    Array.from({ length: 3 }).map((_, i) => (
+                        <TableRow key={i}>
+                            <TableCell colSpan={5}><Skeleton className="h-8 w-full" /></TableCell>
+                        </TableRow>
+                    ))
+                ) : applications.length === 0 ? (
+                    <TableRow>
+                        <TableCell colSpan={5} className="text-center h-24">No health-related applications found.</TableCell>
+                    </TableRow>
+                ) : (
+                applications.map((app) => (
                   <TableRow key={app.id}>
-                    <TableCell>{app.id}</TableCell>
+                    <TableCell className="font-medium">{app.id}</TableCell>
                     <TableCell>{app.user}</TableCell>
-                    <TableCell>{app.nic}</TableCell>
-                    <TableCell>{app.type}</TableCell>
-                    <TableCell>{app.submitted}</TableCell>
+                    <TableCell>{formatDate(app.submitted)}</TableCell>
                     <TableCell>
-                      <Badge variant={app.status === 'Confirmed' ? 'default' : 'secondary'} className={app.status === 'Confirmed' ? 'bg-green-600' : ''}>{app.status}</Badge>
+                      <Badge variant={app.status === 'Approved' ? 'default' : 'secondary'} className={app.status === 'Approved' ? 'bg-green-600' : ''}>{app.status}</Badge>
                     </TableCell>
                     <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button size="icon" variant="ghost"><MoreHorizontal /></Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuItem>View Details</DropdownMenuItem>
-                          <DropdownMenuItem>Approve</DropdownMenuItem>
-                          <DropdownMenuItem>Reject</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                        <Button asChild variant="outline" size="sm">
+                            <Link href={`/admin/applications/${app.id}`}>View Application</Link>
+                        </Button>
                     </TableCell>
                   </TableRow>
-                ))}
+                )))}
               </TableBody>
             </Table>
           </CardContent>
@@ -86,3 +96,5 @@ export default function WorkerHealthDashboard() {
     </AdminLayout>
   );
 }
+
+    

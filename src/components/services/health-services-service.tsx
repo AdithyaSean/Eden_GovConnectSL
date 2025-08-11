@@ -4,14 +4,16 @@
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileUpload } from '../file-upload';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
-import { Download, PlusCircle } from 'lucide-react';
 import { Calendar } from '../ui/calendar';
-import { useState } from 'react';
+import { useState, FormEvent } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useRouter } from 'next/navigation';
+import { Label } from '../ui/label';
 
 type UploadedFilesState = {
   [key: string]: string;
@@ -29,12 +31,79 @@ const medicalReports = [
 ]
 
 export function HealthServicesService({ service }) {
-    const [date, setDate] = useState<Date | undefined>(new Date());
+    const [appointmentDate, setAppointmentDate] = useState<Date | undefined>(new Date());
     const [uploadedFiles, setUploadedFiles] = useState<UploadedFilesState>({});
+    const { user } = useAuth();
+    const { toast } = useToast();
+    const router = useRouter();
 
     const handleUploadComplete = (docName: string, url: string) => {
         setUploadedFiles(prev => ({ ...prev, [docName]: url }));
     };
+
+    const handleIdCardSubmit = async (e: FormEvent) => {
+        e.preventDefault();
+        if (!user) {
+            toast({ title: "Please log in.", variant: "destructive" });
+            return;
+        }
+        if(!uploadedFiles.nicOrBirthCert || !uploadedFiles.photo) {
+            toast({ title: "Please upload both documents.", variant: "destructive" });
+            return;
+        }
+        
+        try {
+            await addDoc(collection(db, "applications"), {
+                service: "National Medical ID Card Application",
+                userId: user.id,
+                user: user.name,
+                status: "In Review",
+                submitted: serverTimestamp(),
+                documents: uploadedFiles,
+            });
+            toast({ title: "Application Submitted", description: "Your Medical ID Card application is under review." });
+            router.push('/my-applications');
+        } catch(error) {
+            console.error(error);
+            toast({ title: "Submission Failed", variant: "destructive"});
+        }
+    }
+    
+    const handleAppointmentSubmit = async (e: FormEvent) => {
+        e.preventDefault();
+        if (!user) {
+            toast({ title: "Please log in.", variant: "destructive" });
+            return;
+        }
+
+        const formData = new FormData(e.target as HTMLFormElement);
+        const appointmentDetails = Object.fromEntries(formData.entries());
+        
+        if(!appointmentDetails.hospital || !appointmentDetails.speciality) {
+             toast({ title: "Please select hospital and speciality.", variant: "destructive" });
+            return;
+        }
+        
+        try {
+             await addDoc(collection(db, "applications"), {
+                service: "Medical Appointment Request",
+                userId: user.id,
+                user: user.name,
+                status: "Pending",
+                submitted: serverTimestamp(),
+                details: {
+                    ...appointmentDetails,
+                    appointmentDate
+                }
+            });
+            toast({ title: "Appointment Requested", description: "Your request has been sent. You will be notified upon confirmation." });
+            router.push('/my-applications');
+        } catch(error) {
+             console.error(error);
+             toast({ title: "Request Failed", variant: "destructive"});
+        }
+    }
+
 
   return (
     <div className="space-y-8">
@@ -66,74 +135,78 @@ export function HealthServicesService({ service }) {
                 <Button variant="outline">Download Full Report</Button>
             </CardFooter>
         </Card>
+        
+        <form onSubmit={handleAppointmentSubmit}>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Book a Hospital/Clinic Appointment</CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label>Select Hospital/Clinic</Label>
+                            <Select name="hospital">
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a location" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="hospital-colombo">National Hospital, Colombo</SelectItem>
+                                    <SelectItem value="hospital-kandy">Teaching Hospital, Kandy</SelectItem>
+                                    <SelectItem value="clinic-galle">Family Clinic, Galle</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Select Speciality/Service</Label>
+                            <Select name="speciality">
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a service" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="opd">General OPD</SelectItem>
+                                    <SelectItem value="cardiology">Cardiology</SelectItem>
+                                    <SelectItem value="dental">Dental</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <div className="flex justify-center">
+                        <Calendar
+                            mode="single"
+                            selected={appointmentDate}
+                            onSelect={setAppointmentDate}
+                            className="rounded-md border"
+                        />
+                    </div>
+                </CardContent>
+                <CardFooter>
+                    <Button type="submit">Request Appointment</Button>
+                </CardFooter>
+            </Card>
+        </form>
 
-        <Card>
-            <CardHeader>
-                <CardTitle>Book a Hospital/Clinic Appointment</CardTitle>
-            </CardHeader>
-             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-4">
-                    <div className="space-y-2">
-                        <Label>Select Hospital/Clinic</Label>
-                        <Select>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select a location" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="hospital-colombo">National Hospital, Colombo</SelectItem>
-                                <SelectItem value="hospital-kandy">Teaching Hospital, Kandy</SelectItem>
-                                <SelectItem value="clinic-galle">Family Clinic, Galle</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="space-y-2">
-                        <Label>Select Speciality/Service</Label>
-                        <Select>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select a service" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="opd">General OPD</SelectItem>
-                                <SelectItem value="cardiology">Cardiology</SelectItem>
-                                <SelectItem value="dental">Dental</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
-                 <div className="flex justify-center">
-                    <Calendar
-                        mode="single"
-                        selected={date}
-                        onSelect={setDate}
-                        className="rounded-md border"
+        <form onSubmit={handleIdCardSubmit}>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Apply for National Medical ID Card</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <FileUpload
+                        id="nic-bc-upload"
+                        label="Upload Copy of NIC/Birth Certificate" 
+                        onUploadComplete={(url) => handleUploadComplete("nicOrBirthCert", url)}
                     />
-                </div>
-            </CardContent>
-            <CardFooter>
-                <Button>Request Appointment</Button>
-            </CardFooter>
-        </Card>
-
-        <Card>
-            <CardHeader>
-                <CardTitle>Apply for National Medical ID Card</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <FileUpload
-                    id="nic-bc-upload"
-                    label="Upload Copy of NIC/Birth Certificate" 
-                    onUploadComplete={(url) => handleUploadComplete("nicOrBirthCert", url)}
-                />
-                <FileUpload
-                    id="photo-upload-medical"
-                    label="Upload Passport-size Photograph"
-                    onUploadComplete={(url) => handleUploadComplete("photo", url)}
-                />
-            </CardContent>
-             <CardFooter>
-                <Button>Submit Application</Button>
-            </CardFooter>
-        </Card>
+                    <FileUpload
+                        id="photo-upload-medical"
+                        label="Upload Passport-size Photograph"
+                        onUploadComplete={(url) => handleUploadComplete("photo", url)}
+                    />
+                </CardContent>
+                <CardFooter>
+                    <Button type="submit">Submit Application</Button>
+                </CardFooter>
+            </Card>
+        </form>
 
         <Card>
             <CardHeader>
@@ -163,9 +236,6 @@ export function HealthServicesService({ service }) {
                     </TableBody>
                 </Table>
             </CardContent>
-             <CardFooter>
-                <Button variant="secondary"><PlusCircle className="mr-2 h-4 w-4" /> Request New Report</Button>
-            </CardFooter>
         </Card>
         
         <Card>
@@ -180,3 +250,5 @@ export function HealthServicesService({ service }) {
     </div>
   );
 }
+
+    

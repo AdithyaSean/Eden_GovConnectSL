@@ -1,18 +1,46 @@
 
+"use client";
+
 import { AdminLayout } from "@/components/admin-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { MoreHorizontal } from "lucide-react";
+import { useEffect, useState } from "react";
+import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import type { Application } from "@/lib/types";
+import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
 
-const applications = [
-  { id: "EXM-AL-01", type: "A/L Re-correction", submitted: "2024-07-22", status: "Pending" },
-  { id: "EXM-OL-02", type: "O/L Certificate Request", submitted: "2024-07-21", status: "Issued" },
-];
+const examsServices = ["Exam Results"];
 
 export default function WorkerExamsDashboard() {
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchApplications = async () => {
+      const q = query(collection(db, "applications"), where("service", "in", examsServices));
+      try {
+        const querySnapshot = await getDocs(q);
+        const appsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
+        setApplications(appsData);
+      } catch (error) {
+        console.error("Error fetching exams applications: ", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchApplications();
+  }, []);
+  
+  const formatDate = (date: Timestamp | string) => {
+    if (!date) return 'N/A';
+    if (typeof date === 'string') return date;
+    return date.toDate().toLocaleDateString();
+  };
+
   return (
     <AdminLayout workerMode>
       <div className="flex-1 space-y-8 p-8 pt-6">
@@ -20,40 +48,46 @@ export default function WorkerExamsDashboard() {
         <Card>
           <CardHeader>
             <CardTitle>Examination Service Requests</CardTitle>
+            <CardDescription>Manage requests for exam re-corrections and certificate issuance.</CardDescription>
           </CardHeader>
           <CardContent>
              <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Ref ID</TableHead>
-                  <TableHead>Type</TableHead>
+                  <TableHead>User</TableHead>
                   <TableHead>Submitted On</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {applications.map((app) => (
+                {loading ? (
+                    Array.from({ length: 3 }).map((_, i) => (
+                        <TableRow key={i}>
+                            <TableCell colSpan={5}><Skeleton className="h-8 w-full" /></TableCell>
+                        </TableRow>
+                    ))
+                ) : applications.length === 0 ? (
+                    <TableRow>
+                        <TableCell colSpan={5} className="text-center h-24">No exam-related applications found.</TableCell>
+                    </TableRow>
+                ) : (
+                applications.map((app) => (
                   <TableRow key={app.id}>
-                    <TableCell>{app.id}</TableCell>
-                    <TableCell>{app.type}</TableCell>
-                    <TableCell>{app.submitted}</TableCell>
+                    <TableCell className="font-medium">{app.id}</TableCell>
+                    <TableCell>{app.user}</TableCell>
+                    <TableCell>{formatDate(app.submitted)}</TableCell>
                     <TableCell>
-                      <Badge variant={app.status === 'Issued' ? 'default' : 'secondary'}>{app.status}</Badge>
+                      <Badge variant={app.status === 'Approved' ? 'default' : 'secondary'} className={app.status === 'Approved' ? 'bg-green-600' : ''}>{app.status}</Badge>
                     </TableCell>
                     <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button size="icon" variant="ghost"><MoreHorizontal /></Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuItem>View Request</DropdownMenuItem>
-                          <DropdownMenuItem>Process Request</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                        <Button asChild variant="outline" size="sm">
+                            <Link href={`/admin/applications/${app.id}`}>View Request</Link>
+                        </Button>
                     </TableCell>
                   </TableRow>
-                ))}
+                )))}
               </TableBody>
             </Table>
           </CardContent>
@@ -62,3 +96,5 @@ export default function WorkerExamsDashboard() {
     </AdminLayout>
   );
 }
+
+    

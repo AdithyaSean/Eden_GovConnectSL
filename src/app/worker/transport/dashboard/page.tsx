@@ -13,6 +13,7 @@ import { collection, query, where, getDocs, getCountFromServer, Timestamp } from
 import { db } from "@/lib/firebase";
 import type { Application } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
 
 
 const transportServices = [
@@ -36,11 +37,11 @@ export default function WorkerTransportDashboard() {
         setApplications(appsData);
 
         // Fetch stats
-        const renewalsQuery = query(collection(db, "applications"), where("service", "==", "Renew Driving License"), where("status", "==", "Pending"));
+        const renewalsQuery = query(collection(db, "applications"), where("service", "==", "Renew Driving License"), where("status", "in", ["Pending", "In Progress", "Pending Payment"]));
         const renewalsSnapshot = await getCountFromServer(renewalsQuery);
         setStats(prev => ({ ...prev, pendingRenewals: renewalsSnapshot.data().count }));
         
-        const registrationsQuery = query(collection(db, "applications"), where("service", "==", "Registered Vehicles"), where("status", "==", "Pending"));
+        const registrationsQuery = query(collection(db, "applications"), where("service", "==", "Registered Vehicles"), where("status", "in", ["Pending", "In Progress", "Pending Payment"]));
         const registrationsSnapshot = await getCountFromServer(registrationsQuery);
         setStats(prev => ({ ...prev, pendingRegistrations: registrationsSnapshot.data().count }));
 
@@ -106,7 +107,8 @@ export default function WorkerTransportDashboard() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Ref ID</TableHead>
-                    <TableHead>Type</TableHead>
+                    <TableHead>Service</TableHead>
+                    <TableHead>User</TableHead>
                     <TableHead>Submitted On</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
@@ -116,33 +118,26 @@ export default function WorkerTransportDashboard() {
                   {loading ? (
                     Array.from({ length: 5 }).map((_, i) => (
                       <TableRow key={i}>
-                        <TableCell colSpan={5}><Skeleton className="h-8 w-full" /></TableCell>
+                        <TableCell colSpan={6}><Skeleton className="h-8 w-full" /></TableCell>
                       </TableRow>
                     ))
                   ) : applications.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center">No transport-related applications found.</TableCell>
+                      <TableCell colSpan={6} className="text-center h-24">No transport-related applications found.</TableCell>
                     </TableRow>
                   ) : ( applications.map((app) => (
                     <TableRow key={app.id}>
-                      <TableCell>{app.id}</TableCell>
+                      <TableCell className="font-medium">{app.id}</TableCell>
                       <TableCell>{app.service}</TableCell>
+                      <TableCell>{app.user}</TableCell>
                       <TableCell>{formatDate(app.submitted)}</TableCell>
                       <TableCell>
-                        <Badge variant={app.status === 'Paid' || app.status === 'Approved' ? 'default' : 'secondary'} className={app.status === 'Paid' || app.status === 'Approved' ? 'bg-green-600' : ''}>{app.status}</Badge>
+                        <Badge variant={app.status === 'Paid' || app.status === 'Approved' || app.status === 'Completed' ? 'default' : 'secondary'} className={app.status === 'Paid' || app.status === 'Approved' ? 'bg-green-600' : ''}>{app.status}</Badge>
                       </TableCell>
                       <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button size="icon" variant="ghost"><MoreHorizontal /></Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent>
-                            <DropdownMenuItem>View Application</DropdownMenuItem>
-                            <DropdownMenuItem>Approve</DropdownMenuItem>
-                            <DropdownMenuItem>Reject</DropdownMenuItem>
-                            <DropdownMenuItem>Request Documents</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <Button asChild variant="outline" size="sm">
+                            <Link href={`/admin/applications/${app.id}`}>View Application</Link>
+                        </Button>
                       </TableCell>
                     </TableRow>
                   )))}
@@ -155,3 +150,5 @@ export default function WorkerTransportDashboard() {
     </AdminLayout>
   );
 }
+
+    
