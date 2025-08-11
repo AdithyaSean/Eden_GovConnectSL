@@ -15,6 +15,9 @@ import { HealthServicesService } from "@/components/services/health-services-ser
 import { PassportRenewalService } from "@/components/services/passport-renewal-service";
 import { FinePaymentService } from "@/components/services/fine-payment-service";
 import { RegisteredVehiclesService } from "@/components/services/registered-vehicles-service";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 const serviceComponentMap = {
   "missing-documents": MissingDocumentsService,
@@ -46,6 +49,9 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
       <div className="flex-1 space-y-8 p-4 md:p-8 pt-6">
         <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
+                <Button asChild variant="outline" size="icon" className="flex-shrink-0">
+                    <Link href="/dashboard"><ArrowLeft /></Link>
+                </Button>
                 <div className="p-4 rounded-lg bg-muted hidden md:flex">
                   {Icon && <Icon className="w-8 h-8 text-primary" />}
                 </div>

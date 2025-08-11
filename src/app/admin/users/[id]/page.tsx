@@ -9,12 +9,13 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { ShieldAlert, UserCog, UserX } from "lucide-react";
+import { ShieldAlert, UserCog, UserX, ArrowLeft } from "lucide-react";
 import { useEffect, useState, use } from "react";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, updateDoc, Timestamp } from "firebase/firestore";
 import type { User } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
 
 const roles = [
     "Citizen", "Super Admin", "worker_transport", "worker_immigration", "worker_identity", "worker_health", "worker_tax", "worker_pension", "worker_landregistry", "worker_exams", "worker_finepayment", "worker_registeredvehicles", "worker_missingdocuments", "worker_support"
@@ -104,9 +105,14 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
     <AdminLayout>
       <div className="flex-1 space-y-8 p-8 pt-6">
         <div className="flex items-center justify-between space-y-2">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">User Profile</h1>
-              <p className="text-muted-foreground">Manage user details and permissions for {user.name}</p>
+            <div className="flex items-center gap-4">
+               <Button asChild variant="outline" size="icon">
+                    <Link href="/admin/users"><ArrowLeft /></Link>
+                </Button>
+                <div>
+                  <h1 className="text-3xl font-bold tracking-tight">User Profile</h1>
+                  <p className="text-muted-foreground">Manage user details and permissions for {user.name}</p>
+                </div>
             </div>
         </div>
 
