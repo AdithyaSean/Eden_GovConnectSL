@@ -134,10 +134,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           </nav>
           
           <div className="flex items-center gap-2 md:gap-4">
-            <Button variant="ghost" size="icon" className="rounded-full">
-                <Search className="h-5 w-5" />
-                <span className="sr-only">Search</span>
-            </Button>
              <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="rounded-full relative">
