@@ -19,7 +19,7 @@ import type { User } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const roles = [
-    "Citizen", "Super Admin", "worker_transport", "worker_immigration", "worker_identity", "worker_health", "worker_tax", "worker_pension", "worker_landregistry", "worker_exams", "worker_finepayment", "worker_registeredvehicles", "worker_missingdocuments"
+    "Citizen", "Super Admin", "worker_transport", "worker_immigration", "worker_identity", "worker_health", "worker_tax", "worker_pension", "worker_landregistry", "worker_exams", "worker_finepayment", "worker_registeredvehicles", "worker_missingdocuments", "worker_support"
 ];
 
 export default function UsersPage() {
@@ -75,6 +75,7 @@ export default function UsersPage() {
   
   const formatDate = (date: Timestamp | string) => {
     if (typeof date === 'string') return date;
+    if (!date) return 'N/A';
     return date.toDate().toLocaleDateString();
   };
 

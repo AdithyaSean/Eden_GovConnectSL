@@ -64,8 +64,9 @@ export interface Application {
     id: string;
     user: string;
     service: string;
-    status: 'Pending' | 'Approved' | 'Rejected' | 'In Progress' | 'Completed';
+    status: 'Pending' | 'Approved' | 'Rejected' | 'In Progress' | 'Completed' | 'In Review' | 'Pending Payment';
     submitted: Timestamp | string;
+    documents?: { [key: string]: string };
 }
 
 export interface User {
@@ -84,4 +85,16 @@ export interface Payment {
     date: Timestamp | string;
     amount: string;
     status: 'Success' | 'Failed';
+}
+
+export interface SupportTicket {
+    id: string;
+    name: string;
+    email: string;
+    subject: string;
+    message: string;
+    status: 'Open' | 'In Progress' | 'Closed';
+    submittedAt: Timestamp | string;
+    userNic: string;
+    reply: string;
 }

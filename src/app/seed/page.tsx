@@ -19,6 +19,7 @@ const seedData = {
         { id: "worker-immigration", name: "Immigration Worker", email: "worker.immigration@gov.lk", nic: "", role: "worker_immigration", status: "Active" },
         { id: "worker-identity", name: "Identity Worker", email: "worker.identity@gov.lk", nic: "", role: "worker_identity", status: "Active" },
         { id: "worker-missingdocuments", name: "Missing Docs Worker", email: "worker.missingdocuments@gov.lk", nic: "", role: "worker_missingdocuments", status: "Active" },
+        { id: "worker-support", name: "Support Worker", email: "worker.support@gov.lk", nic: "", role: "worker_support", status: "Active" },
     ],
     applications: [
         { user: "Nimal Silva", service: "Renew Driving License", status: "In Progress", submitted: new Date("2024-07-20") },
@@ -42,6 +43,10 @@ const seedData = {
         { service: "Passport Renewal Fee", date: new Date("2024-06-15"), amount: "3500.00", status: "Success" },
         { service: "Driving License Renewal", date: new Date("2023-08-01"), amount: "2500.00", status: "Success" },
     ],
+    supportTickets: [
+        { name: "Nimal Silva", email: "nimal.s@example.com", subject: "Passport photo upload failed", message: "I tried to upload my photo for passport renewal, but it keeps giving me an error. Can you please help?", status: "Open", submittedAt: new Date("2024-07-28"), userNic: "199012345V", reply: ""},
+        { name: "Kamala Perera", email: "kamala.p@example.com", subject: "Question about NIC status", message: "My NIC application has been pending for 3 weeks. What is the current status?", status: "Closed", submittedAt: new Date("2024-07-25"), userNic: "198523456V", reply: "Dear Kamala, your application has been processed and your NIC has been dispatched. You should receive it within 5 working days."},
+    ]
 };
 
 
@@ -84,6 +89,12 @@ export default function SeedPage() {
             seedData.payments.forEach(payment => {
                 const paymentRef = doc(collection(db, "payments")); // Auto-generates ID
                 batch.set(paymentRef, { ...payment, date: Timestamp.fromDate(payment.date) });
+            });
+            
+             // Seed Support Tickets
+            seedData.supportTickets.forEach(ticket => {
+                const ticketRef = doc(collection(db, "supportTickets"));
+                batch.set(ticketRef, { ...ticket, submittedAt: Timestamp.fromDate(ticket.submittedAt) });
             });
 
             await batch.commit();
