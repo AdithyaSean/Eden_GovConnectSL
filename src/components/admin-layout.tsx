@@ -21,18 +21,18 @@ const adminNavItems = [
 ];
 
 const allWorkerNavItems = [
-    { title: "Transport", href: "/worker/transport/dashboard", icon: Car, role: "transport" },
-    { title: "Immigration", href: "/worker/immigration/dashboard", icon: BookUser, role: "immigration" },
-    { title: "Identity", href: "/worker/identity/dashboard", icon: Fingerprint, role: "identity" },
-    { title: "Missing Documents", href: "/worker/missingdocuments/dashboard", icon: FileQuestion, role: "missingdocuments" },
-    { title: "Health", href: "/worker/health/dashboard", icon: HeartPulse, role: "health" },
-    { title: "Tax", href: "/worker/tax/dashboard", icon: CreditCard, role: "tax" },
-    { title: "Pensions", href: "/worker/pension/dashboard", icon: Users, role: "pension" },
-    { title: "Land Registry", href: "/worker/landregistry/dashboard", icon: Building, role: "landregistry" },
-    { title: "Exams", href: "/worker/exams/dashboard", icon: GraduationCap, role: "exams" },
-    { title: "Fine Payment", href: "/worker/fine-payment/dashboard", icon: ReceiptText, role: "finepayment" },
-    { title: "Registered Vehicles", href: "/worker/registered-vehicles/dashboard", icon: ClipboardList, role: "registeredvehicles" },
-    { title: "Support", href: "/worker/support/dashboard", icon: LifeBuoy, role: "support" },
+    { title: "Transport", href: "/worker/transport/dashboard", icon: Car, role: "worker_transport" },
+    { title: "Immigration", href: "/worker/immigration/dashboard", icon: BookUser, role: "worker_immigration" },
+    { title: "Identity", href: "/worker/identity/dashboard", icon: Fingerprint, role: "worker_identity" },
+    { title: "Missing Documents", href: "/worker/missingdocuments/dashboard", icon: FileQuestion, role: "worker_missingdocuments" },
+    { title: "Health", href: "/worker/health/dashboard", icon: HeartPulse, role: "worker_health" },
+    { title: "Tax", href: "/worker/tax/dashboard", icon: CreditCard, role: "worker_tax" },
+    { title: "Pensions", href: "/worker/pension/dashboard", icon: Users, role: "worker_pension" },
+    { title: "Land Registry", href: "/worker/landregistry/dashboard", icon: Building, role: "worker_landregistry" },
+    { title: "Exams", href: "/worker/exams/dashboard", icon: GraduationCap, role: "worker_exams" },
+    { title: "Fine Payment", href: "/worker/fine-payment/dashboard", icon: ReceiptText, role: "worker_finepayment" },
+    { title: "Registered Vehicles", href: "/worker/registered-vehicles/dashboard", icon: ClipboardList, role: "worker_registeredvehicles" },
+    { title: "Support", href: "/worker/support/dashboard", icon: LifeBuoy, role: "worker_support" },
 ];
 
 interface AdminLayoutProps {
@@ -43,21 +43,14 @@ interface AdminLayoutProps {
 export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) {
   const pathname = usePathname();
   const [workerRole, setWorkerRole] = useState<string | null>(null);
+  const [workerId, setWorkerId] = useState<string | null>(null);
 
   useEffect(() => {
-    // This effect runs on the client-side, so localStorage is available.
     if (workerMode) {
-      const roleFromPath = pathname.split('/')[2];
       const roleFromStorage = localStorage.getItem("workerRole");
-      const activeRole = roleFromPath && allWorkerNavItems.some(item => item.role === roleFromPath) ? roleFromPath : roleFromStorage;
-      
-      setWorkerRole(activeRole);
-      
-      // If the role from the path is different from storage, update storage.
-      // This keeps the session consistent when navigating between worker dashboards (if that were possible).
-      if (activeRole && activeRole !== roleFromStorage) {
-        localStorage.setItem("workerRole", activeRole);
-      }
+      const idFromStorage = localStorage.getItem("workerId");
+      setWorkerRole(roleFromStorage);
+      setWorkerId(idFromStorage);
     }
   }, [pathname, workerMode]);
 
@@ -72,8 +65,24 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
   };
 
   const navItems = workerMode ? getWorkerNavItems() : adminNavItems;
-  const logoHref = workerMode ? (workerRole ? `/worker/${workerRole}/dashboard` : '/admin/login') : "/admin/dashboard";
-  const profileHref = workerMode ? (workerRole ? `/worker/${workerRole}/profile` : '/admin/login') : "/admin/profile";
+  
+  const getDashboardHref = () => {
+    if (!workerMode) return "/admin/dashboard";
+    if (workerRole) {
+        const item = allWorkerNavItems.find(i => i.role === workerRole);
+        return item ? item.href : '/admin/login';
+    }
+    return '/admin/login';
+  }
+
+  const getProfileHref = () => {
+      if (!workerMode) return "/admin/profile";
+      if(workerId) return `/worker/profile/${workerId}`;
+      return '/admin/login';
+  }
+
+  const logoHref = getDashboardHref();
+  const profileHref = getProfileHref();
   const logoText = workerMode ? "Worker Portal" : "Admin Panel";
   const LogoIcon = workerMode ? PenSquare : Shield;
 

@@ -1,57 +1,51 @@
 
 "use client";
 
+import { use, useEffect, useState, FormEvent } from "react";
+import { notFound } from "next/navigation";
 import { AdminLayout } from "@/components/admin-layout";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { FormEvent, use, useEffect, useState } from "react";
-import { notFound } from "next/navigation";
+import { db } from "@/lib/firebase";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import type { User } from "@/lib/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
-// A simple map to make role names more user-friendly
-const roleDisplayNames = {
-    transport: "Transport",
-    immigration: "Immigration",
-    identity: "Identity",
-    missingdocuments: "Missing Documents",
-    health: "Health",
-    tax: "Tax",
-    pension: "Pension",
-    landregistry: "Land Registry",
-    exams: "Exams",
-    finepayment: "Fine Payment",
-    registeredvehicles: "Registered Vehicles",
-    support: "Support"
-};
-
-export default function WorkerProfilePage({ params }: { params: Promise<{ role: string }> }) {
-    const { role: roleFromParams } = use(params);
+export default function WorkerProfilePage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
     const { toast } = useToast();
-    const [role, setRole] = useState<string | null>(null);
+    const [worker, setWorker] = useState<User | null>(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // On the client-side, we can confirm the role from localStorage as a fallback/check
-        // This makes the component more robust if the param somehow doesn't match the session
-        const storedRole = localStorage.getItem('workerRole');
-        if (roleFromParams && roleDisplayNames[roleFromParams]) {
-            setRole(roleFromParams);
-        } else if (storedRole && roleDisplayNames[storedRole]) {
-            setRole(storedRole);
-        } else {
-            // If no valid role can be determined, this page is not accessible
-            notFound();
-        }
-    }, [roleFromParams]);
+        const fetchWorker = async () => {
+            if (id) {
+                try {
+                    const userDoc = await getDoc(doc(db, "users", id));
+                    if (userDoc.exists()) {
+                        const userData = { id: userDoc.id, ...userDoc.data() } as User;
+                        if (userData.role.startsWith('worker_')) {
+                            setWorker(userData);
+                        } else {
+                           notFound(); // Not a worker
+                        }
+                    } else {
+                        notFound();
+                    }
+                } catch (error) {
+                    console.error("Error fetching worker data:", error);
+                    notFound();
+                } finally {
+                    setLoading(false);
+                }
+            }
+        };
+        fetchWorker();
+    }, [id]);
 
     const handleUpdatePassword = (e: FormEvent) => {
         e.preventDefault();
@@ -59,13 +53,30 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ role: 
             title: "Password Updated",
             description: "Your password has been changed successfully. You will be logged out.",
         });
-    }
-    
-    if (!role) {
-        return null; // Or a loading spinner
+        // In a real app, you would log the user out here.
     }
 
-    const displayName = roleDisplayNames[role] || "Unknown";
+    if (loading) {
+        return (
+            <AdminLayout workerMode>
+                <div className="flex-1 space-y-8 p-8 pt-6">
+                    <Skeleton className="h-10 w-1/2" />
+                     <div className="grid gap-8 md:grid-cols-3">
+                        <div className="md:col-span-1">
+                            <Skeleton className="h-64 w-full" />
+                        </div>
+                        <div className="md:col-span-2">
+                             <Skeleton className="h-48 w-full" />
+                        </div>
+                     </div>
+                </div>
+            </AdminLayout>
+        )
+    }
+
+    if (!worker) {
+        return notFound();
+    }
 
   return (
     <AdminLayout workerMode>
@@ -79,15 +90,14 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ role: 
                  <Card>
                     <CardHeader className="text-center">
                         <Avatar className="w-24 h-24 mx-auto mb-4">
-                            <AvatarImage src="https://placehold.co/100x100" alt="Worker" data-ai-hint="avatar user" />
-                            <AvatarFallback>W</AvatarFallback>
+                            <AvatarImage src="https://placehold.co/100x100" alt={worker.name} data-ai-hint="avatar user" />
+                            <AvatarFallback>{worker.name.charAt(0)}</AvatarFallback>
                         </Avatar>
-                        <CardTitle>{displayName} Worker</CardTitle>
-                        <CardDescription>{`worker.${role}@gov.lk`}</CardDescription>
+                        <CardTitle>{worker.name}</CardTitle>
+                        <CardDescription>{worker.email}</CardDescription>
                     </CardHeader>
                     <CardContent className="text-sm text-center">
-                        <p className="font-semibold">Role: <span className="font-normal">{`worker_${role}`}</span></p>
-                        <p className="font-semibold">Joined: <span className="font-normal">2024-02-15</span></p>
+                        <p className="font-semibold">Role: <span className="font-normal">{worker.role}</span></p>
                     </CardContent>
                 </Card>
             </div>

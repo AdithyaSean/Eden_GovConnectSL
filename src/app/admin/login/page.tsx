@@ -16,39 +16,64 @@ import { Shield } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useToast } from "@/hooks/use-toast";
+import { db } from "@/lib/firebase";
+import { collection, query, where, getDocs, limit } from "firebase/firestore";
+import type { User } from "@/lib/types";
 
 export default function AdminLoginPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
 
     // Clear any previous session info
+    localStorage.removeItem("workerId");
     localStorage.removeItem("workerRole");
 
     if (isAdmin) {
+      // Simulate admin login
       router.push("/admin/dashboard");
+      setLoading(false);
       return;
     }
 
-    // Logic to redirect worker based on email
-    if (email.includes("worker")) {
-        const role = email.split("@")[0].split(".")[1];
-        if (role) {
-            // Store the worker's role to be used in the layout
-            localStorage.setItem("workerRole", role);
-            router.push(`/worker/${role}/dashboard`);
-        } else {
-            // Default worker redirect if role can't be determined
-            localStorage.setItem("workerRole", "transport"); // Fallback role
-            router.push("/worker/transport/dashboard");
+    try {
+        const usersRef = collection(db, "users");
+        const q = query(usersRef, where("email", "==", email), limit(1));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            toast({ title: "Login Failed", description: "No user found with this email.", variant: "destructive" });
+            setLoading(false);
+            return;
         }
-    } else {
-        // If not an admin and not a recognized worker email, do nothing or show an error.
-        // For this prototype, we'll just prevent redirection.
-        console.log("Not a valid worker email format.");
+        
+        const userDoc = querySnapshot.docs[0];
+        const userData = { id: userDoc.id, ...userDoc.data() } as User;
+
+        if (userData.role.startsWith("worker_")) {
+            localStorage.setItem("workerId", userData.id);
+            localStorage.setItem("workerRole", userData.role);
+            router.push(`/worker/${userData.role.replace('worker_', '')}/dashboard`);
+        } else if (userData.role === "Super Admin" && email.endsWith('@gov.lk')) {
+            // This is a simplified check, in reality you'd have a separate admin login or check a flag.
+            router.push("/admin/dashboard");
+        } else {
+            toast({ title: "Access Denied", description: "This login is for authorized workers and admins only.", variant: "destructive" });
+        }
+
+    } catch (error) {
+        console.error("Login error: ", error);
+        toast({ title: "An Error Occurred", description: "Something went wrong. Please try again.", variant: "destructive" });
+    } finally {
+        setLoading(false);
     }
   };
 
@@ -72,25 +97,30 @@ export default function AdminLoginPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="admin@gov.lk or worker.support@gov.lk"
-                  required={!isAdmin}
+                  placeholder="admin@gov.lk or worker.transport@gov.lk"
+                  required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  disabled={isAdmin}
                 />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" required={!isAdmin} disabled={isAdmin} defaultValue="password"/>
+                <Input 
+                  id="password" 
+                  type="password" 
+                  required 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox id="is-admin" checked={isAdmin} onCheckedChange={(checked) => setIsAdmin(checked as boolean)} />
                 <Label htmlFor="is-admin" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Login as Admin
+                  Simulate Admin Login (No DB check)
                 </Label>
               </div>
-              <Button type="submit" className="w-full">
-                Login
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Logging in..." : "Login"}
               </Button>
             </div>
           </form>
