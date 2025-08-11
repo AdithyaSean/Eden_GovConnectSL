@@ -18,23 +18,21 @@ export function useAuth() {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             setFirebaseUser(user);
-            setLoading(false); // Auth state is now known
+            // We set loading to false later, after we've tried to fetch the Firestore user
         });
         return () => unsubscribe();
     }, []);
 
 
     const fetchUser = useCallback(async () => {
-        if (loading) return; // Don't fetch if auth state is still loading
-
-        setLoading(true);
+        // No need to check for loading here, firebaseUser being set is the trigger
         if (firebaseUser) {
             // User is logged in via Firebase Auth, fetch their profile from Firestore
              try {
                 const userDocRef = doc(db, "users", firebaseUser.uid);
                 const userDoc = await getDoc(userDocRef);
                 if (userDoc.exists()) {
-                    setUser({ id: userDoc.id, ...userDoc.data() } as User);
+                    setUser({ id: userDoc.id, ...userDoc.data(), photoURL: firebaseUser.photoURL || userDoc.data().photoURL } as User);
                 } else {
                      console.warn(`No Firestore profile found for user: ${firebaseUser.uid}`);
                      setUser(null);
@@ -49,9 +47,10 @@ export function useAuth() {
         }
         setLoading(false);
 
-    }, [firebaseUser, loading]);
+    }, [firebaseUser]);
         
     useEffect(() => {
+        // This now correctly depends on firebaseUser state changes
         fetchUser();
     }, [fetchUser]);
     

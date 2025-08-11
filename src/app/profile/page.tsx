@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Camera } from "lucide-react";
+import { Camera, Loader2 } from "lucide-react";
 import { useEffect, useState, useRef, ChangeEvent } from 'react';
 import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,7 +27,10 @@ import type { User } from "@/lib/types";
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("personal-info");
-  const { user, loading } = useAuth();
+  const { user, loading, refetch } = useAuth();
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
   
   const [formData, setFormData] = useState({ name: '', email: '', nic: '', contactNumber: '+94 77 123 4567' });
 
@@ -48,6 +51,40 @@ export default function ProfilePage() {
       });
     }
   }, [user]);
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files || event.target.files.length === 0 || !user) {
+        return;
+    }
+
+    const file = event.target.files[0];
+    if (file.size > 2 * 1024 * 1024) { // 2MB limit
+        toast({ title: "File too large", description: "Please select an image smaller than 2MB.", variant: "destructive"});
+        return;
+    }
+
+    setUploading(true);
+    try {
+        const storageRef = ref(storage, `profile-pictures/${user.id}/${file.name}`);
+        const uploadResult = await uploadBytes(storageRef, file);
+        const downloadURL = await getDownloadURL(uploadResult.ref);
+
+        const userDocRef = doc(db, "users", user.id);
+        await updateDoc(userDocRef, { photoURL: downloadURL });
+
+        toast({ title: "Success", description: "Profile picture updated successfully!"});
+        refetch(); // Refetch user data to show the new picture
+    } catch (error) {
+        console.error("Error uploading file: ", error);
+        toast({ title: "Upload Failed", description: "Could not upload your profile picture. Please try again.", variant: "destructive" });
+    } finally {
+        setUploading(false);
+    }
+  };
 
   if (loading || !user) {
     return (
@@ -89,11 +126,22 @@ export default function ProfilePage() {
             <TabsContent value="personal-info">
                 <Card>
                     <CardHeader className="text-center">
-                         <div className="relative mx-auto w-24 h-24 mb-4 group">
+                         <div className="relative mx-auto w-24 h-24 mb-4 group cursor-pointer" onClick={handleAvatarClick}>
                             <Avatar className="w-24 h-24">
                                 <AvatarImage src={user.photoURL || `https://placehold.co/100x100`} alt={user.name} data-ai-hint="avatar user" />
                                 <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                             </Avatar>
+                            <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                {uploading ? <Loader2 className="w-8 h-8 text-white animate-spin" /> : <Camera className="w-8 h-8 text-white" />}
+                            </div>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileChange}
+                                className="hidden"
+                                accept="image/png, image/jpeg"
+                                disabled={uploading}
+                            />
                          </div>
                         <CardTitle>{user.name}</CardTitle>
                         <CardDescription>{user.email}</CardDescription>

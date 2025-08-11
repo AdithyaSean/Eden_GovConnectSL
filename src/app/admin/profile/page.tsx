@@ -15,10 +15,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { FormEvent } from "react";
+import { FormEvent, useRef, useState } from "react";
+import { Camera, Loader2 } from "lucide-react";
 
 export default function AdminProfilePage() {
     const { toast } = useToast();
+    const [uploading, setUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleUpdatePassword = (e: FormEvent) => {
         e.preventDefault();
@@ -27,6 +30,26 @@ export default function AdminProfilePage() {
             description: "Your password has been changed successfully. You will be logged out for security.",
         });
     }
+
+    const handleAvatarClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setUploading(true);
+            // In a real app, you would upload this file to a storage service
+            // and get back a URL. For this prototype, we'll simulate it.
+            setTimeout(() => {
+                toast({
+                    title: "Profile Picture Updated",
+                    description: "Your new avatar has been saved.",
+                });
+                setUploading(false);
+            }, 1500);
+        }
+    };
 
   return (
     <AdminLayout>
@@ -39,10 +62,23 @@ export default function AdminProfilePage() {
             <div className="md:col-span-1">
                  <Card>
                     <CardHeader className="text-center">
-                        <Avatar className="w-24 h-24 mx-auto mb-4">
-                            <AvatarImage src="https://placehold.co/100x100" alt="Admin" data-ai-hint="avatar user" />
-                            <AvatarFallback>A</AvatarFallback>
-                        </Avatar>
+                        <div className="relative mx-auto w-24 h-24 mb-4 group cursor-pointer" onClick={handleAvatarClick}>
+                            <Avatar className="w-24 h-24">
+                                <AvatarImage src="https://placehold.co/100x100" alt="Admin" data-ai-hint="avatar user" />
+                                <AvatarFallback>A</AvatarFallback>
+                            </Avatar>
+                             <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                {uploading ? <Loader2 className="w-8 h-8 text-white animate-spin" /> : <Camera className="w-8 h-8 text-white" />}
+                            </div>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileChange}
+                                className="hidden"
+                                accept="image/png, image/jpeg"
+                                disabled={uploading}
+                            />
+                        </div>
                         <CardTitle>Admin User</CardTitle>
                         <CardDescription>admin@gov.lk</CardDescription>
                     </CardHeader>

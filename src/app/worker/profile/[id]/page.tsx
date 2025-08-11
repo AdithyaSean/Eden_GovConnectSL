@@ -1,7 +1,7 @@
 
 "use client";
 
-import { use, useEffect, useState, FormEvent } from "react";
+import { use, useEffect, useState, FormEvent, useRef, ChangeEvent } from "react";
 import { notFound } from "next/navigation";
 import { AdminLayout } from "@/components/admin-layout";
 import { Button } from "@/components/ui/button";
@@ -10,40 +10,46 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { db } from "@/lib/firebase";
+import { db, storage } from "@/lib/firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import type { User } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Camera, Loader2 } from "lucide-react";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 export default function WorkerProfilePage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
     const { toast } = useToast();
     const [worker, setWorker] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const [uploading, setUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const fetchWorker = async () => {
+        if (id) {
+            setLoading(true);
+            try {
+                const userDoc = await getDoc(doc(db, "users", id));
+                if (userDoc.exists()) {
+                    const userData = { id: userDoc.id, ...userDoc.data() } as User;
+                    if (userData.role.startsWith('worker_') || userData.role === 'Super Admin') {
+                        setWorker(userData);
+                    } else {
+                       notFound(); // Not a worker or admin
+                    }
+                } else {
+                    notFound();
+                }
+            } catch (error) {
+                console.error("Error fetching worker data:", error);
+                notFound();
+            } finally {
+                setLoading(false);
+            }
+        }
+    };
 
     useEffect(() => {
-        const fetchWorker = async () => {
-            if (id) {
-                try {
-                    const userDoc = await getDoc(doc(db, "users", id));
-                    if (userDoc.exists()) {
-                        const userData = { id: userDoc.id, ...userDoc.data() } as User;
-                        if (userData.role.startsWith('worker_')) {
-                            setWorker(userData);
-                        } else {
-                           notFound(); // Not a worker
-                        }
-                    } else {
-                        notFound();
-                    }
-                } catch (error) {
-                    console.error("Error fetching worker data:", error);
-                    notFound();
-                } finally {
-                    setLoading(false);
-                }
-            }
-        };
         fetchWorker();
     }, [id]);
 
@@ -55,6 +61,41 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
         });
         // In a real app, you would log the user out here.
     }
+
+    const handleAvatarClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+        if (!event.target.files || event.target.files.length === 0 || !worker) {
+            return;
+        }
+
+        const file = event.target.files[0];
+        if (file.size > 2 * 1024 * 1024) { // 2MB limit
+            toast({ title: "File too large", description: "Please select an image smaller than 2MB.", variant: "destructive"});
+            return;
+        }
+
+        setUploading(true);
+        try {
+            const storageRef = ref(storage, `profile-pictures/${worker.id}/${file.name}`);
+            const uploadResult = await uploadBytes(storageRef, file);
+            const downloadURL = await getDownloadURL(uploadResult.ref);
+
+            const userDocRef = doc(db, "users", worker.id);
+            await updateDoc(userDocRef, { photoURL: downloadURL });
+
+            toast({ title: "Success", description: "Profile picture updated successfully!"});
+            fetchWorker(); // Refetch worker data
+        } catch (error) {
+            console.error("Error uploading file: ", error);
+            toast({ title: "Upload Failed", variant: "destructive" });
+        } finally {
+            setUploading(false);
+        }
+    };
+
 
     if (loading) {
         return (
@@ -89,10 +130,23 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
             <div className="md:col-span-1">
                  <Card>
                     <CardHeader className="text-center">
-                        <Avatar className="w-24 h-24 mx-auto mb-4">
-                            <AvatarImage src="https://placehold.co/100x100" alt={worker.name} data-ai-hint="avatar user" />
-                            <AvatarFallback>{worker.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
+                        <div className="relative mx-auto w-24 h-24 mb-4 group cursor-pointer" onClick={handleAvatarClick}>
+                            <Avatar className="w-24 h-24">
+                                <AvatarImage src={worker.photoURL || "https://placehold.co/100x100"} alt={worker.name} data-ai-hint="avatar user" />
+                                <AvatarFallback>{worker.name.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                             <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                {uploading ? <Loader2 className="w-8 h-8 text-white animate-spin" /> : <Camera className="w-8 h-8 text-white" />}
+                            </div>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileChange}
+                                className="hidden"
+                                accept="image/png, image/jpeg"
+                                disabled={uploading}
+                            />
+                        </div>
                         <CardTitle>{worker.name}</CardTitle>
                         <CardDescription>{worker.email}</CardDescription>
                     </CardHeader>
