@@ -15,22 +15,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Camera, Download } from "lucide-react";
-import { useEffect, useState, useRef } from 'react';
+import { Camera } from "lucide-react";
+import { useEffect, useState, useRef, ChangeEvent } from 'react';
 import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { db, storage } from "@/lib/firebase";
 import { doc, updateDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import type { User } from "@/lib/types";
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("personal-info");
@@ -39,6 +32,9 @@ export default function ProfilePage() {
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
   
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({ name: '', email: '', nic: '', contactNumber: '+94 77 123 4567' });
+
   useEffect(() => {
     const hash = window.location.hash.replace('#', '');
     if (hash) {
@@ -46,11 +42,22 @@ export default function ProfilePage() {
     }
   }, []);
 
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || '',
+        email: user.email || '',
+        nic: user.nic || '',
+        contactNumber: '+94 77 123 4567' // This can be updated if stored in user doc
+      });
+    }
+  }, [user]);
+
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !user) return;
 
@@ -82,6 +89,28 @@ export default function ProfilePage() {
         setUploading(false);
     }
   };
+
+  const handleFormChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({ ...prev, [id]: value }));
+  };
+
+  const handleSaveChanges = async () => {
+    if (!user) return;
+    try {
+        const userDocRef = doc(db, "users", user.id);
+        await updateDoc(userDocRef, {
+            name: formData.name,
+            // email and nic are typically not user-editable, but could be added here
+        });
+        await refetch();
+        toast({ title: "Success", description: "Profile updated successfully." });
+        setIsEditing(false);
+    } catch(error) {
+        console.error("Error updating profile:", error);
+        toast({ title: "Update Failed", description: "Could not update your profile.", variant: "destructive"});
+    }
+  }
   
   if (loading || !user) {
     return (
@@ -143,24 +172,31 @@ export default function ProfilePage() {
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
                         <div className="space-y-1">
-                            <Label>Full Name</Label>
-                            <p className="font-medium">{user.name}</p>
+                            <Label htmlFor="name">Full Name</Label>
+                             <Input id="name" value={formData.name} onChange={handleFormChange} disabled={!isEditing} />
                         </div>
                         <div className="space-y-1">
-                            <Label>Email</Label>
-                            <p className="font-medium">{user.email}</p>
+                            <Label htmlFor="email">Email</Label>
+                             <Input id="email" value={formData.email} disabled />
                         </div>
                          <div className="space-y-1">
-                            <Label>NIC Number</Label>
-                            <p className="font-medium">{user.nic}</p>
+                            <Label htmlFor="nic">NIC Number</Label>
+                             <Input id="nic" value={formData.nic} disabled />
                         </div>
                          <div className="space-y-1">
-                            <Label>Contact Number</Label>
-                            <p className="font-medium">+94 77 123 4567</p>
+                            <Label htmlFor="contactNumber">Contact Number</Label>
+                             <Input id="contactNumber" value={formData.contactNumber} onChange={handleFormChange} disabled={!isEditing} />
                         </div>
                     </CardContent>
-                    <CardFooter className="justify-center">
-                        <Button>Edit Profile</Button>
+                    <CardFooter className="justify-center gap-2">
+                         {isEditing ? (
+                            <>
+                                <Button variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
+                                <Button onClick={handleSaveChanges}>Save Changes</Button>
+                            </>
+                         ) : (
+                            <Button onClick={() => setIsEditing(true)}>Edit Profile</Button>
+                         )}
                     </CardFooter>
                 </Card>
             </TabsContent>
