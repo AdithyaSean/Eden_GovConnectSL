@@ -136,7 +136,7 @@ export default function WorkerTransportDashboard() {
                       </TableCell>
                       <TableCell>
                         <Button asChild variant="outline" size="sm">
-                            <Link href={`/admin/applications/${app.id}`}>View Application</Link>
+                            <Link href={`/worker/applications/${app.id}`}>View Application</Link>
                         </Button>
                       </TableCell>
                     </TableRow>

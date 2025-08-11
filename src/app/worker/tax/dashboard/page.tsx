@@ -13,7 +13,7 @@ import type { Application } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 
-const taxServices = ["Tax Payments (IRD)"];
+const taxServices = ["Tax Payments (IRD)", "Tax Document Submission"];
 
 export default function WorkerTaxDashboard() {
   const [applications, setApplications] = useState<Application[]>([]);
@@ -83,7 +83,7 @@ export default function WorkerTaxDashboard() {
                     </TableCell>
                     <TableCell>
                         <Button asChild variant="outline" size="sm">
-                            <Link href={`/admin/applications/${app.id}`}>View Application</Link>
+                            <Link href={`/worker/applications/${app.id}`}>View Application</Link>
                         </Button>
                     </TableCell>
                   </TableRow>

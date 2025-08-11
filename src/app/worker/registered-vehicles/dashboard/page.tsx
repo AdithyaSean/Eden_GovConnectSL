@@ -83,7 +83,7 @@ export default function WorkerRegisteredVehiclesDashboard() {
                     </TableCell>
                     <TableCell>
                       <Button asChild variant="outline" size="sm">
-                        <Link href={`/admin/applications/${app.id}`}>View Request</Link>
+                        <Link href={`/worker/applications/${app.id}`}>View Request</Link>
                       </Button>
                     </TableCell>
                   </TableRow>

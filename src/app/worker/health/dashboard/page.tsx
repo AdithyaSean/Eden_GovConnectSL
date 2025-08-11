@@ -13,7 +13,7 @@ import type { Application } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 
-const healthServices = ["Health Services"];
+const healthServices = ["Health Services", "National Medical ID Card Application", "Medical Appointment Request"];
 
 export default function WorkerHealthDashboard() {
   const [applications, setApplications] = useState<Application[]>([]);
@@ -83,7 +83,7 @@ export default function WorkerHealthDashboard() {
                     </TableCell>
                     <TableCell>
                         <Button asChild variant="outline" size="sm">
-                            <Link href={`/admin/applications/${app.id}`}>View Application</Link>
+                            <Link href={`/worker/applications/${app.id}`}>View Application</Link>
                         </Button>
                     </TableCell>
                   </TableRow>
