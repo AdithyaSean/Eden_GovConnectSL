@@ -25,13 +25,13 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
   const { toast } = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const { id } = params;
 
   useEffect(() => {
     const fetchUser = async () => {
-      const userId = params.id;
-      if (userId) {
+      if (id) {
         try {
-          const userDoc = await getDoc(doc(db, "users", userId));
+          const userDoc = await getDoc(doc(db, "users", id));
           if (userDoc.exists()) {
             setUser({ id: userDoc.id, ...userDoc.data() } as User);
           }
@@ -45,7 +45,7 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
       }
     };
     fetchUser();
-  }, [params.id]);
+  }, [id]);
 
   const handleSaveChanges = async () => {
     if(user) {
