@@ -11,6 +11,7 @@ import { Button } from "./ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
+import { useEffect, useState } from "react";
 
 const adminNavItems = [
   { title: "Dashboard", href: "/admin/dashboard", icon: Home },
@@ -41,36 +42,38 @@ interface AdminLayoutProps {
 
 export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) {
   const pathname = usePathname();
+  const [workerRole, setWorkerRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    // This effect runs on the client-side, so localStorage is available.
+    if (workerMode) {
+      const roleFromPath = pathname.split('/')[2];
+      const roleFromStorage = localStorage.getItem("workerRole");
+      const activeRole = roleFromPath && allWorkerNavItems.some(item => item.role === roleFromPath) ? roleFromPath : roleFromStorage;
+      
+      setWorkerRole(activeRole);
+      
+      // If the role from the path is different from storage, update storage.
+      // This keeps the session consistent when navigating between worker dashboards (if that were possible).
+      if (activeRole && activeRole !== roleFromStorage) {
+        localStorage.setItem("workerRole", activeRole);
+      }
+    }
+  }, [pathname, workerMode]);
 
   const getWorkerNavItems = () => {
-    // This logic attempts to find the role from the URL, e.g., /worker/transport/dashboard -> 'transport'
-    // It's not perfect but works for the dashboard pages.
-    const pathSegments = pathname.split('/');
-    const workerRole = pathSegments.length > 2 ? pathSegments[2] : null;
-    
-    if (workerRole && allWorkerNavItems.some(item => item.role === workerRole)) {
-      return allWorkerNavItems.filter(item => item.role === workerRole);
+    if (workerRole) {
+      const navItem = allWorkerNavItems.find(item => item.role === workerRole);
+      return navItem ? [
+          {...navItem, title: "Dashboard", href: navItem.href}
+      ] : [];
     }
-    // Fallback for pages like /worker/profile where the role isn't in the URL.
-    // We can't know the specific role, so we can't show the nav item, but we need a valid logo link.
     return [];
-  }
-  
-  const getWorkerDashboardLink = () => {
-      const pathSegments = pathname.split('/');
-      const workerRole = pathSegments.length > 2 ? pathSegments[2] : null;
-       if (workerRole && allWorkerNavItems.some(item => item.role === workerRole)) {
-            const navItem = allWorkerNavItems.find(item => item.role === workerRole);
-            return navItem ? navItem.href : '/admin/login'; // Fallback to login
-       }
-       // If we're on a generic worker page like /profile, we can't know the specific dashboard.
-       // A generic link to /admin/login is a safe fallback.
-       // A better implementation might store the worker role in a session/context.
-       return '/admin/login';
-  }
+  };
 
   const navItems = workerMode ? getWorkerNavItems() : adminNavItems;
-  const logoHref = workerMode ? getWorkerDashboardLink() : "/admin/dashboard";
+  const logoHref = workerMode ? (workerRole ? `/worker/${workerRole}/dashboard` : '/admin/login') : "/admin/dashboard";
+  const profileHref = workerMode ? (workerRole ? `/worker/${workerRole}/profile` : '/admin/login') : "/admin/profile";
   const logoText = workerMode ? "Worker Portal" : "Admin Panel";
   const LogoIcon = workerMode ? PenSquare : Shield;
 
@@ -156,7 +159,7 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href={workerMode ? "/worker/profile" : "/admin/profile"}>
+                  <Link href={profileHref}>
                     <UserCircle className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </Link>

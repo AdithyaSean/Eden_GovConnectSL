@@ -24,6 +24,10 @@ export default function AdminLoginPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Clear any previous session info
+    localStorage.removeItem("workerRole");
+
     if (isAdmin) {
       router.push("/admin/dashboard");
       return;
@@ -33,9 +37,12 @@ export default function AdminLoginPage() {
     if (email.includes("worker")) {
         const role = email.split("@")[0].split(".")[1];
         if (role) {
+            // Store the worker's role to be used in the layout
+            localStorage.setItem("workerRole", role);
             router.push(`/worker/${role}/dashboard`);
         } else {
             // Default worker redirect if role can't be determined
+            localStorage.setItem("workerRole", "transport"); // Fallback role
             router.push("/worker/transport/dashboard");
         }
     } else {

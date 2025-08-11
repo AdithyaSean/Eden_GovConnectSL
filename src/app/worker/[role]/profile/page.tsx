@@ -15,10 +15,42 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { FormEvent } from "react";
+import { FormEvent, use, useEffect, useState } from "react";
+import { notFound } from "next/navigation";
 
-export default function WorkerProfilePage() {
+// A simple map to make role names more user-friendly
+const roleDisplayNames = {
+    transport: "Transport",
+    immigration: "Immigration",
+    identity: "Identity",
+    missingdocuments: "Missing Documents",
+    health: "Health",
+    tax: "Tax",
+    pension: "Pension",
+    landregistry: "Land Registry",
+    exams: "Exams",
+    finepayment: "Fine Payment",
+    registeredvehicles: "Registered Vehicles",
+    support: "Support"
+};
+
+export default function WorkerProfilePage({ params }: { params: { role: string } }) {
     const { toast } = useToast();
+    const [role, setRole] = useState<string | null>(null);
+
+    useEffect(() => {
+        // On the client-side, we can confirm the role from localStorage as a fallback/check
+        // This makes the component more robust if the param somehow doesn't match the session
+        const storedRole = localStorage.getItem('workerRole');
+        if (params.role && roleDisplayNames[params.role]) {
+            setRole(params.role);
+        } else if (storedRole && roleDisplayNames[storedRole]) {
+            setRole(storedRole);
+        } else {
+            // If no valid role can be determined, this page is not accessible
+            notFound();
+        }
+    }, [params.role]);
 
     const handleUpdatePassword = (e: FormEvent) => {
         e.preventDefault();
@@ -27,6 +59,12 @@ export default function WorkerProfilePage() {
             description: "Your password has been changed successfully. You will be logged out.",
         });
     }
+    
+    if (!role) {
+        return null; // Or a loading spinner
+    }
+
+    const displayName = roleDisplayNames[role] || "Unknown";
 
   return (
     <AdminLayout workerMode>
@@ -43,11 +81,11 @@ export default function WorkerProfilePage() {
                             <AvatarImage src="https://placehold.co/100x100" alt="Worker" data-ai-hint="avatar user" />
                             <AvatarFallback>W</AvatarFallback>
                         </Avatar>
-                        <CardTitle>Transport Worker</CardTitle>
-                        <CardDescription>worker.transport@gov.lk</CardDescription>
+                        <CardTitle>{displayName} Worker</CardTitle>
+                        <CardDescription>{`worker.${role}@gov.lk`}</CardDescription>
                     </CardHeader>
                     <CardContent className="text-sm text-center">
-                        <p className="font-semibold">Role: <span className="font-normal">worker_transport</span></p>
+                        <p className="font-semibold">Role: <span className="font-normal">{`worker_${role}`}</span></p>
                         <p className="font-semibold">Joined: <span className="font-normal">2024-02-15</span></p>
                     </CardContent>
                 </Card>
@@ -86,4 +124,3 @@ export default function WorkerProfilePage() {
     </AdminLayout>
   );
 }
-
