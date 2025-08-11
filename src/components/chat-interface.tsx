@@ -4,13 +4,14 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, User, Bot } from "lucide-react";
+import { Send, User, Bot, Loader } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "./ui/card";
+import { askGemini } from "@/ai/flows/chat";
 
 type Message = {
-    role: "user" | "assistant";
+    role: "user" | "model";
     content: string;
 }
 
@@ -24,6 +25,34 @@ const sampleQueries = [
 export function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+    
+    const userMessage: Message = { role: "user", content: input };
+    setMessages(prev => [...prev, userMessage]);
+    setLoading(true);
+    setInput("");
+
+    try {
+        const assistantResponse = await askGemini({
+            history: messages,
+            newMessage: input,
+        });
+        const assistantMessage: Message = { role: "model", content: assistantResponse };
+        setMessages(prev => [...prev, assistantMessage]);
+
+    } catch(error) {
+        console.error("Error calling Gemini:", error);
+        const errorMessage: Message = { role: "model", content: "Sorry, I ran into a problem. Please try again."};
+        setMessages(prev => [...prev, errorMessage]);
+    } finally {
+        setLoading(false);
+    }
+  }
+
 
   return (
     <div className="flex flex-col h-[calc(100vh-120px)]">
@@ -37,7 +66,7 @@ export function ChatInterface() {
                 message.role === "user" ? "justify-end" : "justify-start"
                 )}
             >
-                {message.role === "assistant" && (
+                {message.role === "model" && (
                 <Avatar className="h-9 w-9">
                     <AvatarImage data-ai-hint="avatar character" src="https://placehold.co/100x100/4A7C59/FFFFFF.png" />
                     <AvatarFallback><Bot /></AvatarFallback>
@@ -45,8 +74,8 @@ export function ChatInterface() {
                 )}
                 <div
                 className={cn(
-                    "rounded-xl p-4 text-sm max-w-lg shadow-sm",
-                    message.role === "assistant"
+                    "rounded-xl p-4 text-sm max-w-lg shadow-sm whitespace-pre-wrap",
+                    message.role === "model"
                     ? "bg-card text-card-foreground"
                     : "bg-primary text-primary-foreground"
                 )}
@@ -81,22 +110,35 @@ export function ChatInterface() {
                 </div>
             </div>
         )}
+        {loading && (
+            <div className="flex items-start gap-4 justify-start">
+                 <Avatar className="h-9 w-9">
+                    <AvatarImage data-ai-hint="avatar character" src="https://placehold.co/100x100/4A7C59/FFFFFF.png" />
+                    <AvatarFallback><Bot /></AvatarFallback>
+                </Avatar>
+                 <div className="rounded-xl p-4 text-sm max-w-lg shadow-sm bg-card text-card-foreground flex items-center">
+                    <Loader className="mr-2 h-4 w-4 animate-spin" />
+                    Thinking...
+                </div>
+            </div>
+        )}
       </div>
       <div className="p-4 bg-background border-t">
-        <form className="relative max-w-3xl mx-auto">
+        <form onSubmit={handleSubmit} className="relative max-w-3xl mx-auto">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask about passport renewal, vehicle registration, etc."
             className="pr-14 h-12 rounded-full shadow-sm"
             aria-label="Chat message input"
+            disabled={loading}
           />
           <Button
             size="icon"
             type="submit"
             className="absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full"
             aria-label="Send message"
-            disabled={!input}
+            disabled={!input || loading}
           >
             <Send className="h-4 w-4" />
           </Button>
