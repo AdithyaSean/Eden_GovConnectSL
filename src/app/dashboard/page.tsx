@@ -35,22 +35,27 @@ export default function DashboardPage() {
       }
       
       try {
-        const activeServicesQuery = query(
-          collection(db, "applications"),
-          where("user", "==", user.name),
-          where("status", "in", ["Pending", "In Progress", "In Review"])
-        );
-        
-        const activeServicesSnapshot = await getCountFromServer(activeServicesQuery);
-        
-        // These are just examples, you'd create more specific queries
-        const documentsCount = 3; // Example
-        const notificationsCount = 2; // Example
+        const baseQuery = collection(db, "applications");
+        const userAppsQuery = query(baseQuery, where("userId", "==", user.id));
+
+        const activeServicesQuery = query(userAppsQuery, where("status", "in", ["Pending", "In Progress", "In Review"]));
+        const documentsQuery = query(userAppsQuery, where("status", "in", ["Approved", "Completed"]));
+        const notificationsQuery = query(collection(db, "notifications"), where("userId", "==", user.id), where("read", "==", false));
+
+        const [
+            activeServicesSnapshot,
+            documentsSnapshot,
+            notificationsSnapshot
+        ] = await Promise.all([
+            getCountFromServer(activeServicesQuery),
+            getCountFromServer(documentsQuery),
+            getCountFromServer(notificationsQuery),
+        ]);
 
         setStats({
-          documents: documentsCount,
+          documents: documentsSnapshot.data().count,
           activeServices: activeServicesSnapshot.data().count,
-          notifications: notificationsCount,
+          notifications: notificationsSnapshot.data().count,
         });
 
       } catch (error) {
@@ -115,7 +120,7 @@ export default function DashboardPage() {
               <CardContent>
                 {loading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{stats.notifications}</div>}
                 <p className="text-xs text-muted-foreground">
-                  1 unread
+                  Unread messages
                 </p>
               </CardContent>
             </Card>
