@@ -8,17 +8,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Download, File, User, X } from "lucide-react";
+import { Check, Download, File, User, X, ArrowLeft } from "lucide-react";
 import { useEffect, useState, use } from "react";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, updateDoc, Timestamp, collection, addDoc, serverTimestamp } from "firebase/firestore";
 import type { Application, User as AppUser } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 
 export default function WorkerApplicationDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const searchParams = useSearchParams();
+  const fromPath = searchParams.get('from');
+
   const { toast } = useToast();
   const [application, setApplication] = useState<Application | null>(null);
   const [applicant, setApplicant] = useState<AppUser | null>(null);
@@ -131,8 +135,17 @@ export default function WorkerApplicationDetailsPage({ params }: { params: Promi
       <div className="flex-1 space-y-8 p-8 pt-6">
         <div className="flex items-center justify-between space-y-2">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Application Details</h1>
-              <p className="text-muted-foreground">Reviewing application #{application.id}</p>
+              <div className="flex items-center gap-4">
+                {fromPath && (
+                  <Button asChild variant="outline" size="icon">
+                    <Link href={fromPath}><ArrowLeft /></Link>
+                  </Button>
+                )}
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">Application Details</h1>
+                    <p className="text-muted-foreground">Reviewing application #{application.id}</p>
+                </div>
+              </div>
             </div>
             <div className="flex items-center gap-2">
                 <Button variant="outline" onClick={() => handleStatusUpdate('In Progress')}>Set to In Progress</Button>

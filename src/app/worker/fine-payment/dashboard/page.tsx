@@ -85,7 +85,7 @@ export default function WorkerFinePaymentDashboard() {
                     </TableCell>
                     <TableCell>
                       <Button asChild variant="outline" size="sm">
-                        <Link href={`/worker/applications/${app.id}`}>View Details</Link>
+                        <Link href={`/worker/applications/${app.id}?from=/worker/fine-payment/dashboard`}>View Details</Link>
                       </Button>
                     </TableCell>
                   </TableRow>

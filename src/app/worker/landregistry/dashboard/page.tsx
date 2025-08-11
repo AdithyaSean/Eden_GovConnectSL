@@ -84,7 +84,7 @@ export default function WorkerLandRegistryDashboard() {
                     </TableCell>
                     <TableCell>
                         <Button asChild variant="outline" size="sm">
-                            <Link href={`/worker/applications/${app.id}`}>View Application</Link>
+                            <Link href={`/worker/applications/${app.id}?from=/worker/landregistry/dashboard`}>View Application</Link>
                         </Button>
                     </TableCell>
                   </TableRow>

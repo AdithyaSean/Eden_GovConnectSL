@@ -83,7 +83,7 @@ export default function WorkerExamsDashboard() {
                     </TableCell>
                     <TableCell>
                         <Button asChild variant="outline" size="sm">
-                            <Link href={`/worker/applications/${app.id}`}>View Request</Link>
+                            <Link href={`/worker/applications/${app.id}?from=/worker/exams/dashboard`}>View Request</Link>
                         </Button>
                     </TableCell>
                   </TableRow>

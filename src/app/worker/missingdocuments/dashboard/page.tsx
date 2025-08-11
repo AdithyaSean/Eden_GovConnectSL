@@ -5,14 +5,13 @@ import { AdminLayout } from "@/components/admin-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { MoreHorizontal } from "lucide-react";
 import { useEffect, useState } from "react";
 import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { Application } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
 
 const missingDocumentsServices = ["Missing Documents"];
 
@@ -83,16 +82,9 @@ export default function WorkerMissingDocumentsDashboard() {
                       <Badge variant={app.status === 'Approved' ? 'default' : app.status === 'Pending Payment' ? 'outline' : 'secondary'} className={app.status === 'Approved' ? 'bg-green-600' : ''}>{app.status}</Badge>
                     </TableCell>
                     <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button size="icon" variant="ghost"><MoreHorizontal /></Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuItem>View Application</DropdownMenuItem>
-                          <DropdownMenuItem>Verify Documents</DropdownMenuItem>
-                          <DropdownMenuItem>Forward to Department</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                       <Button asChild variant="outline" size="sm">
+                          <Link href={`/worker/applications/${app.id}?from=/worker/missingdocuments/dashboard`}>View Details</Link>
+                       </Button>
                     </TableCell>
                   </TableRow>
                 )))}
