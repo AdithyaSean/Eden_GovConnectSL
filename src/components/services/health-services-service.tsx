@@ -13,6 +13,10 @@ import { Calendar } from '../ui/calendar';
 import { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
+type UploadedFilesState = {
+  [key: string]: string;
+};
+
 const vaccinationRecords = [
     { name: "COVID-19 (Dose 1)", date: "2021-06-15", provider: "National Hospital" },
     { name: "COVID-19 (Dose 2)", date: "2021-08-20", provider: "National Hospital" },
@@ -26,6 +30,12 @@ const medicalReports = [
 
 export function HealthServicesService({ service }) {
     const [date, setDate] = useState<Date | undefined>(new Date());
+    const [uploadedFiles, setUploadedFiles] = useState<UploadedFilesState>({});
+
+    const handleUploadComplete = (docName: string, url: string) => {
+        setUploadedFiles(prev => ({ ...prev, [docName]: url }));
+    };
+
   return (
     <div className="space-y-8">
         <Card>
@@ -109,8 +119,16 @@ export function HealthServicesService({ service }) {
                 <CardTitle>Apply for National Medical ID Card</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-                <FileUpload label="Upload Copy of NIC/Birth Certificate" />
-                <FileUpload label="Upload Passport-size Photograph" />
+                <FileUpload
+                    id="nic-bc-upload"
+                    label="Upload Copy of NIC/Birth Certificate" 
+                    onUploadComplete={(url) => handleUploadComplete("nicOrBirthCert", url)}
+                />
+                <FileUpload
+                    id="photo-upload-medical"
+                    label="Upload Passport-size Photograph"
+                    onUploadComplete={(url) => handleUploadComplete("photo", url)}
+                />
             </CardContent>
              <CardFooter>
                 <Button>Submit Application</Button>

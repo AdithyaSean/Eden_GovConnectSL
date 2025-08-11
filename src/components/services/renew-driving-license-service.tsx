@@ -12,8 +12,18 @@ import { Progress } from '../ui/progress';
 import { Textarea } from '../ui/textarea';
 import Link from 'next/link';
 
+type UploadedFilesState = {
+  [key: string]: string;
+};
+
 export function RenewDrivingLicenseService({ service }) {
     const [date, setDate] = useState<Date | undefined>(new Date());
+    const [uploadedFiles, setUploadedFiles] = useState<UploadedFilesState>({});
+
+    const handleUploadComplete = (docName: string, url: string) => {
+        setUploadedFiles(prev => ({ ...prev, [docName]: url }));
+    };
+
   return (
     <div className="space-y-8">
         <Card>
@@ -77,8 +87,16 @@ export function RenewDrivingLicenseService({ service }) {
                 <CardTitle>Upload Documents</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FileUpload label="Copy of Old Driving License" />
-                <FileUpload label="Medical Fitness Report" />
+                <FileUpload 
+                    id="old-license-upload"
+                    label="Copy of Old Driving License"
+                    onUploadComplete={(url) => handleUploadComplete("oldLicense", url)}
+                />
+                <FileUpload 
+                    id="medical-report-upload"
+                    label="Medical Fitness Report" 
+                    onUploadComplete={(url) => handleUploadComplete("medicalReport", url)}
+                />
             </CardContent>
         </Card>
 

@@ -9,12 +9,23 @@ import { Label } from '../ui/label';
 import { Progress } from '../ui/progress';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { useToast } from '@/hooks/use-toast';
+import { useState, FormEvent } from 'react';
+
+type UploadedFilesState = {
+  [key: string]: string;
+};
 
 export function PensionDepartmentService({ service }) {
   const { toast } = useToast();
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFilesState>({});
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleUploadComplete = (docName: string, url: string) => {
+    setUploadedFiles(prev => ({ ...prev, [docName]: url }));
+  };
+
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+    console.log("Submitting with files:", uploadedFiles);
     toast({
         title: "Application Submitted",
         description: "Your pension application has been successfully submitted for review.",
@@ -27,6 +38,8 @@ export function PensionDepartmentService({ service }) {
         description: "Your bank details have been saved successfully.",
     });
   }
+  
+  const requiredDocs = ["Service Certificate", "Retirement Letter", "Copy of NIC", "Bank Account Details Confirmation"];
 
   return (
     <div className="space-y-8">
@@ -77,10 +90,17 @@ export function PensionDepartmentService({ service }) {
                         <CardTitle>Document Checklist & Upload</CardTitle>
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FileUpload label="Service Certificate" />
-                        <FileUpload label="Retirement Letter" />
-                        <FileUpload label="Copy of NIC" />
-                        <FileUpload label="Bank Account Details Confirmation" />
+                        {requiredDocs.map(doc => {
+                           const id = `file-upload-pension-${doc.replace(/\s+/g, '-')}`;
+                           return (
+                               <FileUpload
+                                   key={id}
+                                   id={id}
+                                   label={doc}
+                                   onUploadComplete={(url) => handleUploadComplete(doc, url)}
+                               />
+                           )
+                        })}
                     </CardContent>
                 </Card>
 

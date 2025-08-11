@@ -7,14 +7,24 @@ import { FileUpload } from '../file-upload';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { FormEvent } from 'react';
+import { FormEvent, useState } from 'react';
+
+type UploadedFilesState = {
+  [key: string]: string;
+};
 
 export function PassportRenewalService({ service }) {
   const { toast } = useToast();
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFilesState>({});
+
+  const handleUploadComplete = (docName: string, url: string) => {
+    setUploadedFiles(prev => ({ ...prev, [docName]: url }));
+  };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     const trackingNumber = `PP-${Date.now().toString().slice(-6)}`;
+    console.log("Submitting with files:", uploadedFiles);
     toast({
         title: "Renewal Request Submitted",
         description: `Your application has been received. Your tracking number is ${trackingNumber}.`,
@@ -61,9 +71,21 @@ export function PassportRenewalService({ service }) {
                     <CardTitle>Upload Documents</CardTitle>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <FileUpload label="Scanned Copy of Old Passport" />
-                    <FileUpload label="Recent Passport-size Photograph" />
-                    <FileUpload label="Copy of NIC" />
+                    <FileUpload 
+                        id="old-passport-upload"
+                        label="Scanned Copy of Old Passport"
+                        onUploadComplete={(url) => handleUploadComplete("oldPassport", url)}
+                    />
+                    <FileUpload 
+                        id="photo-upload"
+                        label="Recent Passport-size Photograph"
+                        onUploadComplete={(url) => handleUploadComplete("photo", url)}
+                    />
+                    <FileUpload
+                        id="nic-upload"
+                        label="Copy of NIC"
+                        onUploadComplete={(url) => handleUploadComplete("nic", url)}
+                    />
                 </CardContent>
             </Card>
 

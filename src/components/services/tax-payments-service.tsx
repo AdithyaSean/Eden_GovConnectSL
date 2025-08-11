@@ -7,13 +7,24 @@ import { FileUpload } from '../file-upload';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import Link from 'next/link';
+import { useState } from 'react';
 
 const taxPayments = [
     { year: 2023, type: "Income Tax (Q4)", amount: "15,000.00", status: "Paid", dueDate: "2024-01-15" },
     { year: 2024, type: "Income Tax (Q1)", amount: "18,000.00", status: "Due", dueDate: "2024-04-15" },
 ];
 
+type UploadedFilesState = {
+  [key: string]: string;
+};
+
 export function TaxPaymentsService({ service }) {
+    const [uploadedFiles, setUploadedFiles] = useState<UploadedFilesState>({});
+
+    const handleUploadComplete = (docName: string, url: string) => {
+        setUploadedFiles(prev => ({ ...prev, [docName]: url }));
+    };
+
   return (
     <div className="space-y-8">
         <Card>
@@ -62,8 +73,16 @@ export function TaxPaymentsService({ service }) {
                 <p className="text-sm text-muted-foreground">Upload your salary slips, business income statements, or other relevant documents for the current tax year.</p>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FileUpload label="Salary Slips" />
-                <FileUpload label="Other Income Proof" />
+                <FileUpload 
+                    id="salary-slips-upload"
+                    label="Salary Slips"
+                    onUploadComplete={(url) => handleUploadComplete("salarySlips", url)}
+                />
+                <FileUpload
+                    id="other-income-upload"
+                    label="Other Income Proof"
+                    onUploadComplete={(url) => handleUploadComplete("otherIncomeProof", url)}
+                />
             </CardContent>
             <CardFooter>
                 <Button>Upload Files</Button>
