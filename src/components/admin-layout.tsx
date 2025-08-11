@@ -43,15 +43,34 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
   const pathname = usePathname();
 
   const getWorkerNavItems = () => {
-    const workerRole = pathname.split('/')[2];
-    if (workerRole) {
+    // This logic attempts to find the role from the URL, e.g., /worker/transport/dashboard -> 'transport'
+    // It's not perfect but works for the dashboard pages.
+    const pathSegments = pathname.split('/');
+    const workerRole = pathSegments.length > 2 ? pathSegments[2] : null;
+    
+    if (workerRole && allWorkerNavItems.some(item => item.role === workerRole)) {
       return allWorkerNavItems.filter(item => item.role === workerRole);
     }
+    // Fallback for pages like /worker/profile where the role isn't in the URL.
+    // We can't know the specific role, so we can't show the nav item, but we need a valid logo link.
     return [];
+  }
+  
+  const getWorkerDashboardLink = () => {
+      const pathSegments = pathname.split('/');
+      const workerRole = pathSegments.length > 2 ? pathSegments[2] : null;
+       if (workerRole && allWorkerNavItems.some(item => item.role === workerRole)) {
+            const navItem = allWorkerNavItems.find(item => item.role === workerRole);
+            return navItem ? navItem.href : '/admin/login'; // Fallback to login
+       }
+       // If we're on a generic worker page like /profile, we can't know the specific dashboard.
+       // A generic link to /admin/login is a safe fallback.
+       // A better implementation might store the worker role in a session/context.
+       return '/admin/login';
   }
 
   const navItems = workerMode ? getWorkerNavItems() : adminNavItems;
-  const logoHref = workerMode ? (navItems[0]?.href || "/worker/login") : "/admin/dashboard";
+  const logoHref = workerMode ? getWorkerDashboardLink() : "/admin/dashboard";
   const logoText = workerMode ? "Worker Portal" : "Admin Panel";
   const LogoIcon = workerMode ? PenSquare : Shield;
 
