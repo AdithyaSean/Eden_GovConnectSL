@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { FileUpload } from '../file-upload';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { Calendar } from '../ui/calendar';
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
@@ -31,11 +31,15 @@ const medicalReports = [
 ]
 
 export function HealthServicesService({ service }) {
-    const [appointmentDate, setAppointmentDate] = useState<Date | undefined>(new Date());
+    const [appointmentDate, setAppointmentDate] = useState<Date | undefined>();
     const [uploadedFiles, setUploadedFiles] = useState<UploadedFilesState>({});
     const { user } = useAuth();
     const { toast } = useToast();
     const router = useRouter();
+
+    useEffect(() => {
+        setAppointmentDate(new Date());
+    }, []);
 
     const handleUploadComplete = (docName: string, url: string) => {
         setUploadedFiles(prev => ({ ...prev, [docName]: url }));

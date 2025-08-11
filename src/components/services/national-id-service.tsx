@@ -8,7 +8,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Calendar } from '../ui/calendar';
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
@@ -20,12 +20,16 @@ type UploadedFilesState = {
 };
 
 export function NationalIdService({ service }) {
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [date, setDate] = useState<Date | undefined>();
   const [serviceType, setServiceType] = useState("new-id");
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFilesState>({});
   const { toast } = useToast();
   const { user } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    setDate(new Date());
+  }, []);
 
   const handleUploadComplete = (docName: string, url: string) => {
     setUploadedFiles(prev => ({ ...prev, [docName]: url }));

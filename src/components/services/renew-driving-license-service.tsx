@@ -7,7 +7,7 @@ import { FileUpload } from '../file-upload';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Calendar } from '../ui/calendar';
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import { Progress } from '../ui/progress';
 import { Textarea } from '../ui/textarea';
 import Link from 'next/link';
@@ -24,11 +24,15 @@ type UploadedFilesState = {
 const requiredDocs = ["oldLicense", "medicalReport"];
 
 export function RenewDrivingLicenseService({ service }) {
-    const [date, setDate] = useState<Date | undefined>(new Date());
+    const [date, setDate] = useState<Date | undefined>();
     const [uploadedFiles, setUploadedFiles] = useState<UploadedFilesState>({});
     const { user } = useAuth();
     const { toast } = useToast();
     const router = useRouter();
+
+    useEffect(() => {
+        setDate(new Date());
+    }, []);
 
     const isReadyToSubmit = requiredDocs.every(doc => uploadedFiles[doc]);
 
@@ -47,7 +51,7 @@ export function RenewDrivingLicenseService({ service }) {
             return;
         }
 
-        const formData = new FormData(e.target);
+        const formData = new FormData(e.target as HTMLFormElement);
         const formDetails = Object.fromEntries(formData.entries());
 
         try {
