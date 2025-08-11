@@ -17,21 +17,25 @@ import { useEffect, useState } from "react";
 import { collection, query, where, getDocs, getCountFromServer } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/hooks/use-auth";
 
 
 export default function DashboardPage() {
   const [stats, setStats] = useState({ documents: 0, activeServices: 0, notifications: 0 });
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchDashboardData = async () => {
-      // In a real app, you would use the current user's ID
-      const userId = "Nimal Silva"; // Placeholder for prototype
-
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+      
       try {
         const activeServicesQuery = query(
           collection(db, "applications"),
-          where("user", "==", userId),
+          where("user", "==", user.name),
           where("status", "in", ["Pending", "In Progress", "In Review"])
         );
         
@@ -54,7 +58,7 @@ export default function DashboardPage() {
       }
     };
     fetchDashboardData();
-  }, []);
+  }, [user]);
 
 
   return (

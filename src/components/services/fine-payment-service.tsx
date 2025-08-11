@@ -11,15 +11,23 @@ import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import type { Fine } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
+import { useAuth } from '@/hooks/use-auth';
 
 export function FinePaymentService({ service }) {
   const [fines, setFines] = useState<Fine[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchFines = async () => {
-      // In a real app, you would filter by the current user's ID
-      const q = query(collection(db, "fines")); // No filter for prototype
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+      // In a real app, you would filter by the current user's NIC or a unique ID.
+      // The current data model for fines does not have a user field, so we fetch all for now.
+      // This is a known limitation of the prototype data.
+      const q = query(collection(db, "fines"));
       try {
         const querySnapshot = await getDocs(q);
         const finesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Fine));
@@ -31,7 +39,7 @@ export function FinePaymentService({ service }) {
       }
     };
     fetchFines();
-  }, []);
+  }, [user]);
 
   return (
     <div className="space-y-8">
@@ -65,6 +73,10 @@ export function FinePaymentService({ service }) {
                                   </TableCell>
                                 </TableRow>
                               ))
+                            ) : fines.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={7} className="text-center h-24">You have no fines recorded.</TableCell>
+                                </TableRow>
                             ) : (
                               fines.map((fine) => (
                                 <TableRow key={fine.id}>

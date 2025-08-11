@@ -25,9 +25,12 @@ import {
 } from "@/components/ui/table";
 import { Download } from "lucide-react";
 import { useEffect, useState } from 'react';
+import { useAuth } from "@/hooks/use-auth";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("personal-info");
+  const { user, loading } = useAuth();
   
   useEffect(() => {
     const hash = window.location.hash.replace('#', '');
@@ -35,6 +38,30 @@ export default function ProfilePage() {
       setActiveTab(hash);
     }
   }, []);
+  
+  if (loading || !user) {
+    return (
+        <DashboardLayout>
+             <div className="flex-1 space-y-8 p-4 md:p-8 pt-6">
+                <Skeleton className="h-12 w-1/3" />
+                <Skeleton className="h-10 w-1/2" />
+                 <Card>
+                    <CardHeader className="text-center">
+                        <Skeleton className="w-24 h-24 rounded-full mx-auto mb-4" />
+                        <Skeleton className="h-8 w-1/3 mx-auto" />
+                        <Skeleton className="h-6 w-1/2 mx-auto" />
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                    </CardContent>
+                </Card>
+             </div>
+        </DashboardLayout>
+    )
+  }
 
   return (
     <DashboardLayout>
@@ -54,23 +81,23 @@ export default function ProfilePage() {
                     <CardHeader className="text-center">
                         <Avatar className="w-24 h-24 mx-auto mb-4">
                             <AvatarImage src="https://placehold.co/100x100" alt="User" data-ai-hint="avatar user" />
-                            <AvatarFallback>NS</AvatarFallback>
+                            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                         </Avatar>
-                        <CardTitle>Nimal Silva</CardTitle>
-                        <CardDescription>nimal.s@example.com</CardDescription>
+                        <CardTitle>{user.name}</CardTitle>
+                        <CardDescription>{user.email}</CardDescription>
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
                         <div className="space-y-1">
                             <Label>Full Name</Label>
-                            <p className="font-medium">Nimal Silva</p>
+                            <p className="font-medium">{user.name}</p>
                         </div>
                         <div className="space-y-1">
                             <Label>Email</Label>
-                            <p className="font-medium">nimal.s@example.com</p>
+                            <p className="font-medium">{user.email}</p>
                         </div>
                          <div className="space-y-1">
                             <Label>NIC Number</Label>
-                            <p className="font-medium">199012345V</p>
+                            <p className="font-medium">{user.nic}</p>
                         </div>
                          <div className="space-y-1">
                             <Label>Contact Number</Label>

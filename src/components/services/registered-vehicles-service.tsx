@@ -9,19 +9,26 @@ import { Download, Bell } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, query, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import type { Vehicle } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
+import { useAuth } from '@/hooks/use-auth';
 
 
 export function RegisteredVehiclesService({ service }) {
     const { toast } = useToast();
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [loading, setLoading] = useState(true);
+    const { user } = useAuth();
 
     useEffect(() => {
         const fetchVehicles = async () => {
-            // In a real app, filter by the current user's ID
+            if (!user) {
+                setLoading(false);
+                return;
+            }
+            // In a real app, vehicles would be linked to a user ID.
+            // The current data model does not have this link, so we fetch all for the prototype.
             const q = query(collection(db, "vehicles"));
             try {
                 const querySnapshot = await getDocs(q);
@@ -34,7 +41,7 @@ export function RegisteredVehiclesService({ service }) {
             }
         };
         fetchVehicles();
-    }, []);
+    }, [user]);
 
     const handleDownload = (plate) => {
         toast({
@@ -73,6 +80,10 @@ export function RegisteredVehiclesService({ service }) {
                                     </TableCell>
                                 </TableRow>
                                 ))
+                            ) : vehicles.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={6} className="text-center h-24">You have no vehicles registered.</TableCell>
+                                </TableRow>
                             ) : (
                                 vehicles.map((vehicle) => (
                                     <TableRow key={vehicle.id}>

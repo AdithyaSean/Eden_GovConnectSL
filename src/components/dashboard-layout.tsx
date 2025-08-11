@@ -7,7 +7,7 @@ import Link from "next/link";
 import { usePathname } from 'next/navigation'
 import { cn } from "@/lib/utils";
 import { navItems } from "@/lib/data";
-import { Bell, Menu, MessageCircle, Search, UserSquare, CheckCircle, CreditCard, Calendar } from "lucide-react";
+import { Bell, Menu, MessageCircle, Search, UserSquare, CheckCircle, CreditCard, Calendar, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import {
   DropdownMenu,
@@ -20,6 +20,7 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { ScrollArea } from "./ui/scroll-area";
 import { Badge } from "./ui/badge";
+import { useAuth } from "@/hooks/use-auth";
 
 const notifications = [
     {
@@ -39,14 +40,14 @@ const notifications = [
     {
         title: "Appointment Reminder",
         description: "Biometrics for NIC on Aug 28, 2024.",
-        time: "3 days ago",
-        href: "/services/national-id-services",
+        time: "/services/national-id-services",
         icon: Calendar,
     }
 ]
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { user } = useAuth();
 
   return (
     <div className="min-h-screen w-full bg-background text-foreground">
@@ -155,18 +156,20 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Avatar className="cursor-pointer h-9 w-9">
-                  <AvatarImage src="https://placehold.co/100x100" alt="@shadcn" data-ai-hint="avatar user" />
-                  <AvatarFallback>NS</AvatarFallback>
+                  <AvatarImage src="https://placehold.co/100x100" alt={user?.name} data-ai-hint="avatar user" />
+                  <AvatarFallback>{user?.name.charAt(0)}</AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuLabel>{user?.name}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild><Link href="/profile">Profile</Link></DropdownMenuItem>
                 <DropdownMenuItem asChild><Link href="/payments">Payments</Link></DropdownMenuItem>
                 <DropdownMenuItem>Settings</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Logout</DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/login"><LogOut className="mr-2 h-4 w-4" />Logout</Link>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

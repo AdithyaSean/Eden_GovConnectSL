@@ -10,21 +10,23 @@ import { MoreHorizontal } from "lucide-react";
 import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
 import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
-import { auth } from "@/lib/firebase"; // Assuming you have a current user
 import type { Application } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function MyApplicationsPage() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchApplications = async () => {
-      // In a real app, you would use the currently logged-in user's ID.
-      // For this prototype, we'll hardcode a user name to query.
-      const userId = "Nimal Silva"; // Replace with dynamic user ID from auth state
-
-      const q = query(collection(db, "applications"), where("user", "==", userId));
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+      
+      const q = query(collection(db, "applications"), where("user", "==", user.name));
       
       try {
         const querySnapshot = await getDocs(q);
@@ -41,7 +43,7 @@ export default function MyApplicationsPage() {
     };
 
     fetchApplications();
-  }, []);
+  }, [user]);
   
   const formatDate = (date: Timestamp | string) => {
     if (typeof date === 'string') return date;
@@ -81,6 +83,10 @@ export default function MyApplicationsPage() {
                                   </TableCell>
                                 </TableRow>
                               ))
+                            ) : applications.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="text-center h-24">You have not submitted any applications yet.</TableCell>
+                                </TableRow>
                             ) : (
                               applications.map((app) => (
                                  <TableRow key={app.id}>
@@ -90,7 +96,7 @@ export default function MyApplicationsPage() {
                                     <TableCell>
                                         <Badge variant={
                                             app.status === 'Approved' || app.status === 'Completed' ? 'default'
-                                            : app.status === 'In Review' ? 'secondary'
+                                            : app.status === 'In Review' || app.status === 'In Progress' ? 'secondary'
                                             : app.status === 'Pending Payment' ? 'outline'
                                             : 'destructive'
                                         }

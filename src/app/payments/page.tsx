@@ -22,19 +22,31 @@ import {
 import { Download } from "lucide-react";
 import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
-import { collection, getDocs, Timestamp } from "firebase/firestore";
+import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
 import type { Payment } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/hooks/use-auth";
 
 
 export default function PaymentsPage() {
     const [paymentHistory, setPaymentHistory] = useState<Payment[]>([]);
     const [loading, setLoading] = useState(true);
+    const { user } = useAuth();
 
     useEffect(() => {
         const fetchPayments = async () => {
+            if (!user) {
+              setLoading(false);
+              return;
+            }
+            // This is a simplified query. In a real app, payments might be linked
+            // to a user ID field directly on the payment record. For this prototype,
+            // we assume a user's payments are for services they applied for.
+            // This logic may need to be more complex based on the final data model.
             setLoading(true);
             try {
+                // For now, we fetch all payments for the prototype's simplicity.
+                // A real implementation would require a 'userId' field on each payment document.
                 const querySnapshot = await getDocs(collection(db, "payments"));
                 const paymentsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Payment));
                 setPaymentHistory(paymentsData);
@@ -46,7 +58,7 @@ export default function PaymentsPage() {
         };
 
         fetchPayments();
-    }, []);
+    }, [user]);
     
     const formatDate = (date: Timestamp | string) => {
         if (typeof date === 'string') return date;
@@ -89,6 +101,10 @@ export default function PaymentsPage() {
                                     </TableCell>
                                 </TableRow>
                              ))
+                        ) : paymentHistory.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={6} className="text-center h-24">You have no payment history.</TableCell>
+                            </TableRow>
                         ) : (
                             paymentHistory.map((payment) => (
                             <TableRow key={payment.id}>

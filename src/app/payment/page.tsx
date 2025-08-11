@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useState } from "react";
 import Link from "next/link";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function PaymentPage() {
   const searchParams = useSearchParams();
@@ -35,6 +36,7 @@ export default function PaymentPage() {
   const amount = searchParams.get("amount") || "0.00";
   const ref = searchParams.get("ref") || new Date().getTime().toString().slice(-8);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const { user } = useAuth();
 
   const handlePayment = (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,14 +92,18 @@ export default function PaymentPage() {
               </div>
               <div className="space-y-4">
                 <h3 className="font-semibold text-lg">User Information</h3>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Name:</span>
-                  <span className="font-medium">Nimal Silva</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">NIC:</span>
-                  <span className="font-medium">199012345V</span>
-                </div>
+                 {user && (
+                    <>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Name:</span>
+                          <span className="font-medium">{user.name}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">NIC:</span>
+                          <span className="font-medium">{user.nic}</span>
+                        </div>
+                    </>
+                )}
               </div>
             </div>
 
