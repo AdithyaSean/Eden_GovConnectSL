@@ -3,7 +3,7 @@
  * @fileOverview Defines the AI flow for the main chat interface.
  */
 import {ai} from '@/ai/genkit';
-import {generate} from 'genkit/generate';
+import { generate } from 'genkit';
 import {z} from 'zod';
 
 // Define the schema for a single chat message
@@ -43,7 +43,7 @@ const chatFlow = ai.defineFlow(
       }
     });
 
-    return response.text();
+    return response.text;
   }
 );
 
