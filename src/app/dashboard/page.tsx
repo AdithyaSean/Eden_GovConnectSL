@@ -18,6 +18,7 @@ import { collection, query, where, getDocs, getCountFromServer } from "firebase/
 import { db } from "@/lib/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
+import Link from "next/link";
 
 
 export default function DashboardPage() {
@@ -137,7 +138,11 @@ export default function DashboardPage() {
                     <p className="text-sm opacity-80 mt-1">Get help with our services, or contact our team.</p>
                   </div>
                 </div>
-                <Button variant="secondary" size="lg" className="w-full md:w-auto mt-4 md:mt-0">Contact Support <ArrowRight className="ml-2" /></Button>
+                <Button asChild variant="secondary" size="lg" className="w-full md:w-auto mt-4 md:mt-0">
+                  <Link href="/support">
+                    Contact Support <ArrowRight className="ml-2" />
+                  </Link>
+                </Button>
               </div>
             </CardHeader>
         </Card>
