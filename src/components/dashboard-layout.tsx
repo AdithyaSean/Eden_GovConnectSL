@@ -39,12 +39,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
     const q = query(
         collection(db, "notifications"), 
-        where("userId", "==", user.id),
-        orderBy("createdAt", "desc")
+        where("userId", "==", user.id)
     );
     
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const notifs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification));
+        // Sort on the client-side to avoid needing a composite index
+        notifs.sort((a, b) => (b.createdAt as Timestamp).toMillis() - (a.createdAt as Timestamp).toMillis());
         setNotifications(notifs);
     });
 
