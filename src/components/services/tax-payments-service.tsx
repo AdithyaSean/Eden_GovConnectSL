@@ -20,7 +20,7 @@ const taxPayments = [
 ];
 
 type UploadedFilesState = {
-  [key: string]: string;
+  [key: string]: { url: string; path: string; };
 };
 
 export function TaxPaymentsService({ service }) {
@@ -29,8 +29,8 @@ export function TaxPaymentsService({ service }) {
     const { toast } = useToast();
     const router = useRouter();
 
-    const handleUploadComplete = (docName: string, url: string) => {
-        setUploadedFiles(prev => ({ ...prev, [docName]: url }));
+    const handleUploadComplete = (docName: string, url: string, path: string) => {
+        setUploadedFiles(prev => ({ ...prev, [docName]: { url, path } }));
     };
 
     const handleFileUploadSubmit = async (e: FormEvent) => {
@@ -43,6 +43,10 @@ export function TaxPaymentsService({ service }) {
             toast({ title: "Please upload at least one document.", variant: "destructive" });
             return;
         }
+        
+        const documentsForFirestore = Object.fromEntries(
+            Object.entries(uploadedFiles).map(([key, value]) => [key, value.url])
+        );
 
         try {
             await addDoc(collection(db, "applications"), {
@@ -51,7 +55,7 @@ export function TaxPaymentsService({ service }) {
                 user: user.name,
                 status: "In Review",
                 submitted: serverTimestamp(),
-                documents: uploadedFiles,
+                documents: documentsForFirestore,
             });
             toast({
                 title: "Documents Submitted",
@@ -115,12 +119,12 @@ export function TaxPaymentsService({ service }) {
                     <FileUpload 
                         id="salary-slips-upload"
                         label="Salary Slips"
-                        onUploadComplete={(url) => handleUploadComplete("salarySlips", url)}
+                        onUploadComplete={(url, path) => handleUploadComplete("salarySlips", url, path)}
                     />
                     <FileUpload
                         id="other-income-upload"
                         label="Other Income Proof"
-                        onUploadComplete={(url) => handleUploadComplete("otherIncomeProof", url)}
+                        onUploadComplete={(url, path) => handleUploadComplete("otherIncomeProof", url, path)}
                     />
                 </CardContent>
                 <CardFooter>
@@ -163,5 +167,3 @@ export function TaxPaymentsService({ service }) {
     </div>
   );
 }
-
-    

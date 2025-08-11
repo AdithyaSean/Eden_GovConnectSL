@@ -162,12 +162,12 @@ export function RenewDrivingLicenseService({ service }) {
                     <CardTitle>Schedule an Appointment</CardTitle>
                 </CardHeader>
                 <CardContent className="flex justify-center">
-                     {date && <Calendar
+                    {date ? <Calendar
                         mode="single"
                         selected={date}
                         onSelect={setDate}
                         className="rounded-md border"
-                        />}
+                        /> : <div className="h-[290px] w-[280px] flex items-center justify-center"><p>Loading calendar...</p></div> }
                 </CardContent>
             </Card>
 

@@ -19,7 +19,7 @@ const documentsMap = {
 };
 
 type UploadedFilesState = {
-  [key: string]: string;
+  [key: string]: { url: string; path: string; };
 };
 
 
@@ -33,8 +33,8 @@ export function MissingDocumentsService({ service }) {
   const requiredDocs = selectedService ? documentsMap[selectedService] : [];
   const isReadyToSubmit = requiredDocs.length > 0 && requiredDocs.every(doc => uploadedFiles[doc]);
 
-  const handleUploadComplete = (docName: string, url: string) => {
-    setUploadedFiles(prev => ({ ...prev, [docName]: url }));
+  const handleUploadComplete = (docName: string, url: string, path: string) => {
+    setUploadedFiles(prev => ({ ...prev, [docName]: { url, path } }));
   };
   
   const handleSubmit = async () => {
@@ -46,6 +46,10 @@ export function MissingDocumentsService({ service }) {
         toast({ title: "Please upload all required documents.", variant: "destructive" });
         return;
     }
+    
+    const documentsForFirestore = Object.fromEntries(
+        Object.entries(uploadedFiles).map(([key, value]) => [key, value.url])
+    );
 
     try {
         await addDoc(collection(db, "applications"), {
@@ -54,7 +58,7 @@ export function MissingDocumentsService({ service }) {
             user: user.name,
             status: "Pending",
             submitted: serverTimestamp(),
-            documents: uploadedFiles
+            documents: documentsForFirestore
         });
 
         toast({
@@ -108,7 +112,7 @@ export function MissingDocumentsService({ service }) {
                             key={id} 
                             id={id}
                             label={doc}
-                            onUploadComplete={(url) => handleUploadComplete(doc, url)}
+                            onUploadComplete={(url, path) => handleUploadComplete(doc, url, path)}
                         />
                     )
                 })}

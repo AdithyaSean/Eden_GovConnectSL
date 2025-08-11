@@ -17,7 +17,7 @@ import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 
 type UploadedFilesState = {
-  [key: string]: string;
+  [key: string]: { url: string; path: string; };
 };
 
 
@@ -27,11 +27,11 @@ export function LandRegistryService({ service }) {
   const { toast } = useToast();
   const router = useRouter();
   
-  const requiredDocs = ["Deed / Title Document", "Survey Plan"];
-  const isReadyToSubmit = requiredDocs.every(doc => uploadedFiles[doc.replace(/\s|\//g, '')]);
+  const requiredDocs = ["DeedOrTitleDocument", "SurveyPlan"];
+  const isReadyToSubmit = requiredDocs.every(doc => uploadedFiles[doc]);
 
-  const handleUploadComplete = (docName: string, url: string) => {
-    setUploadedFiles(prev => ({ ...prev, [docName.replace(/\s|\//g, '')]: url }));
+  const handleUploadComplete = (docName: string, url: string, path: string) => {
+    setUploadedFiles(prev => ({ ...prev, [docName]: { url, path } }));
   };
   
   const handleSubmit = async (e: FormEvent) => {
@@ -44,6 +44,10 @@ export function LandRegistryService({ service }) {
         toast({ title: "Please upload all required documents.", variant: "destructive" });
         return;
     }
+    
+    const documentsForFirestore = Object.fromEntries(
+        Object.entries(uploadedFiles).map(([key, value]) => [key, value.url])
+    );
 
     try {
         await addDoc(collection(db, "applications"), {
@@ -52,7 +56,7 @@ export function LandRegistryService({ service }) {
             user: user.name,
             status: "Pending Payment",
             submitted: serverTimestamp(),
-            documents: uploadedFiles,
+            documents: documentsForFirestore,
         });
 
         toast({
@@ -115,8 +119,8 @@ export function LandRegistryService({ service }) {
                     <div className="space-y-4">
                         <h3 className="font-semibold">Upload Documents</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <FileUpload label="Deed / Title Document" id="deed-upload" onUploadComplete={(url) => handleUploadComplete("Deed/TitleDocument", url)} />
-                            <FileUpload label="Survey Plan" id="survey-plan-upload" onUploadComplete={(url) => handleUploadComplete("SurveyPlan", url)} />
+                            <FileUpload label="Deed / Title Document" id="deed-upload" onUploadComplete={(url, path) => handleUploadComplete("DeedOrTitleDocument", url, path)} />
+                            <FileUpload label="Survey Plan" id="survey-plan-upload" onUploadComplete={(url, path) => handleUploadComplete("SurveyPlan", url, path)} />
                         </div>
                     </div>
                 </CardContent>
@@ -144,5 +148,3 @@ export function LandRegistryService({ service }) {
     </div>
   );
 }
-
-    

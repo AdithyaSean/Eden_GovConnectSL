@@ -14,10 +14,10 @@ import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 
 type UploadedFilesState = {
-  [key: string]: string;
+  [key: string]: { url: string; path: string; };
 };
 
-const requiredDocs = ["Scanned Copy of Old Passport", "Recent Passport-size Photograph", "Copy of NIC"];
+const requiredDocs = ["oldPassport", "photo", "nic"];
 
 export function PassportRenewalService({ service }) {
   const { toast } = useToast();
@@ -25,10 +25,10 @@ export function PassportRenewalService({ service }) {
   const { user } = useAuth();
   const router = useRouter();
   
-  const isReadyToSubmit = requiredDocs.every(doc => uploadedFiles[doc.replace(/ /g, '')]);
+  const isReadyToSubmit = requiredDocs.every(doc => uploadedFiles[doc]);
 
-  const handleUploadComplete = (docName: string, url: string) => {
-    setUploadedFiles(prev => ({ ...prev, [docName]: url }));
+  const handleUploadComplete = (docName: string, url: string, path: string) => {
+    setUploadedFiles(prev => ({ ...prev, [docName]: { url, path } }));
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -37,9 +37,18 @@ export function PassportRenewalService({ service }) {
         toast({ title: "Please log in to submit.", variant: "destructive" });
         return;
     }
+    
+    if (!isReadyToSubmit) {
+        toast({ title: "Please upload all required documents.", variant: "destructive" });
+        return;
+    }
 
-    const formData = new FormData(e.target);
+    const formData = new FormData(e.target as HTMLFormElement);
     const formDetails = Object.fromEntries(formData.entries());
+    
+    const documentsForFirestore = Object.fromEntries(
+        Object.entries(uploadedFiles).map(([key, value]) => [key, value.url])
+    );
 
     try {
          await addDoc(collection(db, "applications"), {
@@ -48,7 +57,7 @@ export function PassportRenewalService({ service }) {
             user: user.name,
             status: "Pending",
             submitted: serverTimestamp(),
-            documents: uploadedFiles,
+            documents: documentsForFirestore,
             details: formDetails
         });
 
@@ -107,17 +116,17 @@ export function PassportRenewalService({ service }) {
                     <FileUpload 
                         id="old-passport-upload"
                         label="Scanned Copy of Old Passport"
-                        onUploadComplete={(url) => handleUploadComplete("oldPassport", url)}
+                        onUploadComplete={(url, path) => handleUploadComplete("oldPassport", url, path)}
                     />
                     <FileUpload 
                         id="photo-upload"
                         label="Recent Passport-size Photograph"
-                        onUploadComplete={(url) => handleUploadComplete("photo", url)}
+                        onUploadComplete={(url, path) => handleUploadComplete("photo", url, path)}
                     />
                     <FileUpload
                         id="nic-upload"
                         label="Copy of NIC"
-                        onUploadComplete={(url) => handleUploadComplete("nic", url)}
+                        onUploadComplete={(url, path) => handleUploadComplete("nic", url, path)}
                     />
                 </CardContent>
             </Card>

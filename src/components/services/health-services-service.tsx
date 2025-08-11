@@ -180,12 +180,12 @@ export function HealthServicesService({ service }) {
                         </div>
                     </div>
                     <div className="flex justify-center">
-                        {appointmentDate && <Calendar
+                        {appointmentDate ? <Calendar
                             mode="single"
                             selected={appointmentDate}
                             onSelect={setAppointmentDate}
                             className="rounded-md border"
-                        />}
+                        /> : <div className="h-[290px] w-[280px] flex items-center justify-center"><p>Loading calendar...</p></div> }
                     </div>
                 </CardContent>
                 <CardFooter>

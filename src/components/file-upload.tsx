@@ -57,7 +57,7 @@ export function FileUpload({ label, onUploadComplete, id }: FileUploadProps) {
         toast({
           variant: "destructive",
           title: "Upload Failed",
-          description: `An error occurred during upload. Please check console for details.`,
+          description: `An error occurred during upload: ${error.message}`,
         });
         setIsUploading(false);
         setUploadProgress(null);
@@ -148,7 +148,7 @@ export function FileUpload({ label, onUploadComplete, id }: FileUploadProps) {
                 </>
               )}
             </div>
-            <input id={id} type="file" className="hidden" onChange={handleFileChange} disabled={isUploading} />
+            <input id={id} type="file" className="hidden" onChange={handleFileChange} disabled={isUploading} accept="image/png, image/jpeg, application/pdf" />
           </label>
         </div>
       )}

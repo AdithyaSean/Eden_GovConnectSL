@@ -16,7 +16,7 @@ import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 
 type UploadedFilesState = {
-  [key: string]: string;
+  [key: string]: { url: string; path: string; };
 };
 
 export function PensionDepartmentService({ service }) {
@@ -25,8 +25,8 @@ export function PensionDepartmentService({ service }) {
   const { user } = useAuth();
   const router = useRouter();
 
-  const handleUploadComplete = (docName: string, url: string) => {
-    setUploadedFiles(prev => ({ ...prev, [docName]: url }));
+  const handleUploadComplete = (docName: string, url: string, path: string) => {
+    setUploadedFiles(prev => ({ ...prev, [docName]: { url, path } }));
   };
   
   const requiredDocs = ["Service Certificate", "Retirement Letter", "Copy of NIC", "Bank Account Details Confirmation"];
@@ -43,6 +43,10 @@ export function PensionDepartmentService({ service }) {
         return;
     }
 
+    const documentsForFirestore = Object.fromEntries(
+        Object.entries(uploadedFiles).map(([key, value]) => [key, value.url])
+    );
+
     try {
         await addDoc(collection(db, "applications"), {
             service: service.title,
@@ -50,7 +54,7 @@ export function PensionDepartmentService({ service }) {
             user: user.name,
             status: "Pending",
             submitted: serverTimestamp(),
-            documents: uploadedFiles,
+            documents: documentsForFirestore,
         });
 
         toast({
@@ -127,7 +131,7 @@ export function PensionDepartmentService({ service }) {
                                    key={id}
                                    id={id}
                                    label={doc}
-                                   onUploadComplete={(url) => handleUploadComplete(doc, url)}
+                                   onUploadComplete={(url, path) => handleUploadComplete(doc, url, path)}
                                />
                            )
                         })}
@@ -187,5 +191,3 @@ export function PensionDepartmentService({ service }) {
     </div>
   );
 }
-
-    
