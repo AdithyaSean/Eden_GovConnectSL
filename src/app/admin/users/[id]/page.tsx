@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { ShieldAlert, UserCog, UserX } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, updateDoc, Timestamp } from "firebase/firestore";
 import type { User } from "@/lib/types";
@@ -21,14 +21,14 @@ const roles = [
 ];
 
 
-export default function UserProfilePage({ params }: { params: { id: string } }) {
+export default function UserProfilePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const { toast } = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
     const fetchUser = async () => {
-      const id = params.id;
       if (id) {
         try {
           const userDoc = await getDoc(doc(db, "users", id));
@@ -45,7 +45,7 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
       }
     };
     fetchUser();
-  }, [params]);
+  }, [id]);
 
   const handleSaveChanges = async () => {
     if(user) {

@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { Check, Download, File, User, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, updateDoc, Timestamp, collection, addDoc, serverTimestamp } from "firebase/firestore";
 import type { Application, User as AppUser } from "@/lib/types";
@@ -17,7 +17,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 
 
-export default function ApplicationDetailsPage({ params }: { params: { id: string } }) {
+export default function ApplicationDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const { toast } = useToast();
   const [application, setApplication] = useState<Application | null>(null);
   const [applicant, setApplicant] = useState<AppUser | null>(null);
@@ -42,7 +43,6 @@ export default function ApplicationDetailsPage({ params }: { params: { id: strin
 
   useEffect(() => {
     const fetchApplication = async () => {
-      const id = params.id;
       if (id) {
         try {
           const appDoc = await getDoc(doc(db, "applications", id));
@@ -68,7 +68,7 @@ export default function ApplicationDetailsPage({ params }: { params: { id: strin
       }
     };
     fetchApplication();
-  }, [params]);
+  }, [id]);
 
   const handleStatusUpdate = async (status: Application['status']) => {
     if(application) {
