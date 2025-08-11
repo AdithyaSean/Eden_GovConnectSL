@@ -25,19 +25,27 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
   const { toast } = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const userId = params.id;
 
   useEffect(() => {
     const fetchUser = async () => {
-      if (params.id) {
-        const userDoc = await getDoc(doc(db, "users", params.id));
-        if (userDoc.exists()) {
-          setUser({ id: userDoc.id, ...userDoc.data() } as User);
+      if (userId) {
+        try {
+          const userDoc = await getDoc(doc(db, "users", userId));
+          if (userDoc.exists()) {
+            setUser({ id: userDoc.id, ...userDoc.data() } as User);
+          }
+        } catch (error) {
+            console.error("Error fetching user data:", error);
+        } finally {
+            setLoading(false);
         }
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchUser();
-  }, [params.id]);
+  }, [userId]);
 
   const handleSaveChanges = async () => {
     if(user) {
