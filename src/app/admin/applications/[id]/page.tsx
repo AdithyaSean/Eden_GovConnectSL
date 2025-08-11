@@ -23,7 +23,6 @@ export default function ApplicationDetailsPage({ params }: { params: { id: strin
   const [applicant, setApplicant] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   
-  const id = params.id;
 
   const createNotification = async (userId: string, title: string, description: string, href: string) => {
     try {
@@ -43,6 +42,7 @@ export default function ApplicationDetailsPage({ params }: { params: { id: strin
 
   useEffect(() => {
     const fetchApplication = async () => {
+      const id = params.id;
       if (id) {
         try {
           const appDoc = await getDoc(doc(db, "applications", id));
@@ -68,7 +68,7 @@ export default function ApplicationDetailsPage({ params }: { params: { id: strin
       }
     };
     fetchApplication();
-  }, [id]);
+  }, [params.id]);
 
   const handleStatusUpdate = async (status: Application['status']) => {
     if(application) {
