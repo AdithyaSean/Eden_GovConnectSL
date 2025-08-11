@@ -66,13 +66,17 @@ export default function AdminAnalyticsPage() {
         const readyDocsCount = applications.filter(app => app.documents && Object.keys(app.documents).length > 0).length;
         const docReadiness = Math.round((readyDocsCount / applications.length) * 100);
 
-        // Peak Hours
+        // Peak Hours in SLST (UTC+5:30)
         const submissionsByHour: { [key: number]: number } = {};
         for(let i=0; i<24; i++) { submissionsByHour[i] = 0; }
 
         applications.forEach(app => {
             if (app.submitted && typeof app.submitted !== 'string') {
-                const hour = (app.submitted as Timestamp).toDate().getHours();
+                const date = (app.submitted as Timestamp).toDate();
+                // Convert to SLST by adding 5 hours and 30 minutes
+                const slstOffset = 5.5 * 60 * 60 * 1000;
+                const slstDate = new Date(date.getTime() + slstOffset);
+                const hour = slstDate.getUTCHours();
                 submissionsByHour[hour]++;
             }
         });
@@ -91,10 +95,15 @@ export default function AdminAnalyticsPage() {
             applications: count
         }));
         
+        const formatPeakHour = (hour: number) => {
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const h = hour % 12 || 12; // convert 0 to 12
+            return `${h} ${ampm} (SLST)`;
+        }
 
         return {
             docReadiness,
-            peakHour: `${peakHour.toString().padStart(2, '0')}:00`,
+            peakHour: formatPeakHour(peakHour),
             peakHoursData,
         }
 
