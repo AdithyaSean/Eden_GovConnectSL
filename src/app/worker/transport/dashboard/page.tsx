@@ -19,7 +19,6 @@ const transportServices = [
     "Renew Driving License",
     "Fine Payment",
     "Registered Vehicles",
-    "Missing Documents", // Assuming transport handles lost licenses
 ];
 
 export default function WorkerTransportDashboard() {

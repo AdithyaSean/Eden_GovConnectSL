@@ -18,6 +18,7 @@ const seedData = {
         { id: "worker-transport", name: "Transport Worker", email: "worker.transport@gov.lk", nic: "", role: "worker_transport", status: "Active" },
         { id: "worker-immigration", name: "Immigration Worker", email: "worker.immigration@gov.lk", nic: "", role: "worker_immigration", status: "Active" },
         { id: "worker-identity", name: "Identity Worker", email: "worker.identity@gov.lk", nic: "", role: "worker_identity", status: "Active" },
+        { id: "worker-missingdocuments", name: "Missing Docs Worker", email: "worker.missingdocuments@gov.lk", nic: "", role: "worker_missingdocuments", status: "Active" },
     ],
     applications: [
         { user: "Nimal Silva", service: "Renew Driving License", status: "In Progress", submitted: new Date("2024-07-20") },

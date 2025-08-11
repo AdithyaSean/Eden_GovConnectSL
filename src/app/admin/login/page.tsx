@@ -74,7 +74,7 @@ export default function AdminLoginPage() {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" required={!isAdmin} disabled={isAdmin} />
+                <Input id="password" type="password" required={!isAdmin} disabled={isAdmin} defaultValue="password"/>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox id="is-admin" checked={isAdmin} onCheckedChange={(checked) => setIsAdmin(checked as boolean)} />

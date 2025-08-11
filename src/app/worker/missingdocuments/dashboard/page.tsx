@@ -4,7 +4,7 @@
 import { AdminLayout } from "@/components/admin-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { MoreHorizontal } from "lucide-react";
@@ -14,21 +14,21 @@ import { db } from "@/lib/firebase";
 import type { Application } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const immigrationServices = ["Passport Renewal"];
+const missingDocumentsServices = ["Missing Documents"];
 
-export default function WorkerImmigrationDashboard() {
+export default function WorkerMissingDocumentsDashboard() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchApplications = async () => {
-      const q = query(collection(db, "applications"), where("service", "in", immigrationServices));
+      const q = query(collection(db, "applications"), where("service", "in", missingDocumentsServices));
       try {
         const querySnapshot = await getDocs(q);
         const appsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
         setApplications(appsData);
       } catch (error) {
-        console.error("Error fetching immigration applications: ", error);
+        console.error("Error fetching missing document applications: ", error);
       } finally {
         setLoading(false);
       }
@@ -45,17 +45,18 @@ export default function WorkerImmigrationDashboard() {
   return (
     <AdminLayout workerMode>
       <div className="flex-1 space-y-8 p-8 pt-6">
-        <h1 className="text-3xl font-bold tracking-tight">Immigration Worker Dashboard</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Missing Documents Worker Dashboard</h1>
         <Card>
           <CardHeader>
-            <CardTitle>Passport Applications</CardTitle>
+            <CardTitle>Missing Document Applications</CardTitle>
+            <CardDescription>Review and process requests for replacing lost documents.</CardDescription>
           </CardHeader>
           <CardContent>
              <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Ref ID</TableHead>
-                  <TableHead>Type</TableHead>
+                  <TableHead>User</TableHead>
                   <TableHead>Submitted On</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
@@ -63,23 +64,23 @@ export default function WorkerImmigrationDashboard() {
               </TableHeader>
               <TableBody>
                 {loading ? (
-                    Array.from({ length: 5 }).map((_, i) => (
+                    Array.from({ length: 3 }).map((_, i) => (
                       <TableRow key={i}>
                         <TableCell colSpan={5}><Skeleton className="h-8 w-full" /></TableCell>
                       </TableRow>
                     ))
                 ) : applications.length === 0 ? (
                     <TableRow>
-                        <TableCell colSpan={5} className="text-center">No immigration-related applications found.</TableCell>
+                        <TableCell colSpan={5} className="text-center">No applications found.</TableCell>
                     </TableRow>
                 ) : (
                 applications.map((app) => (
                   <TableRow key={app.id}>
                     <TableCell>{app.id}</TableCell>
-                    <TableCell>{app.service}</TableCell>
+                    <TableCell>{app.user}</TableCell>
                     <TableCell>{formatDate(app.submitted)}</TableCell>
                     <TableCell>
-                      <Badge variant={app.status === 'Approved' ? 'default' : 'secondary'} className={app.status === 'Approved' ? 'bg-green-600' : ''}>{app.status}</Badge>
+                      <Badge variant={app.status === 'Approved' ? 'default' : app.status === 'Pending Payment' ? 'outline' : 'secondary'} className={app.status === 'Approved' ? 'bg-green-600' : ''}>{app.status}</Badge>
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
@@ -88,8 +89,8 @@ export default function WorkerImmigrationDashboard() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
                           <DropdownMenuItem>View Application</DropdownMenuItem>
-                          <DropdownMenuItem>Approve</DropdownMenuItem>
-                          <DropdownMenuItem>Reject</DropdownMenuItem>
+                          <DropdownMenuItem>Verify Documents</DropdownMenuItem>
+                          <DropdownMenuItem>Forward to Department</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

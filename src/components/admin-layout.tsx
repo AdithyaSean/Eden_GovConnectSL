@@ -6,7 +6,7 @@ import type React from "react";
 import Link from "next/link";
 import { usePathname } from 'next/navigation';
 import { cn } from "@/lib/utils";
-import { Bell, Home, Users, Settings, LogOut, Shield, FileText, PenSquare, Building, BookUser, Car, Fingerprint, GraduationCap, HeartPulse, CreditCard, UserCircle, ReceiptText, ClipboardList, Menu } from "lucide-react";
+import { Bell, Home, Users, Settings, LogOut, Shield, FileText, PenSquare, Building, BookUser, Car, Fingerprint, GraduationCap, HeartPulse, CreditCard, UserCircle, ReceiptText, ClipboardList, Menu, FileQuestion } from "lucide-react";
 import { Button } from "./ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -23,6 +23,7 @@ const allWorkerNavItems = [
     { title: "Transport", href: "/worker/transport/dashboard", icon: Car, role: "transport" },
     { title: "Immigration", href: "/worker/immigration/dashboard", icon: BookUser, role: "immigration" },
     { title: "Identity", href: "/worker/identity/dashboard", icon: Fingerprint, role: "identity" },
+    { title: "Missing Documents", href: "/worker/missingdocuments/dashboard", icon: FileQuestion, role: "missingdocuments" },
     { title: "Health", href: "/worker/health/dashboard", icon: HeartPulse, role: "health" },
     { title: "Tax", href: "/worker/tax/dashboard", icon: CreditCard, role: "tax" },
     { title: "Pensions", href: "/worker/pension/dashboard", icon: Users, role: "pension" },
