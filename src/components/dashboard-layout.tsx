@@ -21,6 +21,7 @@ import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { ScrollArea } from "./ui/scroll-area";
 import { Badge } from "./ui/badge";
 import { useAuth } from "@/hooks/use-auth";
+import { useRouter } from "next/navigation";
 
 const notifications = [
     {
@@ -48,6 +49,12 @@ const notifications = [
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = () => {
+      localStorage.removeItem("loggedInNic");
+      router.push('/login');
+  }
 
   return (
     <div className="min-h-screen w-full bg-background text-foreground">
@@ -157,18 +164,18 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               <DropdownMenuTrigger asChild>
                 <Avatar className="cursor-pointer h-9 w-9">
                   <AvatarImage src="https://placehold.co/100x100" alt={user?.name} data-ai-hint="avatar user" />
-                  <AvatarFallback>{user?.name.charAt(0)}</AvatarFallback>
+                  <AvatarFallback>{user?.name ? user.name.charAt(0) : 'U'}</AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>{user?.name}</DropdownMenuLabel>
+                <DropdownMenuLabel>{user?.name || "Citizen"}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild><Link href="/profile">Profile</Link></DropdownMenuItem>
                 <DropdownMenuItem asChild><Link href="/payments">Payments</Link></DropdownMenuItem>
                 <DropdownMenuItem>Settings</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/login"><LogOut className="mr-2 h-4 w-4" />Logout</Link>
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />Logout
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

@@ -3,29 +3,60 @@
 
 import { useState, useEffect } from 'react';
 import type { User } from '@/lib/types';
-
-// This is a mock authentication hook for the prototype.
-// In a real application, this would be replaced with Firebase Auth.
-const mockUser: User = {
-    id: "user-nimal",
-    name: "Nimal Silva",
-    email: "nimal.s@example.com",
-    nic: "199012345V",
-    role: "Citizen",
-    status: "Active",
-    joined: new Date().toISOString(),
-};
+import { db } from '@/lib/firebase';
+import { collection, query, where, getDocs, limit } from "firebase/firestore";
 
 export function useAuth() {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Simulate fetching user data
-        setTimeout(() => {
-            setUser(mockUser);
-            setLoading(false);
-        }, 500); // Simulate network delay
+        const fetchUser = async () => {
+            setLoading(true);
+            try {
+                // For this prototype, we get the logged-in user's NIC from localStorage.
+                // In a real app, this would come from the Firebase Auth session.
+                const loggedInNic = localStorage.getItem("loggedInNic");
+
+                if (loggedInNic) {
+                    const usersRef = collection(db, "users");
+                    // Query for the user with the matching NIC
+                    const q = query(usersRef, where("nic", "==", loggedInNic), limit(1));
+                    const querySnapshot = await getDocs(q);
+
+                    if (!querySnapshot.empty) {
+                        const userDoc = querySnapshot.docs[0];
+                        setUser({ id: userDoc.id, ...userDoc.data() } as User);
+                    } else {
+                        // Handle case where NIC is not found
+                        console.warn(`No user found with NIC: ${loggedInNic}`);
+                        setUser(null);
+                    }
+                } else {
+                    // No user is "logged in"
+                    setUser(null);
+                }
+            } catch (error) {
+                console.error("Error fetching user data:", error);
+                setUser(null);
+            } finally {
+                setLoading(false);
+            }
+        };
+        
+        fetchUser();
+        
+        // Listen for storage changes to update auth state if needed elsewhere
+        const handleStorageChange = () => {
+            fetchUser();
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+        };
+
     }, []);
 
     return { user, loading };
