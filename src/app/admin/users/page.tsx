@@ -55,6 +55,11 @@ export default function UsersPage() {
     const formData = new FormData(event.target as HTMLFormElement);
     const formValues = Object.fromEntries(formData.entries()) as { name: string; email: string; nic: string; password: string};
 
+    if (formValues.password.length < 6) {
+        toast({ title: "Weak Password", description: "Password must be at least 6 characters long.", variant: "destructive" });
+        return;
+    }
+
     let authEmail = '';
     let userData: Partial<User> = {
         name: formValues.name,
@@ -239,7 +244,7 @@ export default function UsersPage() {
               )}
                <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="password" className="text-right">Password</Label>
-                  <Input id="password" name="password" type="password" className="col-span-3" required />
+                  <Input id="password" name="password" type="password" className="col-span-3" required minLength={6} />
                 </div>
             </div>
             <DialogFooter>
