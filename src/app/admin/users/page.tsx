@@ -97,6 +97,7 @@ export default function UsersPage() {
             ...userData,
             id: authUser.uid,
             joined: serverTimestamp(),
+            photoURL: ''
         });
         
         toast({ title: "User Created Successfully", description: `${formValues.name} has been added.`});
@@ -268,3 +269,5 @@ export default function UsersPage() {
     </AdminLayout>
   );
 }
+
+    
