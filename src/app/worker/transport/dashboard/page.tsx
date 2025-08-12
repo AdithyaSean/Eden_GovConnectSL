@@ -17,58 +17,51 @@ import Link from "next/link";
 
 const transportServices = [
     "Renew Driving License",
-    "Fine Payment",
-    "Registered Vehicles",
 ];
 
-const appointmentServices = ["Renew Driving License"];
 
 export default function WorkerTransportDashboard() {
   const [applications, setApplications] = useState<Application[]>([]);
-  const [appointments, setAppointments] = useState<Application[]>([]);
-  const [stats, setStats] = useState({ pendingRenewals: 0, pendingRegistrations: 0, appointmentsToday: 0 });
+  const [stats, setStats] = useState({ pendingRenewals: 0, appointmentsToday: 0, completedToday: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch all applications related to transport services
         const appsQuery = query(collection(db, "applications"), where("service", "in", transportServices));
         const appsSnapshot = await getDocs(appsQuery);
         const appsData = appsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
         
-        // Separate applications with appointments from general ones
-        const allAppointments = appsData.filter(app => appointmentServices.includes(app.service) && app.details?.appointmentDate);
-        const generalApplications = appsData.filter(app => !allAppointments.some(appt => appt.id === app.id));
-
-        setAppointments(allAppointments);
-        setApplications(generalApplications);
+        setApplications(appsData);
 
         // Fetch stats
         const renewalsQuery = query(collection(db, "applications"), where("service", "==", "Renew Driving License"), where("status", "in", ["Pending", "In Progress", "Pending Payment"]));
-        const registrationsQuery = query(collection(db, "applications"), where("service", "==", "Registered Vehicles"), where("status", "in", ["Pending", "In Progress", "Pending Payment"]));
-        
-        const [renewalsSnapshot, registrationsSnapshot] = await Promise.all([
-          getCountFromServer(renewalsQuery),
-          getCountFromServer(registrationsQuery)
-        ]);
         
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
 
-        const appointmentsTodayCount = allAppointments.filter(app => {
+        const appointmentsTodayCount = appsData.filter(app => {
             if (!app.details?.appointmentDate) return false;
             const appDate = (app.details.appointmentDate as Timestamp).toDate();
             return appDate >= today && appDate < tomorrow;
         }).length;
 
+        const completedTodayCount = appsData.filter(app => {
+             if (!app.submitted) return false;
+             const appDate = (app.submitted as Timestamp).toDate();
+             return app.status === 'Completed' && appDate >= today && appDate < tomorrow;
+        }).length;
+
+
+        const renewalsSnapshot = await getCountFromServer(renewalsQuery);
+        
         setStats({ 
           pendingRenewals: renewalsSnapshot.data().count, 
-          pendingRegistrations: registrationsSnapshot.data().count,
-          appointmentsToday: appointmentsTodayCount
+          appointmentsToday: appointmentsTodayCount,
+          completedToday: completedTodayCount,
         });
 
       } catch (error) {
@@ -104,16 +97,6 @@ export default function WorkerTransportDashboard() {
           </Card>
            <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Registrations</CardTitle>
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-               {loading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{stats.pendingRegistrations}</div>}
-              <p className="text-xs text-muted-foreground">Waiting for validation</p>
-            </CardContent>
-          </Card>
-           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Appointments Today</CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -122,102 +105,64 @@ export default function WorkerTransportDashboard() {
                <p className="text-xs text-muted-foreground">For driving tests & biometrics</p>
             </CardContent>
           </Card>
+           <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Completed Today</CardTitle>
+              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+               {loading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{stats.completedToday}</div>}
+              <p className="text-xs text-muted-foreground">Renewals processed today</p>
+            </CardContent>
+          </Card>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Upcoming Appointments</CardTitle>
-              <CardDescription>All scheduled biometrics and driving test appointments.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
+        <Card>
+          <CardHeader>
+            <CardTitle>License Renewal Applications</CardTitle>
+            <CardDescription>All scheduled biometrics and driving test appointments.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>User</TableHead>
+                    <TableHead>Appointment Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loading ? (
+                    Array.from({ length: 5 }).map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell colSpan={4}><Skeleton className="h-8 w-full" /></TableCell>
+                      </TableRow>
+                    ))
+                  ) : applications.length === 0 ? (
                     <TableRow>
-                      <TableHead>User</TableHead>
-                      <TableHead>Appointment Date</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableCell colSpan={4} className="text-center h-24">No license renewal applications found.</TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {loading ? (
-                      Array.from({ length: 3 }).map((_, i) => (
-                        <TableRow key={i}>
-                          <TableCell colSpan={4}><Skeleton className="h-8 w-full" /></TableCell>
-                        </TableRow>
-                      ))
-                    ) : appointments.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={4} className="text-center h-24">No upcoming appointments.</TableCell>
-                      </TableRow>
-                    ) : ( appointments.map((app) => (
-                      <TableRow key={app.id}>
-                        <TableCell className="font-medium">{app.user}</TableCell>
-                        <TableCell>{formatDate(app.details?.appointmentDate)}</TableCell>
-                        <TableCell>
-                          <Badge variant={app.status === 'Approved' ? 'default' : 'secondary'} className={app.status === 'Approved' ? 'bg-green-600' : ''}>{app.status}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Button asChild variant="outline" size="sm">
-                              <Link href={`/worker/applications/${app.id}?from=/worker/transport/dashboard`}>View Details</Link>
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    )))}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>General Applications</CardTitle>
-               <CardDescription>Other non-appointment based applications.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Service</TableHead>
-                      <TableHead>User</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
+                  ) : ( applications.map((app) => (
+                    <TableRow key={app.id}>
+                      <TableCell className="font-medium">{app.user}</TableCell>
+                      <TableCell>{formatDate(app.details?.appointmentDate)}</TableCell>
+                      <TableCell>
+                        <Badge variant={app.status === 'Approved' ? 'default' : 'secondary'} className={app.status === 'Approved' ? 'bg-green-600' : ''}>{app.status}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Button asChild variant="outline" size="sm">
+                            <Link href={`/worker/applications/${app.id}?from=/worker/transport/dashboard`}>View Details</Link>
+                        </Button>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {loading ? (
-                      Array.from({ length: 3 }).map((_, i) => (
-                        <TableRow key={i}>
-                          <TableCell colSpan={4}><Skeleton className="h-8 w-full" /></TableCell>
-                        </TableRow>
-                      ))
-                    ) : applications.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={4} className="text-center h-24">No general applications found.</TableCell>
-                      </TableRow>
-                    ) : ( applications.map((app) => (
-                      <TableRow key={app.id}>
-                        <TableCell className="font-medium">{app.service}</TableCell>
-                        <TableCell>{app.user}</TableCell>
-                        <TableCell>
-                          <Badge variant={app.status === 'Paid' || app.status === 'Approved' || app.status === 'Completed' ? 'default' : 'secondary'} className={app.status === 'Paid' || app.status === 'Approved' || app.status === 'Completed' ? 'bg-green-600' : ''}>{app.status}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Button asChild variant="outline" size="sm">
-                              <Link href={`/worker/applications/${app.id}?from=/worker/transport/dashboard`}>View Details</Link>
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    )))}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                  )))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </AdminLayout>
   );
