@@ -26,6 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Calendar } from '../ui/calendar';
 
 type UploadedFilesState = {
   [key: string]: string;
@@ -35,12 +36,14 @@ const STEPS = [
     { id: 1, name: 'Service Type' },
     { id: 2, name: 'Application Form' },
     { id: 3, name: 'Upload Documents' },
-    { id: 4, name: 'Submit' },
+    { id: 4, name: 'Schedule Biometrics' },
+    { id: 5, name: 'Submit' },
 ];
 
 export function PassportRenewalService({ service }) {
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
+  const [date, setDate] = useState<Date | undefined>(new Date());
   const [serviceType, setServiceType] = useState('renewal');
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFilesState>({});
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
@@ -99,6 +102,9 @@ export function PassportRenewalService({ service }) {
     if(currentStep === 3) {
         return Object.keys(requiredDocs).every(docKey => uploadedFiles[docKey]);
     }
+     if(currentStep === 4) {
+        return date !== undefined;
+    }
     return true;
   }
 
@@ -108,7 +114,7 @@ export function PassportRenewalService({ service }) {
     } else {
         toast({
             title: "Incomplete Step",
-            description: "Please fill all required fields or upload all required documents before proceeding.",
+            description: "Please fill all required fields, upload documents, or select a date before proceeding.",
             variant: "destructive"
         });
     }
@@ -136,7 +142,7 @@ export function PassportRenewalService({ service }) {
             status: "Pending Payment",
             submitted: serverTimestamp(),
             documents: uploadedFiles,
-            details: formValues
+            details: { ...formValues, appointmentDate: date, serviceType }
         });
         setShowPaymentDialog(true);
     } catch (error) {
@@ -253,11 +259,28 @@ export function PassportRenewalService({ service }) {
                     </CardContent>
                 </Card>
             )}
-            
+
             {currentStep === 4 && (
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Step 4: Book an Appointment for Biometrics</CardTitle>
+                        <CardDescription>Schedule a visit to the Immigration Department for fingerprint and photo capture.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex justify-center">
+                         {date ? <Calendar
+                            mode="single"
+                            selected={date}
+                            onSelect={setDate}
+                            className="rounded-md border"
+                            /> : <div className="h-[290px] w-[280px] flex items-center justify-center"><p>Loading calendar...</p></div> }
+                    </CardContent>
+                </Card>
+            )}
+            
+            {currentStep === 5 && (
                 <Card>
                     <CardHeader>
-                        <CardTitle>Step 4: Review and Submit</CardTitle>
+                        <CardTitle>Step 5: Review and Submit</CardTitle>
                         <CardDescription>
                             Please review all your details from the previous steps. The total fee is LKR {serviceType === 'renewal' ? '3,500.00' : '5,000.00'}. Click submit to save your application and proceed to payment.
                         </CardDescription>
@@ -294,7 +317,7 @@ export function PassportRenewalService({ service }) {
             <AlertDialogCancel onClick={() => router.push('/my-applications')}>
               Pay Later
             </AlertDialogCancel>
-            <AlertDialogAction onClick={() => router.push(`/payment?service=${encodeURIComponent(service.title)}&amount=${serviceType === 'renewal' ? '3500.00' : '5000.00'}`)}>
+            <AlertDialogAction onClick={() => router.push(`/payment?service=${encodeURIComponent(service.title)}&amount=${serviceType === 'renewal' ? '3500.00' : '5000.00'}&ref=${user?.id}`)}>
               Pay Now
             </AlertDialogAction>
           </AlertDialogFooter>
