@@ -14,8 +14,8 @@ import Link from "next/link";
 const seedData = {
     users: [
         // Citizens
-        { id: "user-nimal-silva", name: "Nimal Silva", email: "nimal.s@example.com", nic: "199012345V", role: "Citizen", status: "Active" },
-        { id: "user-kamala-perera", name: "Kamala Perera", email: "kamala.p@example.com", nic: "198523456V", role: "Citizen", status: "Active" },
+        { id: "user-nimal-silva", name: "Nimal Silva", email: "", nic: "199012345V", role: "Citizen", status: "Active" },
+        { id: "user-kamala-perera", name: "Kamala Perera", email: "", nic: "198523456V", role: "Citizen", status: "Active" },
         // Admin
         { id: "super-admin-01", name: "S. Weerasinghe", email: "admin@gov.lk", nic: "", role: "Super Admin", status: "Active" },
         // Workers
@@ -68,6 +68,7 @@ export default function SeedPage() {
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
     const [logs, setLogs] = useState<string[]>([]);
+    const [userUidMap, setUserUidMap] = useState<{[key: string]: string}>({});
 
     const addLog = (message: string) => {
         setLogs(prevLogs => [...prevLogs, message]);
@@ -77,6 +78,7 @@ export default function SeedPage() {
         setLoading(true);
         setStatus("idle");
         setLogs([]);
+        const tempUserUidMap: {[key: string]: string} = {};
 
         addLog("Starting database reset...");
 
@@ -84,39 +86,35 @@ export default function SeedPage() {
             // Step 1: Create/Update all users in Firebase Auth and Firestore
             addLog(`Found ${seedData.users.length} users to process...`);
             for (const user of seedData.users) {
+                 const authEmail = user.role === 'Citizen' ? `${user.nic}@citizen.gov.lk` : user.email;
+                let authUserUid = '';
                 try {
-                    const authEmail = user.role === 'Citizen' ? `${user.nic}@citizen.gov.lk` : user.email;
                     addLog(`Processing user: ${user.name} (${authEmail})`);
-
-                    // Try to create the user
                     const userCredential = await createUserWithEmailAndPassword(auth, authEmail, PASSWORD);
-                    const authUser = userCredential.user;
-                    addLog(` -> Successfully created auth user: ${authUser.uid}`);
-
-                    // Create user document in Firestore with the new UID
-                    const userRef = doc(db, "users", authUser.uid);
-                    await setDoc(userRef, { ...user, id: authUser.uid, joined: Timestamp.now() });
-                    addLog(` -> Successfully created Firestore profile for ${user.name}.`);
+                    authUserUid = userCredential.user.uid;
+                    addLog(` -> Successfully created auth user: ${authUserUid}`);
 
                 } catch (error: any) {
                     if (error.code === 'auth/email-already-in-use') {
-                        // If user exists, sign in to get their UID, then update their Firestore data
                         addLog(` -> Auth user already exists. Signing in to get UID...`);
-                        const userCredential = await signInWithEmailAndPassword(auth, user.role === 'Citizen' ? `${user.nic}@citizen.gov.lk` : user.email, PASSWORD);
-                        const authUser = userCredential.user;
-                        addLog(` -> UID is ${authUser.uid}. Updating Firestore profile.`);
-
-                        const userRef = doc(db, "users", authUser.uid);
-                        await setDoc(userRef, { ...user, id: authUser.uid, joined: Timestamp.now() }, { merge: true });
-                        addLog(` -> Successfully updated Firestore profile for ${user.name}.`);
+                        const userCredential = await signInWithEmailAndPassword(auth, authEmail, PASSWORD);
+                        authUserUid = userCredential.user.uid;
                         await signOut(auth); // Sign out after operation
-
+                        addLog(` -> UID is ${authUserUid}.`);
                     } else {
                         addLog(` -> Error creating user ${user.name}: ${error.message}`);
-                        throw error; // Stop if it's a critical error
+                        throw error;
                     }
                 }
+
+                const userRef = doc(db, "users", authUserUid);
+                // Use the original ID for the map, but the new auth UID for the document ID and 'id' field
+                tempUserUidMap[user.id] = authUserUid;
+                await setDoc(userRef, { ...user, id: authUserUid, joined: Timestamp.now() });
+                addLog(` -> Successfully created/updated Firestore profile for ${user.name} with ID ${authUserUid}.`);
             }
+            
+            setUserUidMap(tempUserUidMap); // Set the map state
 
             // Step 2: Seed other collections
             addLog("Seeding other collections (applications, fines, etc.)...");
@@ -124,7 +122,8 @@ export default function SeedPage() {
 
             seedData.applications.forEach(app => {
                 const appRef = doc(collection(db, "applications"));
-                batch.set(appRef, { ...app, submitted: Timestamp.fromDate(app.submitted) });
+                const userId = tempUserUidMap[app.userId] || app.userId;
+                batch.set(appRef, { ...app, submitted: Timestamp.fromDate(app.submitted), userId: userId });
             });
 
             seedData.fines.forEach(fine => {
@@ -139,12 +138,14 @@ export default function SeedPage() {
             
             seedData.payments.forEach(payment => {
                 const paymentRef = doc(collection(db, "payments"));
-                batch.set(paymentRef, { ...payment, date: Timestamp.fromDate(payment.date) });
+                const userId = tempUserUidMap[payment.userId] || payment.userId;
+                batch.set(paymentRef, { ...payment, date: Timestamp.fromDate(payment.date), userId: userId });
             });
             
             seedData.supportTickets.forEach(ticket => {
                 const ticketRef = doc(collection(db, "supportTickets"));
-                batch.set(ticketRef, { ...ticket, submittedAt: Timestamp.fromDate(ticket.submittedAt) });
+                const userId = tempUserUidMap[ticket.userId] || ticket.userId;
+                batch.set(ticketRef, { ...ticket, submittedAt: Timestamp.fromDate(ticket.submittedAt), userId: userId });
             });
 
             await batch.commit();
@@ -222,5 +223,3 @@ export default function SeedPage() {
         </div>
     );
 }
-
-    
