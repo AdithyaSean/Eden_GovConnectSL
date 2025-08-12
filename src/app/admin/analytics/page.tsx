@@ -3,7 +3,6 @@
 
 import { AdminLayout } from "@/components/admin-layout";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -19,22 +18,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Bar, BarChart, CartesianGrid, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Clock, AlertTriangle, FileCheck2, Hourglass } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { collection, getDocs, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { Application } from "@/lib/types";
-
-const processingTimeData = [
-    { month: "Jan", time: 7.2 },
-    { month: "Feb", time: 6.8 },
-    { month: "Mar", time: 8.1 },
-    { month: "Apr", time: 7.5 },
-    { month: "May", time: 6.2 },
-    { month: "Jun", time: 5.9 },
-]
-
+import { subMonths, format, differenceInDays } from 'date-fns';
 
 export default function AdminAnalyticsPage() {
     const [applications, setApplications] = useState<Application[]>([]);
@@ -59,6 +49,9 @@ export default function AdminAnalyticsPage() {
                   hour: `${i.toString().padStart(2, '0')}:00`,
                   applications: 0,
                 })),
+                avgProcessingTime: 0,
+                noShowRate: 0,
+                processingTimeData: [],
             };
         }
 
@@ -71,9 +64,8 @@ export default function AdminAnalyticsPage() {
         for(let i=0; i<24; i++) { submissionsByHour[i] = 0; }
 
         applications.forEach(app => {
-            if (app.submitted && typeof app.submitted !== 'string') {
-                const date = (app.submitted as Timestamp).toDate();
-                // Convert to SLST by adding 5 hours and 30 minutes
+            if (app.submitted && app.submitted instanceof Timestamp) {
+                const date = app.submitted.toDate();
                 const slstOffset = 5.5 * 60 * 60 * 1000;
                 const slstDate = new Date(date.getTime() + slstOffset);
                 const hour = slstDate.getUTCHours();
@@ -101,10 +93,53 @@ export default function AdminAnalyticsPage() {
             return `${h} ${ampm} (SLST)`;
         }
 
+        // Processing Time
+        const completedApps = applications.filter(
+            app => (app.status === 'Approved' || app.status === 'Rejected' || app.status === 'Completed') && app.submitted instanceof Timestamp
+        );
+        const totalProcessingTime = completedApps.reduce((acc, app) => {
+             // For this demo, we assume completion happens now. A real app would have a `completedAt` field.
+            const completionDate = new Date(); 
+            const submissionDate = app.submitted.toDate();
+            return acc + differenceInDays(completionDate, submissionDate);
+        }, 0);
+        const avgProcessingTime = completedApps.length > 0 ? Math.round(totalProcessingTime / completedApps.length) : 0;
+        
+        // No-Show Rate
+        const appointmentApps = applications.filter(app => app.details?.appointmentDate);
+        const noShowApps = appointmentApps.filter(app => {
+            const appointmentDate = (app.details.appointmentDate as Timestamp).toDate();
+            return new Date() > appointmentDate && (app.status === 'Pending' || app.status === 'In Progress');
+        }).length;
+        const noShowRate = appointmentApps.length > 0 ? Math.round((noShowApps / appointmentApps.length) * 100) : 0;
+
+        // Processing Time Trend Data
+        const monthlyProcessingData: {[key: string]: { totalDays: number, count: number }} = {};
+        completedApps.forEach(app => {
+            const month = format(app.submitted.toDate(), 'MMM yyyy');
+            const completionDate = new Date();
+            const processingDays = differenceInDays(completionDate, app.submitted.toDate());
+            if (!monthlyProcessingData[month]) {
+                monthlyProcessingData[month] = { totalDays: 0, count: 0 };
+            }
+            monthlyProcessingData[month].totalDays += processingDays;
+            monthlyProcessingData[month].count++;
+        });
+        
+        const processingTimeData = Object.entries(monthlyProcessingData)
+            .map(([month, data]) => ({
+                month: month.split(' ')[0],
+                time: data.totalDays / data.count,
+            }))
+            .slice(-6); // Get last 6 months
+
         return {
             docReadiness,
             peakHour: formatPeakHour(peakHour),
             peakHoursData,
+            avgProcessingTime,
+            noShowRate,
+            processingTimeData,
         }
 
     }, [applications]);
@@ -123,7 +158,7 @@ export default function AdminAnalyticsPage() {
                     <Hourglass className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">6.8 Days</div>
+                    <div className="text-2xl font-bold">{analyticsData.avgProcessingTime} Days</div>
                     <p className="text-xs text-muted-foreground">From submission to completion</p>
                 </CardContent>
             </Card>
@@ -133,7 +168,7 @@ export default function AdminAnalyticsPage() {
                     <AlertTriangle className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">12%</div>
+                    <div className="text-2xl font-bold">{analyticsData.noShowRate}%</div>
                     <p className="text-xs text-muted-foreground">For biometrics & in-person visits</p>
                 </CardContent>
             </Card>
@@ -184,7 +219,7 @@ export default function AdminAnalyticsPage() {
                 </CardHeader>
                 <CardContent>
                     <ResponsiveContainer width="100%" height={300}>
-                        <LineChart data={processingTimeData}>
+                        <LineChart data={analyticsData.processingTimeData}>
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis dataKey="month" fontSize={12} tickLine={false} axisLine={false} />
                             <YAxis fontSize={12} tickLine={false} axisLine={false} />
@@ -198,8 +233,8 @@ export default function AdminAnalyticsPage() {
 
         <Card>
             <CardHeader>
-                <CardTitle>Document Readiness Status</CardTitle>
-                <CardDescription>Overview of document completion for recent applications.</CardDescription>
+                <CardTitle>Recent Applications Document Status</CardTitle>
+                <CardDescription>Overview of document completion for the latest applications.</CardDescription>
             </CardHeader>
             <CardContent>
                 <Table>
