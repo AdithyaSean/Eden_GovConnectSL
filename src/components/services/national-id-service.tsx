@@ -1,10 +1,10 @@
 
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileUpload } from '../file-upload';
-import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Calendar } from '../ui/calendar';
@@ -14,12 +14,23 @@ import { useAuth } from '@/hooks/use-auth';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
+import { Check } from 'lucide-react';
+import { Input } from '../ui/input';
 
 type UploadedFilesState = {
   [key: string]: string;
 };
 
+const STEPS = [
+    { id: 1, name: 'Service Type' },
+    { id: 2, name: 'Upload Documents' },
+    { id: 3, name: 'Schedule Biometrics' },
+    { id: 4, name: 'Submit' },
+];
+
 export function NationalIdService({ service }) {
+  const [currentStep, setCurrentStep] = useState(1);
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [serviceType, setServiceType] = useState("new-id");
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFilesState>({});
@@ -46,18 +57,37 @@ export function NationalIdService({ service }) {
   const getDocumentsForServiceType = () => {
     switch (serviceType) {
         case 'new-id':
-            return ["Birth Certificate", "Certified Photo", "Grama Niladhari Certificate"];
+            return { "BirthCertificate": "Birth Certificate", "CertifiedPhoto": "Certified Photo", "GramaNiladhariCertificate": "Grama Niladhari Certificate" };
         case 'update-id':
-            return ["Certified Photo", "Grama Niladhari Certificate"];
+            return { "CertifiedPhoto": "Certified Photo", "GramaNiladhariCertificate": "Grama Niladhari Certificate", "ProofOfChange": "Proof of Change (e.g., Marriage Cert.)" };
         case 'lost-id':
-            return ["Police Report (for Lost ID)", "Certified Photo"];
+            return { "PoliceReport": "Police Report (for Lost ID)", "CertifiedPhoto": "Certified Photo" };
         default:
-            return [];
+            return {};
     }
   }
 
   const requiredDocs = getDocumentsForServiceType();
-  const isReadyToSubmit = requiredDocs.length > 0 && requiredDocs.every(doc => uploadedFiles[doc]);
+  
+  const validateStep = () => {
+    if(currentStep === 2) {
+       return Object.keys(requiredDocs).every(docKey => uploadedFiles[docKey]);
+    }
+    return true;
+  }
+
+  const handleNext = () => {
+    if(validateStep()){
+        setCurrentStep(prev => Math.min(prev + 1, STEPS.length));
+    } else {
+        toast({
+            title: "Incomplete Step",
+            description: "Please upload all required documents before proceeding.",
+            variant: "destructive"
+        });
+    }
+  };
+  const handleBack = () => setCurrentStep(prev => Math.max(prev - 1, 1));
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -65,8 +95,8 @@ export function NationalIdService({ service }) {
         toast({ title: "Please log in to submit.", variant: "destructive" });
         return;
     }
-     if (!isReadyToSubmit) {
-        toast({ title: "Please upload all required documents.", variant: "destructive" });
+    if (!validateStep()) {
+        toast({ title: "Please complete all steps.", variant: "destructive" });
         return;
     }
 
@@ -98,7 +128,7 @@ export function NationalIdService({ service }) {
     <div className="space-y-8">
         <Card>
             <CardHeader>
-                <CardTitle>Check Application Status</CardTitle>
+                <CardTitle>Application Status</CardTitle>
             </CardHeader>
             <CardContent className="flex gap-2">
                 <Input placeholder="Enter your Application Reference Number" />
@@ -108,65 +138,118 @@ export function NationalIdService({ service }) {
 
         <form onSubmit={handleSubmit}>
             <div className="space-y-8">
-                <Card>
+                 <Card>
                     <CardHeader>
-                        <CardTitle>Select Service Type</CardTitle>
+                        <CardTitle>Application Process</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <RadioGroup defaultValue={serviceType} onValueChange={(value) => { setServiceType(value); setUploadedFiles({})}}>
-                            <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="new-id" id="r-new-id" />
-                                <Label htmlFor="r-new-id">Apply for New ID (First Time)</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="update-id" id="r-update-id" />
-                                <Label htmlFor="r-update-id">Update Details on Existing ID</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="lost-id" id="r-lost-id" />
-                                <Label htmlFor="r-lost-id">Apply for Duplicate of Lost ID</Label>
-                            </div>
-                        </RadioGroup>
+                        <div className="flex items-center justify-between">
+                            {STEPS.map((step, index) => (
+                                <React.Fragment key={step.id}>
+                                    <div className="flex flex-col items-center text-center w-32">
+                                        <div className={cn(
+                                            "w-10 h-10 rounded-full flex items-center justify-center border-2",
+                                            currentStep > step.id ? "bg-green-600 border-green-600 text-white" : "",
+                                            currentStep === step.id ? "border-primary" : "border-muted-foreground",
+                                        )}>
+                                            {currentStep > step.id ? <Check /> : step.id}
+                                        </div>
+                                        <p className={cn(
+                                            "mt-2 text-sm",
+                                            currentStep === step.id ? "font-bold text-primary" : "text-muted-foreground"
+                                        )}>{step.name}</p>
+                                    </div>
+                                    {index < STEPS.length - 1 && <div className="flex-1 h-0.5 bg-border -mx-4 mb-8"></div>}
+                                </React.Fragment>
+                            ))}
+                        </div>
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Upload Required Documents</CardTitle>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                         {requiredDocs.map(doc => {
-                             const docId = doc.replace(/\s+/g, '-');
-                             const id = `file-upload-${serviceType}-${docId}`;
-                             return (
-                                 <FileUpload
-                                     key={id}
-                                     id={id}
-                                     label={doc}
-                                     onUploadComplete={(base64) => handleUploadComplete(docId, base64)}
-                                     onFileRemove={() => handleFileRemove(docId)}
-                                 />
-                             )
-                         })}
-                    </CardContent>
-                </Card>
+                {currentStep === 1 && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Step 1: Select Service Type</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <RadioGroup defaultValue={serviceType} onValueChange={(value) => { setServiceType(value); setUploadedFiles({})}}>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="new-id" id="r-new-id" />
+                                    <Label htmlFor="r-new-id">Apply for New ID (First Time)</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="update-id" id="r-update-id" />
+                                    <Label htmlFor="r-update-id">Update Details on Existing ID</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="lost-id" id="r-lost-id" />
+                                    <Label htmlFor="r-lost-id">Apply for Duplicate of Lost ID</Label>
+                                </div>
+                            </RadioGroup>
+                        </CardContent>
+                    </Card>
+                )}
                 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Book an Appointment for Biometrics</CardTitle>
-                        <p className="text-sm text-muted-foreground">Schedule a visit to your nearest Divisional Secretariat for fingerprint and photo capture.</p>
-                    </CardHeader>
-                    <CardContent className="flex justify-center">
-                        {date ? <Calendar
-                            mode="single"
-                            selected={date}
-                            onSelect={setDate}
-                            className="rounded-md border"
-                            /> : <div className="h-[290px] w-[280px] flex items-center justify-center"><p>Loading calendar...</p></div> }
-                    </CardContent>
-                </Card>
-                 <div className="flex justify-end">
-                    <Button type="submit" size="lg" disabled={!isReadyToSubmit}>Submit Application</Button>
+                {currentStep === 2 && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Step 2: Upload Required Documents</CardTitle>
+                        </CardHeader>
+                        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {Object.entries(requiredDocs).map(([key, label]) => {
+                                const id = `file-upload-${serviceType}-${key}`;
+                                return (
+                                    <FileUpload
+                                        key={id}
+                                        id={id}
+                                        label={label}
+                                        onUploadComplete={(base64) => handleUploadComplete(key, base64)}
+                                        onFileRemove={() => handleFileRemove(key)}
+                                    />
+                                )
+                            })}
+                        </CardContent>
+                    </Card>
+                )}
+
+                {currentStep === 3 && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Step 3: Book an Appointment for Biometrics</CardTitle>
+                            <CardDescription>Schedule a visit to your nearest Divisional Secretariat for fingerprint and photo capture.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex justify-center">
+                            {date ? <Calendar
+                                mode="single"
+                                selected={date}
+                                onSelect={setDate}
+                                className="rounded-md border"
+                                /> : <div className="h-[290px] w-[280px] flex items-center justify-center"><p>Loading calendar...</p></div> }
+                        </CardContent>
+                    </Card>
+                )}
+
+                {currentStep === 4 && (
+                     <Card>
+                        <CardHeader>
+                            <CardTitle>Step 4: Review and Submit</CardTitle>
+                            <CardDescription>Please review all your details from the previous steps. Click submit to complete your application.</CardDescription>
+                        </CardHeader>
+                        <CardFooter>
+                            <Button size="lg" type="submit">Submit Application</Button>
+                        </CardFooter>
+                    </Card>
+                )}
+
+                 <div className="flex justify-between mt-8">
+                    <div>
+                    {currentStep > 1 && <Button type="button" variant="secondary" onClick={handleBack}>Back</Button>}
+                    </div>
+                    <div>
+                        {currentStep < STEPS.length ? (
+                            <Button type="button" onClick={handleNext}>Next</Button>
+                        ) : null}
+                    </div>
                 </div>
             </div>
         </form>
