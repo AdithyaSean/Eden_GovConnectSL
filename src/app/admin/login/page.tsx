@@ -61,7 +61,12 @@ export default function AdminLoginPage() {
         if (userData.role.startsWith("worker_")) {
             localStorage.setItem("workerId", userData.id);
             localStorage.setItem("workerRole", userData.role);
-            router.push(`/worker/${userData.role.replace('worker_', '')}/dashboard`);
+            let dashboardPath = userData.role.replace('worker_', '');
+            if(dashboardPath === 'finepayment') dashboardPath = 'fine-payment';
+            if(dashboardPath === 'registeredvehicles') dashboardPath = 'registered-vehicles';
+            
+            router.push(`/worker/${dashboardPath}/dashboard`);
+
         } else if (userData.role === "Super Admin" && email.endsWith('@gov.lk')) {
             // This is a simplified check, in reality you'd have a separate admin login or check a flag.
             router.push("/admin/dashboard");
