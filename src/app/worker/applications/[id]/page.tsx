@@ -94,7 +94,7 @@ export default function WorkerApplicationDetailsPage({ params }: { params: Promi
             await setDoc(doc(db, "vehicles", vehicleId), {
                 id: vehicleId,
                 type: application.details.vehicleType,
-                licensePlate: `WP-${Math.random().toString().slice(2, 6)}`, // Generate random plate
+                licensePlate: application.details.licensePlate || `WP-${Math.random().toString().slice(2, 6)}`, // Use provided plate or generate random
                 registrationDate: new Date().toLocaleDateString('en-CA'),
                 chassisNumber: `CH-${new Date().getTime()}`,
                 status: 'Active',

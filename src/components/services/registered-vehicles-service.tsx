@@ -201,6 +201,10 @@ export function RegisteredVehiclesService({ service }) {
                         <CardContent className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
+                                    <Label htmlFor="reg-plate">License Plate</Label>
+                                    <Input id="reg-plate" name="licensePlate" placeholder="e.g., CBA-1234" />
+                                </div>
+                                <div className="space-y-2">
                                     <Label htmlFor="reg-type">Vehicle Type</Label>
                                     <Input id="reg-type" name="vehicleType" placeholder="e.g., Car, Motorcycle" />
                                 </div>
@@ -241,19 +245,12 @@ export function RegisteredVehiclesService({ service }) {
                     <Card>
                          <CardHeader>
                             <CardTitle>Transfer Vehicle Ownership</CardTitle>
-                            <CardDescription>Select a vehicle and provide the new owner's details.</CardDescription>
+                            <CardDescription>Enter the license plate of the vehicle and provide the new owner's details.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
                             <div className="space-y-2">
-                                <Label>Select Vehicle to Transfer</Label>
-                                <Select name="vehicleToTransfer">
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select from your vehicles" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {vehicles.map(v => <SelectItem key={v.id} value={v.licensePlate}>{v.licensePlate} ({v.type})</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
+                                <Label htmlFor="transfer-plate">Vehicle License Plate to Transfer</Label>
+                                <Input id="transfer-plate" name="vehicleToTransfer" placeholder="e.g., CBA-1234" />
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
