@@ -17,8 +17,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { db } from "@/lib/firebase";
+import { db, auth } from "@/lib/firebase";
 import { collection, query, where, getDocs, limit } from "firebase/firestore";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import type { User } from "@/lib/types";
 
 export default function AdminLoginPage() {
@@ -45,12 +46,14 @@ export default function AdminLoginPage() {
     }
 
     try {
+        await signInWithEmailAndPassword(auth, email, password);
+
         const usersRef = collection(db, "users");
         const q = query(usersRef, where("email", "==", email), limit(1));
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
-            toast({ title: "Login Failed", description: "No user found with this email.", variant: "destructive" });
+            toast({ title: "Login Failed", description: "No user profile found for this email.", variant: "destructive" });
             setLoading(false);
             return;
         }
@@ -68,15 +71,18 @@ export default function AdminLoginPage() {
             router.push(`/worker/${dashboardPath}/dashboard`);
 
         } else if (userData.role === "Super Admin" && email.endsWith('@gov.lk')) {
-            // This is a simplified check, in reality you'd have a separate admin login or check a flag.
             router.push("/admin/dashboard");
         } else {
             toast({ title: "Access Denied", description: "This login is for authorized workers and admins only.", variant: "destructive" });
         }
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Login error: ", error);
-        toast({ title: "An Error Occurred", description: "Something went wrong. Please try again.", variant: "destructive" });
+        if (error.code === 'auth/invalid-credential') {
+          toast({ title: "Login Failed", description: "Invalid email or password. Please try again.", variant: "destructive" });
+        } else {
+          toast({ title: "An Error Occurred", description: "Something went wrong. Please try again.", variant: "destructive" });
+        }
     } finally {
         setLoading(false);
     }
