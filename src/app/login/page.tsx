@@ -51,11 +51,19 @@ export default function LoginPage() {
 
     } catch (error: any) {
         console.error("Login failed: ", error);
-        toast({
-            title: "Login Failed",
-            description: "Invalid credentials. Please check your NIC and password.",
-            variant: "destructive"
-        });
+        if (error.code === 'auth/invalid-credential') {
+            toast({
+                title: "Login Failed",
+                description: "Invalid credentials. Please check your NIC and password.",
+                variant: "destructive"
+            });
+        } else {
+             toast({
+                title: "An Error Occurred",
+                description: "Something went wrong during login. Please try again later.",
+                variant: "destructive"
+            });
+        }
     } finally {
         setLoading(false);
     }
