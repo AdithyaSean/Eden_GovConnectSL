@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Check, Download, File, User, X, ArrowLeft } from "lucide-react";
 import { useEffect, useState, use } from "react";
 import { db } from "@/lib/firebase";
-import { doc, getDoc, updateDoc, Timestamp, collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, updateDoc, Timestamp, collection, addDoc, serverTimestamp, setDoc, query, where, getDocs, limit } from "firebase/firestore";
 import type { Application, User as AppUser } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
@@ -85,26 +85,69 @@ export default function WorkerApplicationDetailsPage({ params }: { params: Promi
   }
 
   const handleStatusUpdate = async () => {
-    if(application && targetStatus) {
-      await updateDoc(doc(db, "applications", application.id), { status: targetStatus, workerComment: comment });
-      setApplication(prev => prev ? { ...prev, status: targetStatus, workerComment: comment } : null);
-      toast({
-          title: "Status Updated",
-          description: `Application has been marked as ${targetStatus}.`,
-      });
-      
-      if (application.userId) {
-          await createNotification(
-              application.userId,
-              `Application ${targetStatus}`,
-              `Your application for '${application.service}' has been ${targetStatus.toLowerCase()}. ${comment ? 'A comment was added.' : ''}`,
-              "/my-applications"
-          );
-      }
-      setIsStatusUpdateDialogOpen(false);
-      setComment("");
-      setTargetStatus(null);
+    if(!application || !targetStatus || !applicant) return;
+
+    // --- Special logic for vehicle services ---
+    if (targetStatus === 'Approved') {
+        if (application.service === 'New Vehicle Registration') {
+            const vehicleId = `${application.details.make}-${new Date().getTime()}`;
+            await setDoc(doc(db, "vehicles", vehicleId), {
+                id: vehicleId,
+                type: application.details.vehicleType,
+                licensePlate: `WP-${Math.random().toString().slice(2, 6)}`, // Generate random plate
+                registrationDate: new Date().toLocaleDateString('en-CA'),
+                chassisNumber: `CH-${new Date().getTime()}`,
+                status: 'Active',
+                insuranceExpiry: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toLocaleDateString('en-CA'),
+                emissionTestExpiry: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toLocaleDateString('en-CA'),
+                nic: applicant.nic, // Link to the applicant
+            });
+            toast({ title: "Vehicle Registered", description: "New vehicle has been added to the registry." });
+        } else if (application.service === 'Vehicle Ownership Transfer') {
+            // Find the new owner's user doc to get their ID
+            const newOwnerQuery = query(collection(db, "users"), where("nic", "==", application.details.newOwnerNic), limit(1));
+            const newOwnerSnapshot = await getDocs(newOwnerQuery);
+
+            if(newOwnerSnapshot.empty) {
+                toast({ title: "Error", description: "New owner not found in the system.", variant: "destructive" });
+                return;
+            }
+            const newOwner = newOwnerSnapshot.docs[0].data() as AppUser;
+            
+            // Find vehicle by plate
+            const vehicleQuery = query(collection(db, "vehicles"), where("licensePlate", "==", application.details.vehicleToTransfer), limit(1));
+            const vehicleSnapshot = await getDocs(vehicleQuery);
+
+            if(vehicleSnapshot.empty){
+                toast({ title: "Error", description: "Vehicle to transfer not found.", variant: "destructive" });
+                return;
+            }
+            const vehicleDocRef = vehicleSnapshot.docs[0].ref;
+
+            await updateDoc(vehicleDocRef, { nic: newOwner.nic });
+            toast({ title: "Ownership Transferred", description: `Vehicle now belongs to ${newOwner.name}.` });
+        }
     }
+    // --- End special logic ---
+
+    await updateDoc(doc(db, "applications", application.id), { status: targetStatus, workerComment: comment });
+    setApplication(prev => prev ? { ...prev, status: targetStatus, workerComment: comment } : null);
+    toast({
+        title: "Status Updated",
+        description: `Application has been marked as ${targetStatus}.`,
+    });
+    
+    if (application.userId) {
+        await createNotification(
+            application.userId,
+            `Application ${targetStatus}`,
+            `Your application for '${application.service}' has been ${targetStatus.toLowerCase()}. ${comment ? 'A comment was added.' : ''}`,
+            "/my-applications"
+        );
+    }
+    setIsStatusUpdateDialogOpen(false);
+    setComment("");
+    setTargetStatus(null);
   }
   
   const formatDate = (date: Timestamp | string | undefined) => {
@@ -250,8 +293,8 @@ export default function WorkerApplicationDetailsPage({ params }: { params: Promi
             {application.details && Object.keys(application.details).length > 0 && (
                  <Card>
                     <CardHeader>
-                        <CardTitle>Appointment Details</CardTitle>
-                        <CardDescription>This application includes an appointment or specific request details.</CardDescription>
+                        <CardTitle>Additional Details</CardTitle>
+                        <CardDescription>This application includes extra information submitted by the user.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {Object.entries(application.details).map(([key, value]) => (
@@ -301,5 +344,3 @@ export default function WorkerApplicationDetailsPage({ params }: { params: Promi
     </>
   );
 }
-
-    

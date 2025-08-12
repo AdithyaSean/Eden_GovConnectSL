@@ -9,7 +9,7 @@ import { Download, Bell } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect, FormEvent } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, query, addDoc, serverTimestamp, getDocs } from 'firebase/firestore';
+import { collection, query, addDoc, serverTimestamp, getDocs, where } from 'firebase/firestore';
 import type { Vehicle } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
 import { useAuth } from '@/hooks/use-auth';
@@ -31,23 +31,26 @@ export function RegisteredVehiclesService({ service }) {
     const [registrationFiles, setRegistrationFiles] = useState<UploadedFilesState>({});
     const [transferFiles, setTransferFiles] = useState<UploadedFilesState>({});
 
+    const fetchVehicles = async () => {
+        if (!user) {
+            setLoading(false);
+            return;
+        }
+        setLoading(true);
+        // Query vehicles collection where the NIC matches the current user's NIC
+        const q = query(collection(db, "vehicles"), where("nic", "==", user.nic));
+        try {
+            const querySnapshot = await getDocs(q);
+            const vehiclesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Vehicle));
+            setVehicles(vehiclesData);
+        } catch (error) {
+            console.error("Error fetching vehicles: ", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchVehicles = async () => {
-            if (!user) {
-                setLoading(false);
-                return;
-            }
-            const q = query(collection(db, "vehicles"));
-            try {
-                const querySnapshot = await getDocs(q);
-                const vehiclesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Vehicle));
-                setVehicles(vehiclesData);
-            } catch (error) {
-                console.error("Error fetching vehicles: ", error);
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchVehicles();
     }, [user]);
 
@@ -75,7 +78,7 @@ export function RegisteredVehiclesService({ service }) {
                 details: registrationDetails,
                 documents: registrationFiles
             });
-            toast({ title: "Registration Submitted", description: "Your application is under review."});
+            toast({ title: "Registration Submitted", description: "Your application is under review. You will be notified upon approval."});
         } catch(err) {
             toast({ title: "Submission Failed", variant: "destructive"});
         }
@@ -98,7 +101,7 @@ export function RegisteredVehiclesService({ service }) {
                 details: transferDetails,
                 documents: transferFiles
             });
-            toast({ title: "Transfer Request Submitted", description: "Your request is under review."});
+            toast({ title: "Transfer Request Submitted", description: "Your request is under review. You will be notified upon approval."});
         } catch(err) {
             toast({ title: "Submission Failed", variant: "destructive"});
         }
@@ -278,4 +281,3 @@ export function RegisteredVehiclesService({ service }) {
         </Tabs>
     );
 }
-

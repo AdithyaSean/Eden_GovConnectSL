@@ -13,7 +13,7 @@ import type { Application } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 
-const registeredVehiclesServices = ["Registered Vehicles"];
+const registeredVehiclesServices = ["Registered Vehicles", "New Vehicle Registration", "Vehicle Ownership Transfer"];
 
 export default function WorkerRegisteredVehiclesDashboard() {
   const [applications, setApplications] = useState<Application[]>([]);
@@ -54,7 +54,7 @@ export default function WorkerRegisteredVehiclesDashboard() {
              <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Ref ID</TableHead>
+                  <TableHead>Service</TableHead>
                   <TableHead>User</TableHead>
                   <TableHead>Submitted On</TableHead>
                   <TableHead>Status</TableHead>
@@ -75,7 +75,7 @@ export default function WorkerRegisteredVehiclesDashboard() {
                 ) : (
                 applications.map((app) => (
                   <TableRow key={app.id}>
-                    <TableCell className="font-medium">{app.id}</TableCell>
+                    <TableCell className="font-medium">{app.service}</TableCell>
                     <TableCell>{app.user}</TableCell>
                     <TableCell>{formatDate(app.submitted)}</TableCell>
                     <TableCell>

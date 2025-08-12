@@ -47,6 +47,7 @@ export interface Fine {
     amount: string;
     dueDate: string;
     status: 'Pending' | 'Paid';
+    nic: string;
 }
 
 export interface Vehicle {
@@ -58,6 +59,7 @@ export interface Vehicle {
     status: 'Active' | 'Inactive';
     insuranceExpiry: string;
     emissionTestExpiry: string;
+    nic: string;
 }
 
 export interface Application {
