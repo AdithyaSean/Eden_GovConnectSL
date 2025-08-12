@@ -7,13 +7,71 @@ import { FileUpload } from '../file-upload';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import Link from 'next/link';
+import { useState, FormEvent } from 'react';
+import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useRouter } from 'next/navigation';
 
 const taxPayments = [
     { year: 2023, type: "Income Tax (Q4)", amount: "15,000.00", status: "Paid", dueDate: "2024-01-15" },
     { year: 2024, type: "Income Tax (Q1)", amount: "18,000.00", status: "Due", dueDate: "2024-04-15" },
 ];
 
+type UploadedFilesState = {
+  [key: string]: string;
+};
+
 export function TaxPaymentsService({ service }) {
+    const [uploadedFiles, setUploadedFiles] = useState<UploadedFilesState>({});
+    const { user } = useAuth();
+    const { toast } = useToast();
+    const router = useRouter();
+
+    const handleUploadComplete = (docName: string, base64: string) => {
+        setUploadedFiles(prev => ({ ...prev, [docName]: base64 }));
+    };
+
+    const handleFileRemove = (docName: string) => {
+        setUploadedFiles(prev => {
+            const newFiles = { ...prev };
+            delete newFiles[docName];
+            return newFiles;
+        });
+    }
+
+    const handleFileUploadSubmit = async (e: FormEvent) => {
+        e.preventDefault();
+        if (!user) {
+            toast({ title: "Please log in to submit.", variant: "destructive" });
+            return;
+        }
+        if(Object.keys(uploadedFiles).length === 0) {
+            toast({ title: "Please upload at least one document.", variant: "destructive" });
+            return;
+        }
+        
+        try {
+            await addDoc(collection(db, "applications"), {
+                service: "Tax Document Submission", // More specific service name
+                userId: user.id,
+                user: user.name,
+                status: "In Review",
+                submitted: serverTimestamp(),
+                documents: uploadedFiles,
+            });
+            toast({
+                title: "Documents Submitted",
+                description: "Your tax documents have been submitted for review by the IRD.",
+            });
+            router.push("/my-applications");
+        } catch (error) {
+            console.error("Error submitting documents: ", error);
+            toast({ title: "Submission Failed", description: "An error occurred. Please try again.", variant: "destructive"});
+        }
+    }
+
   return (
     <div className="space-y-8">
         <Card>
@@ -55,20 +113,31 @@ export function TaxPaymentsService({ service }) {
                 </Table>
             </CardContent>
         </Card>
-
-        <Card>
-            <CardHeader>
-                <CardTitle>Upload Income Documents</CardTitle>
-                <p className="text-sm text-muted-foreground">Upload your salary slips, business income statements, or other relevant documents for the current tax year.</p>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FileUpload label="Salary Slips" />
-                <FileUpload label="Other Income Proof" />
-            </CardContent>
-            <CardFooter>
-                <Button>Upload Files</Button>
-            </CardFooter>
-        </Card>
+        <form onSubmit={handleFileUploadSubmit}>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Upload Income Documents</CardTitle>
+                    <p className="text-sm text-muted-foreground">Upload your salary slips, business income statements, or other relevant documents for the current tax year.</p>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FileUpload 
+                        id="salary-slips-upload"
+                        label="Salary Slips"
+                        onUploadComplete={(base64) => handleUploadComplete("salarySlips", base64)}
+                        onFileRemove={() => handleFileRemove("salarySlips")}
+                    />
+                    <FileUpload
+                        id="other-income-upload"
+                        label="Other Income Proof"
+                        onUploadComplete={(base64) => handleUploadComplete("otherIncomeProof", base64)}
+                        onFileRemove={() => handleFileRemove("otherIncomeProof")}
+                    />
+                </CardContent>
+                <CardFooter>
+                    <Button type="submit">Upload Files for Review</Button>
+                </CardFooter>
+            </Card>
+        </form>
         
         <Card>
             <CardHeader>

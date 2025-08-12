@@ -28,17 +28,67 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useState } from "react";
 import Link from "next/link";
+import { useAuth } from "@/hooks/use-auth";
+import { doc, updateDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { useToast } from "@/hooks/use-toast";
 
 export default function PaymentPage() {
   const searchParams = useSearchParams();
+  const { toast } = useToast();
   const service = searchParams.get("service") || "Unknown Service";
   const amount = searchParams.get("amount") || "0.00";
-  const ref = searchParams.get("ref") || new Date().getTime().toString().slice(-8);
+  const ref = searchParams.get("ref") || null;
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [newPaymentId, setNewPaymentId] = useState<string | null>(null);
+  const { user } = useAuth();
 
-  const handlePayment = (e: React.FormEvent) => {
+  const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
-    setShowSuccessDialog(true);
+    if (!ref || !user) {
+        toast({ title: "Error", description: "Application reference or user not found.", variant: "destructive"});
+        return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+        // 1. Update application status (if it's an application payment)
+        if(ref.length === 20) { // Simple check if it's likely a Firestore ID
+            const appRef = doc(db, "applications", ref);
+            await updateDoc(appRef, { status: "In Progress" });
+        }
+
+        // 2. Create a payment record
+        const paymentDocRef = await addDoc(collection(db, "payments"), {
+            userId: user.id,
+            service: service,
+            amount: amount,
+            date: serverTimestamp(),
+            status: "Success",
+            applicationRef: ref
+        });
+        setNewPaymentId(paymentDocRef.id);
+
+        // 3. Create a notification
+         await addDoc(collection(db, "notifications"), {
+            userId: user.id,
+            title: "Payment Successful",
+            description: `Your payment of LKR ${amount} for '${service}' was successful.`,
+            href: `/receipt/${paymentDocRef.id}`,
+            icon: "CheckCircle",
+            read: false,
+            createdAt: serverTimestamp()
+        });
+
+        setShowSuccessDialog(true);
+    } catch(error) {
+        console.error("Payment processing error:", error);
+        toast({ title: "Payment Failed", description: "Something went wrong. Please try again.", variant: "destructive"});
+    } finally {
+        setIsProcessing(false);
+    }
   };
 
   return (
@@ -50,16 +100,23 @@ export default function PaymentPage() {
               <AlertDialogTitle>Payment Successful!</AlertDialogTitle>
               <AlertDialogDescription>
                 Your payment for {service} has been processed successfully. Your
-                application status will be updated shortly.
+                application status has been updated.
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter>
-              <Button variant="outline" asChild>
-                <Link href="/payments">View Payment History</Link>
-              </Button>
-              <AlertDialogAction asChild>
-                <Link href="/dashboard">Back to Dashboard</Link>
-              </AlertDialogAction>
+            <AlertDialogFooter className="sm:justify-between w-full gap-2 sm:gap-0">
+               {newPaymentId && (
+                    <Button variant="outline" asChild>
+                        <Link href={`/receipt/${newPaymentId}`}>View Receipt</Link>
+                    </Button>
+                )}
+              <div className="flex flex-col-reverse sm:flex-row gap-2">
+                  <Button variant="secondary" asChild>
+                    <Link href="/my-applications">My Applications</Link>
+                  </Button>
+                  <AlertDialogAction asChild>
+                    <Link href="/dashboard">Go to Dashboard</Link>
+                  </AlertDialogAction>
+              </div>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
@@ -77,7 +134,7 @@ export default function PaymentPage() {
                 <h3 className="font-semibold text-lg">Payment Details</h3>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Service:</span>
-                  <span className="font-medium">{service}</span>
+                  <span className="font-medium text-right">{service}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Reference No:</span>
@@ -90,14 +147,18 @@ export default function PaymentPage() {
               </div>
               <div className="space-y-4">
                 <h3 className="font-semibold text-lg">User Information</h3>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Name:</span>
-                  <span className="font-medium">Sri Lankan Citizen</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">NIC:</span>
-                  <span className="font-medium">199012345V</span>
-                </div>
+                 {user && (
+                    <>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Name:</span>
+                          <span className="font-medium">{user.name}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">NIC:</span>
+                          <span className="font-medium">{user.nic}</span>
+                        </div>
+                    </>
+                )}
               </div>
             </div>
 
@@ -133,7 +194,9 @@ export default function PaymentPage() {
                       </div>
                     </CardContent>
                     <CardFooter>
-                      <Button type="submit" className="w-full" size="lg">Pay LKR {amount}</Button>
+                      <Button type="submit" className="w-full" size="lg" disabled={isProcessing}>
+                        {isProcessing ? "Processing..." : `Pay LKR ${amount}`}
+                      </Button>
                     </CardFooter>
                   </Card>
                 </TabsContent>
@@ -155,7 +218,9 @@ export default function PaymentPage() {
                         </div>
                     </CardContent>
                     <CardFooter>
-                       <Button type="submit" className="w-full" size="lg">Pay LKR {amount}</Button>
+                       <Button type="submit" className="w-full" size="lg" disabled={isProcessing}>
+                         {isProcessing ? "Processing..." : `Pay LKR ${amount}`}
+                       </Button>
                     </CardFooter>
                   </Card>
                 </TabsContent>
@@ -166,16 +231,18 @@ export default function PaymentPage() {
                       <CardTitle>Online Banking</CardTitle>
                       <CardDescription>Select your bank to proceed with the payment.</CardDescription>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-3 gap-4">
-                        <Button variant="outline" className="h-20">Bank 1</Button>
-                        <Button variant="outline" className="h-20">Bank 2</Button>
-                        <Button variant="outline" className="h-20">Bank 3</Button>
-                        <Button variant="outline" className="h-20">Bank 4</Button>
-                        <Button variant="outline" className="h-20">Bank 5</Button>
-                        <Button variant="outline" className="h-20">Bank 6</Button>
+                    <CardContent className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        <Button variant="outline" className="h-20">Bank of Ceylon</Button>
+                        <Button variant="outline" className="h-20">People's Bank</Button>
+                        <Button variant="outline" className="h-20">Sampath Bank</Button>
+                        <Button variant="outline" className="h-20">Commercial Bank</Button>
+                        <Button variant="outline" className="h-20">HNB</Button>
+                        <Button variant="outline" className="h-20">NDB Bank</Button>
                     </CardContent>
                     <CardFooter>
-                       <Button type="submit" className="w-full" size="lg">Proceed to Bank</Button>
+                       <Button type="submit" className="w-full" size="lg" disabled={isProcessing}>
+                         {isProcessing ? "Processing..." : "Proceed to Bank"}
+                       </Button>
                     </CardFooter>
                   </Card>
                 </TabsContent>
