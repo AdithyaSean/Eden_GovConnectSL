@@ -138,7 +138,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           </nav>
           
           <div className="flex items-center gap-2 md:gap-4">
-            <SriLankaTime />
              <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="rounded-full relative">
