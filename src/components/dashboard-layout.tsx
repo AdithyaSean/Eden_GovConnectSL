@@ -47,8 +47,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const notifs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification));
         // Sort on the client-side to avoid needing a composite index
-        notifs.sort((a, b) => (b.createdAt as Timestamp).toMillis() - (a.createdAt as Timestamp).toMillis());
-        setNotifications(notifs);
+        const sortedNotifs = notifs
+            .filter(n => n.createdAt) // Filter out notifications without a timestamp
+            .sort((a, b) => (b.createdAt as Timestamp).toMillis() - (a.createdAt as Timestamp).toMillis());
+        setNotifications(sortedNotifs);
     });
 
     return () => unsubscribe();
