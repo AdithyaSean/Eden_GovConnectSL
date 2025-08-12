@@ -13,7 +13,7 @@ import { Textarea } from '../ui/textarea';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import {
   AlertDialog,
@@ -28,6 +28,7 @@ import {
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Check, Circle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
 
 type UploadedFilesState = {
   [key: string]: string;
@@ -40,9 +41,12 @@ const STEPS = [
     { id: 4, name: 'Schedule & Submit' },
 ];
 
+const timeSlots = ["09:00 AM", "10:00 AM", "11:00 AM", "01:00 PM", "02:00 PM", "03:00 PM"];
+
 export function RenewDrivingLicenseService({ service }) {
     const [currentStep, setCurrentStep] = useState(1);
     const [date, setDate] = useState<Date | undefined>(undefined);
+    const [time, setTime] = useState<string>("");
     const [serviceType, setServiceType] = useState('renewal');
     const [uploadedFiles, setUploadedFiles] = useState<UploadedFilesState>({});
     const [showPaymentDialog, setShowPaymentDialog] = useState(false);
@@ -125,10 +129,22 @@ export function RenewDrivingLicenseService({ service }) {
             toast({ title: "Please log in to submit.", variant: "destructive" });
             return;
         }
-        if (!validateStep()) {
+        if (!validateStep() || !date || !time) {
             toast({ title: "Please complete all steps.", variant: "destructive" });
             return;
         }
+
+        const appointmentDateTime = new Date(date);
+        const [hours, minutes, ampm] = time.match(/(\d{2}):(\d{2}) (AM|PM)/)!.slice(1);
+        let numericHours = parseInt(hours, 10);
+        if (ampm === 'PM' && numericHours !== 12) {
+            numericHours += 12;
+        }
+        if (ampm === 'AM' && numericHours === 12) {
+            numericHours = 0;
+        }
+        appointmentDateTime.setHours(numericHours, parseInt(minutes, 10), 0, 0);
+
 
         try {
             await addDoc(collection(db, "applications"), {
@@ -138,7 +154,7 @@ export function RenewDrivingLicenseService({ service }) {
                 status: "Pending Payment",
                 submitted: serverTimestamp(),
                 documents: uploadedFiles,
-                details: { ...formValues, appointmentDate: date, serviceType }
+                details: { ...formValues, appointmentDate: Timestamp.fromDate(appointmentDateTime), serviceType }
             });
             toast({
                 title: "Application Saved Successfully",
@@ -306,13 +322,28 @@ export function RenewDrivingLicenseService({ service }) {
                             <CardTitle>Step 4: Schedule an Appointment</CardTitle>
                             <CardDescription>For new applicants, this will be for the written exam. For renewals, this is for biometrics.</CardDescription>
                         </CardHeader>
-                        <CardContent className="flex justify-center">
-                            {date ? <Calendar
-                                mode="single"
-                                selected={date}
-                                onSelect={setDate}
-                                className="rounded-md border"
-                                /> : <div className="h-[290px] w-[280px] flex items-center justify-center"><p>Loading calendar...</p></div> }
+                        <CardContent className="grid md:grid-cols-2 gap-8 items-start">
+                            <div className="flex justify-center">
+                                {date ? <Calendar
+                                    mode="single"
+                                    selected={date}
+                                    onSelect={setDate}
+                                    className="rounded-md border"
+                                    /> : <div className="h-[290px] w-[280px] flex items-center justify-center"><p>Loading calendar...</p></div> }
+                            </div>
+                            <div className="space-y-4">
+                                <Label>Select Time Slot</Label>
+                                <Select onValueChange={setTime} value={time}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select a time" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {timeSlots.map(slot => (
+                                            <SelectItem key={slot} value={slot}>{slot}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </CardContent>
                     </Card>
 

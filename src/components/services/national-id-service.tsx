@@ -11,12 +11,14 @@ import { Calendar } from '../ui/calendar';
 import { useState, FormEvent, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Check } from 'lucide-react';
 import { Input } from '../ui/input';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
+
 
 type UploadedFilesState = {
   [key: string]: string;
@@ -29,9 +31,12 @@ const STEPS = [
     { id: 4, name: 'Submit' },
 ];
 
+const timeSlots = ["09:00 AM", "10:00 AM", "11:00 AM", "01:00 PM", "02:00 PM", "03:00 PM"];
+
 export function NationalIdService({ service }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [date, setDate] = useState<Date | undefined>(undefined);
+  const [time, setTime] = useState<string>("");
   const [serviceType, setServiceType] = useState("new-id");
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFilesState>({});
   const { toast } = useToast();
@@ -73,6 +78,9 @@ export function NationalIdService({ service }) {
     if(currentStep === 2) {
        return Object.keys(requiredDocs).every(docKey => uploadedFiles[docKey]);
     }
+     if (currentStep === 3) {
+      return date && time;
+    }
     return true;
   }
 
@@ -82,7 +90,7 @@ export function NationalIdService({ service }) {
     } else {
         toast({
             title: "Incomplete Step",
-            description: "Please upload all required documents before proceeding.",
+            description: "Please upload all required documents and select an appointment date and time.",
             variant: "destructive"
         });
     }
@@ -99,6 +107,17 @@ export function NationalIdService({ service }) {
         toast({ title: "Please complete all steps.", variant: "destructive" });
         return;
     }
+    
+    const appointmentDateTime = new Date(date!);
+    const [hours, minutes, ampm] = time.match(/(\d{2}):(\d{2}) (AM|PM)/)!.slice(1);
+    let numericHours = parseInt(hours, 10);
+    if (ampm === 'PM' && numericHours !== 12) {
+        numericHours += 12;
+    }
+    if (ampm === 'AM' && numericHours === 12) {
+        numericHours = 0;
+    }
+    appointmentDateTime.setHours(numericHours, parseInt(minutes, 10), 0, 0);
 
     try {
         await addDoc(collection(db, "applications"), {
@@ -110,7 +129,7 @@ export function NationalIdService({ service }) {
             documents: uploadedFiles,
             details: {
                 serviceType,
-                appointmentDate: date
+                appointmentDate: Timestamp.fromDate(appointmentDateTime)
             }
         });
         toast({
@@ -218,13 +237,28 @@ export function NationalIdService({ service }) {
                             <CardTitle>Step 3: Book an Appointment for Biometrics</CardTitle>
                             <CardDescription>Schedule a visit to your nearest Divisional Secretariat for fingerprint and photo capture.</CardDescription>
                         </CardHeader>
-                        <CardContent className="flex justify-center">
-                            {date ? <Calendar
-                                mode="single"
-                                selected={date}
-                                onSelect={setDate}
-                                className="rounded-md border"
-                                /> : <div className="h-[290px] w-[280px] flex items-center justify-center"><p>Loading calendar...</p></div> }
+                        <CardContent className="grid md:grid-cols-2 gap-8 items-start">
+                             <div className="flex justify-center">
+                                {date ? <Calendar
+                                    mode="single"
+                                    selected={date}
+                                    onSelect={setDate}
+                                    className="rounded-md border"
+                                    /> : <div className="h-[290px] w-[280px] flex items-center justify-center"><p>Loading calendar...</p></div> }
+                             </div>
+                             <div className="space-y-4">
+                                <Label>Select Time Slot</Label>
+                                <Select onValueChange={setTime} value={time}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select a time" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {timeSlots.map(slot => (
+                                            <SelectItem key={slot} value={slot}>{slot}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </CardContent>
                     </Card>
                 )}

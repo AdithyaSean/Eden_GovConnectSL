@@ -152,7 +152,7 @@ export default function WorkerApplicationDetailsPage({ params }: { params: Promi
   
   const formatDate = (date: Timestamp | string | undefined) => {
     if (!date) return 'N/A';
-    if (typeof date === 'string') return new Date(date).toLocaleDateString();
+    if (typeof date === 'string') return new Date(date).toLocaleString();
     if (date instanceof Timestamp) return date.toDate().toLocaleString();
     if (date instanceof Date) return date.toLocaleString();
     return 'Invalid Date';
@@ -344,5 +344,3 @@ export default function WorkerApplicationDetailsPage({ params }: { params: Promi
     </>
   );
 }
-
-    

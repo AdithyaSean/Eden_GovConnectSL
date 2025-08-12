@@ -10,7 +10,7 @@ import { Label } from '../ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { FormEvent, useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
@@ -27,6 +27,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Calendar } from '../ui/calendar';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
 
 type UploadedFilesState = {
   [key: string]: string;
@@ -40,10 +41,13 @@ const STEPS = [
     { id: 5, name: 'Submit' },
 ];
 
+const timeSlots = ["09:00 AM", "10:00 AM", "11:00 AM", "01:00 PM", "02:00 PM", "03:00 PM"];
+
 export function PassportRenewalService({ service }) {
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const [time, setTime] = useState<string>("");
   const [serviceType, setServiceType] = useState('renewal');
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFilesState>({});
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
@@ -103,7 +107,7 @@ export function PassportRenewalService({ service }) {
         return Object.keys(requiredDocs).every(docKey => uploadedFiles[docKey]);
     }
      if(currentStep === 4) {
-        return date !== undefined;
+        return date !== undefined && time !== "";
     }
     return true;
   }
@@ -114,7 +118,7 @@ export function PassportRenewalService({ service }) {
     } else {
         toast({
             title: "Incomplete Step",
-            description: "Please fill all required fields, upload documents, or select a date before proceeding.",
+            description: "Please fill all required fields, upload documents, or select a date and time before proceeding.",
             variant: "destructive"
         });
     }
@@ -134,6 +138,17 @@ export function PassportRenewalService({ service }) {
         return;
     }
     
+    const appointmentDateTime = new Date(date!);
+    const [hours, minutes, ampm] = time.match(/(\d{2}):(\d{2}) (AM|PM)/)!.slice(1);
+    let numericHours = parseInt(hours, 10);
+    if (ampm === 'PM' && numericHours !== 12) {
+        numericHours += 12;
+    }
+    if (ampm === 'AM' && numericHours === 12) {
+        numericHours = 0;
+    }
+    appointmentDateTime.setHours(numericHours, parseInt(minutes, 10), 0, 0);
+
     try {
          await addDoc(collection(db, "applications"), {
             service: service.title,
@@ -142,7 +157,7 @@ export function PassportRenewalService({ service }) {
             status: "Pending Payment",
             submitted: serverTimestamp(),
             documents: uploadedFiles,
-            details: { ...formValues, appointmentDate: date, serviceType }
+            details: { ...formValues, appointmentDate: Timestamp.fromDate(appointmentDateTime), serviceType }
         });
         setShowPaymentDialog(true);
     } catch (error) {
@@ -266,13 +281,28 @@ export function PassportRenewalService({ service }) {
                         <CardTitle>Step 4: Book an Appointment for Biometrics</CardTitle>
                         <CardDescription>Schedule a visit to the Immigration Department for fingerprint and photo capture.</CardDescription>
                     </CardHeader>
-                    <CardContent className="flex justify-center">
-                         {date ? <Calendar
-                            mode="single"
-                            selected={date}
-                            onSelect={setDate}
-                            className="rounded-md border"
-                            /> : <div className="h-[290px] w-[280px] flex items-center justify-center"><p>Loading calendar...</p></div> }
+                    <CardContent className="grid md:grid-cols-2 gap-8 items-start">
+                         <div className="flex justify-center">
+                            {date ? <Calendar
+                                mode="single"
+                                selected={date}
+                                onSelect={setDate}
+                                className="rounded-md border"
+                                /> : <div className="h-[290px] w-[280px] flex items-center justify-center"><p>Loading calendar...</p></div> }
+                         </div>
+                         <div className="space-y-4">
+                            <Label>Select Time Slot</Label>
+                            <Select onValueChange={setTime} value={time}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a time" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {timeSlots.map(slot => (
+                                        <SelectItem key={slot} value={slot}>{slot}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                         </div>
                     </CardContent>
                 </Card>
             )}

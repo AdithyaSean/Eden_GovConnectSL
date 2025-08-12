@@ -10,7 +10,7 @@ import { useState, FormEvent, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { Label } from '../ui/label';
@@ -31,8 +31,11 @@ const medicalReports = [
     { name: "X-Ray Chest Report", date: "2022-09-21", id: "REP-002" },
 ]
 
+const timeSlots = ["09:00 AM", "10:00 AM", "11:00 AM", "01:00 PM", "02:00 PM", "03:00 PM"];
+
 export function HealthServicesService({ service }) {
     const [appointmentDate, setAppointmentDate] = useState<Date | undefined>(undefined);
+    const [appointmentTime, setAppointmentTime] = useState<string>("");
     const [uploadedFiles, setUploadedFiles] = useState<UploadedFilesState>({});
     const { user } = useAuth();
     const { toast } = useToast();
@@ -92,10 +95,21 @@ export function HealthServicesService({ service }) {
         const formData = new FormData(e.target as HTMLFormElement);
         const appointmentDetails = Object.fromEntries(formData.entries());
         
-        if(!appointmentDetails.hospital || !appointmentDetails.speciality) {
-             toast({ title: "Please select hospital and speciality.", variant: "destructive" });
+        if(!appointmentDetails.hospital || !appointmentDetails.speciality || !appointmentDate || !appointmentTime) {
+             toast({ title: "Please select hospital, speciality, date, and time.", variant: "destructive" });
             return;
         }
+
+        const finalAppointmentDate = new Date(appointmentDate);
+        const [hours, minutes, ampm] = appointmentTime.match(/(\d{2}):(\d{2}) (AM|PM)/)!.slice(1);
+        let numericHours = parseInt(hours, 10);
+        if (ampm === 'PM' && numericHours !== 12) {
+            numericHours += 12;
+        }
+        if (ampm === 'AM' && numericHours === 12) {
+            numericHours = 0;
+        }
+        finalAppointmentDate.setHours(numericHours, parseInt(minutes, 10), 0, 0);
         
         try {
              await addDoc(collection(db, "applications"), {
@@ -106,7 +120,7 @@ export function HealthServicesService({ service }) {
                 submitted: serverTimestamp(),
                 details: {
                     ...appointmentDetails,
-                    appointmentDate
+                    appointmentDate: Timestamp.fromDate(finalAppointmentDate)
                 }
             });
             toast({ title: "Appointment Requested", description: "Your request has been sent. You will be notified upon confirmation." });
@@ -179,6 +193,19 @@ export function HealthServicesService({ service }) {
                                     <SelectItem value="opd">General OPD</SelectItem>
                                     <SelectItem value="cardiology">Cardiology</SelectItem>
                                     <SelectItem value="dental">Dental</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Select Time</Label>
+                             <Select onValueChange={setAppointmentTime} value={appointmentTime}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a time slot" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {timeSlots.map(slot => (
+                                        <SelectItem key={slot} value={slot}>{slot}</SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>
