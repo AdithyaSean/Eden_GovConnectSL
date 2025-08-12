@@ -22,7 +22,7 @@ import {
 import { Download } from "lucide-react";
 import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
+import { collection, query, where, getDocs, Timestamp, orderBy } from "firebase/firestore";
 import type { Payment } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
@@ -39,15 +39,11 @@ export default function PaymentsPage() {
               setLoading(false);
               return;
             }
-            // This is a simplified query. In a real app, payments might be linked
-            // to a user ID field directly on the payment record. For this prototype,
-            // we assume a user's payments are for services they applied for.
-            // This logic may need to be more complex based on the final data model.
+            
             setLoading(true);
             try {
-                // For now, we fetch all payments for the prototype's simplicity.
-                // A real implementation would require a 'userId' field on each payment document.
-                const querySnapshot = await getDocs(collection(db, "payments"));
+                const q = query(collection(db, "payments"), where("userId", "==", user.id), orderBy("date", "desc"));
+                const querySnapshot = await getDocs(q);
                 const paymentsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Payment));
                 setPaymentHistory(paymentsData);
             } catch (error) {
@@ -57,11 +53,14 @@ export default function PaymentsPage() {
             }
         };
 
-        fetchPayments();
+        if(user){
+            fetchPayments();
+        }
     }, [user]);
     
     const formatDate = (date: Timestamp | string) => {
-        if (typeof date === 'string') return date;
+        if (!date) return 'N/A';
+        if (typeof date === 'string') return new Date(date).toLocaleDateString();
         return date.toDate().toLocaleDateString();
     };
 
@@ -108,7 +107,7 @@ export default function PaymentsPage() {
                         ) : (
                             paymentHistory.map((payment) => (
                             <TableRow key={payment.id}>
-                                <TableCell className="font-medium">{payment.id}</TableCell>
+                                <TableCell className="font-medium truncate max-w-28">{payment.applicationRef || payment.id}</TableCell>
                                 <TableCell>{payment.service}</TableCell>
                                 <TableCell>{formatDate(payment.date)}</TableCell>
                                 <TableCell>{payment.amount}</TableCell>

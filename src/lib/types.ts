@@ -91,6 +91,8 @@ export interface Payment {
     date: Timestamp | string;
     amount: string;
     status: 'Success' | 'Failed';
+    userId: string;
+    applicationRef?: string;
 }
 
 export interface SupportTicket {

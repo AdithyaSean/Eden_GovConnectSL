@@ -29,18 +29,62 @@ import {
 import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
+import { doc, updateDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { useToast } from "@/hooks/use-toast";
 
 export default function PaymentPage() {
   const searchParams = useSearchParams();
+  const { toast } = useToast();
   const service = searchParams.get("service") || "Unknown Service";
   const amount = searchParams.get("amount") || "0.00";
-  const ref = searchParams.get("ref") || new Date().getTime().toString().slice(-8);
+  const ref = searchParams.get("ref") || null;
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const { user } = useAuth();
 
-  const handlePayment = (e: React.FormEvent) => {
+  const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
-    setShowSuccessDialog(true);
+    if (!ref || !user) {
+        toast({ title: "Error", description: "Application reference or user not found.", variant: "destructive"});
+        return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+        // 1. Update application status
+        const appRef = doc(db, "applications", ref);
+        await updateDoc(appRef, { status: "In Progress" });
+
+        // 2. Create a payment record
+        await addDoc(collection(db, "payments"), {
+            userId: user.id,
+            service: service,
+            amount: amount,
+            date: serverTimestamp(),
+            status: "Success",
+            applicationRef: ref
+        });
+
+        // 3. Create a notification
+         await addDoc(collection(db, "notifications"), {
+            userId: user.id,
+            title: "Payment Successful",
+            description: `Your payment of LKR ${amount} for '${service}' was successful.`,
+            href: "/payments",
+            icon: "CheckCircle",
+            read: false,
+            createdAt: serverTimestamp()
+        });
+
+        setShowSuccessDialog(true);
+    } catch(error) {
+        console.error("Payment processing error:", error);
+        toast({ title: "Payment Failed", description: "Something went wrong. Please try again.", variant: "destructive"});
+    } finally {
+        setIsProcessing(false);
+    }
   };
 
   return (
@@ -52,7 +96,7 @@ export default function PaymentPage() {
               <AlertDialogTitle>Payment Successful!</AlertDialogTitle>
               <AlertDialogDescription>
                 Your payment for {service} has been processed successfully. Your
-                application status will be updated shortly.
+                application status has been updated to "In Progress".
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -60,7 +104,7 @@ export default function PaymentPage() {
                 <Link href="/payments">View Payment History</Link>
               </Button>
               <AlertDialogAction asChild>
-                <Link href="/dashboard">Back to Dashboard</Link>
+                <Link href="/my-applications">Go to My Applications</Link>
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -139,7 +183,9 @@ export default function PaymentPage() {
                       </div>
                     </CardContent>
                     <CardFooter>
-                      <Button type="submit" className="w-full" size="lg">Pay LKR {amount}</Button>
+                      <Button type="submit" className="w-full" size="lg" disabled={isProcessing}>
+                        {isProcessing ? "Processing..." : `Pay LKR ${amount}`}
+                      </Button>
                     </CardFooter>
                   </Card>
                 </TabsContent>
@@ -161,7 +207,9 @@ export default function PaymentPage() {
                         </div>
                     </CardContent>
                     <CardFooter>
-                       <Button type="submit" className="w-full" size="lg">Pay LKR {amount}</Button>
+                       <Button type="submit" className="w-full" size="lg" disabled={isProcessing}>
+                         {isProcessing ? "Processing..." : `Pay LKR ${amount}`}
+                       </Button>
                     </CardFooter>
                   </Card>
                 </TabsContent>
@@ -181,7 +229,9 @@ export default function PaymentPage() {
                         <Button variant="outline" className="h-20">NDB Bank</Button>
                     </CardContent>
                     <CardFooter>
-                       <Button type="submit" className="w-full" size="lg">Proceed to Bank</Button>
+                       <Button type="submit" className="w-full" size="lg" disabled={isProcessing}>
+                         {isProcessing ? "Processing..." : "Proceed to Bank"}
+                       </Button>
                     </CardFooter>
                   </Card>
                 </TabsContent>
