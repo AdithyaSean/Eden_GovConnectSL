@@ -1,6 +1,7 @@
 
 "use client";
 
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileUpload } from '../file-upload';
@@ -364,4 +365,3 @@ export function RenewDrivingLicenseService({ service }) {
     </>
   );
 }
-
