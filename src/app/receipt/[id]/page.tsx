@@ -13,7 +13,6 @@ import { db } from '@/lib/firebase';
 import type { Payment, User } from '@/lib/types';
 import { doc, getDoc, Timestamp } from 'firebase/firestore';
 import { Printer, Download } from 'lucide-react';
-import Image from 'next/image';
 import { useEffect, useState, useRef } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import jsPDF from 'jspdf';
@@ -50,7 +49,7 @@ export default function ReceiptPage({ params }: { params: Promise<{ id: string }
     const handleDownloadPdf = () => {
         const input = receiptRef.current;
         if (input) {
-            html2canvas(input, { scale: 2 }).then((canvas) => {
+            html2canvas(input, { scale: 2, useCORS: true }).then((canvas) => {
                 const imgData = canvas.toDataURL('image/png');
                 const pdf = new jsPDF('p', 'mm', 'a4');
                 const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -105,71 +104,73 @@ export default function ReceiptPage({ params }: { params: Promise<{ id: string }
     return (
         <DashboardLayout>
             <div className="flex-1 space-y-8 p-4 md:p-8 pt-6">
-                <Card className="max-w-2xl mx-auto" id="receipt-content" ref={receiptRef}>
-                    <CardHeader className="text-center bg-muted/30 p-8">
-                        <div className="flex justify-center mb-4">
-                             <Image src="https://placehold.co/150x50" alt="GovConnect SL Logo" width={150} height={50} data-ai-hint="logo" />
-                        </div>
-                        <CardTitle className="text-3xl">Official Receipt</CardTitle>
-                        <CardDescription>Thank you for your payment.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-8 space-y-6">
-                        <div className="grid grid-cols-2 gap-4 text-sm">
+                <Card className="max-w-2xl mx-auto" id="receipt-content">
+                    <div ref={receiptRef} className="bg-card">
+                        <CardHeader className="text-center bg-muted/30 p-8">
+                            <div className="flex justify-center mb-4">
+                                 <img src="https://placehold.co/150x50" alt="GovConnect SL Logo" width={150} height={50} data-ai-hint="logo" />
+                            </div>
+                            <CardTitle className="text-3xl">Official Receipt</CardTitle>
+                            <CardDescription>Thank you for your payment.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="p-8 space-y-6">
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <h3 className="font-semibold text-muted-foreground mb-2">BILLED TO</h3>
+                                    <p>{user?.name}</p>
+                                    <p>{user?.nic}</p>
+                                </div>
+                                <div className="text-right">
+                                    <h3 className="font-semibold text-muted-foreground mb-2">RECEIPT DETAILS</h3>
+                                    <p><span className="font-semibold">Receipt No:</span> {payment.id}</p>
+                                    <p><span className="font-semibold">Date:</span> {formatDate(payment.date)}</p>
+                                </div>
+                            </div>
+
+                            <Separator />
+
                             <div>
-                                <h3 className="font-semibold text-muted-foreground mb-2">BILLED TO</h3>
-                                <p>{user?.name}</p>
-                                <p>{user?.nic}</p>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Description</TableHead>
+                                            <TableHead className="text-right">Amount</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        <TableRow>
+                                            <TableCell>
+                                                <p className="font-medium">{payment.service}</p>
+                                                <p className="text-xs text-muted-foreground">Ref: {payment.applicationRef}</p>
+                                            </TableCell>
+                                            <TableCell className="text-right">LKR {payment.amount}</TableCell>
+                                        </TableRow>
+                                    </TableBody>
+                                </Table>
                             </div>
-                            <div className="text-right">
-                                <h3 className="font-semibold text-muted-foreground mb-2">RECEIPT DETAILS</h3>
-                                <p><span className="font-semibold">Receipt No:</span> {payment.id}</p>
-                                <p><span className="font-semibold">Date:</span> {formatDate(payment.date)}</p>
+                            
+                            <Separator />
+                            
+                            <div className="grid grid-cols-2 items-center">
+                                <div className="flex justify-center">
+                                    <img src={`https://placehold.co/120x120.png`} alt="QR Code" width={120} height={120} data-ai-hint="qr code" />
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-muted-foreground">Total</p>
+                                    <p className="text-4xl font-bold">LKR {payment.amount}</p>
+                                    <p className={`mt-2 font-semibold ${payment.status === 'Success' ? 'text-green-600' : 'text-red-600'}`}>
+                                        Status: {payment.status}
+                                    </p>
+                                </div>
                             </div>
-                        </div>
+                            
+                             <Separator />
 
-                        <Separator />
-
-                        <div>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Description</TableHead>
-                                        <TableHead className="text-right">Amount</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    <TableRow>
-                                        <TableCell>
-                                            <p className="font-medium">{payment.service}</p>
-                                            <p className="text-xs text-muted-foreground">Ref: {payment.applicationRef}</p>
-                                        </TableCell>
-                                        <TableCell className="text-right">LKR {payment.amount}</TableCell>
-                                    </TableRow>
-                                </TableBody>
-                            </Table>
-                        </div>
-                        
-                        <Separator />
-                        
-                        <div className="grid grid-cols-2 items-center">
-                            <div className="flex justify-center">
-                                <Image src={`https://placehold.co/120x120.png`} alt="QR Code" width={120} height={120} data-ai-hint="qr code" />
-                            </div>
-                            <div className="text-right">
-                                <p className="text-muted-foreground">Total</p>
-                                <p className="text-4xl font-bold">LKR {payment.amount}</p>
-                                <p className={`mt-2 font-semibold ${payment.status === 'Success' ? 'text-green-600' : 'text-red-600'}`}>
-                                    Status: {payment.status}
-                                </p>
-                            </div>
-                        </div>
-                        
-                         <Separator />
-
-                         <p className="text-xs text-muted-foreground text-center">
-                            This is a computer-generated receipt and does not require a signature. If you have any questions about this receipt, please contact our support team.
-                        </p>
-                    </CardContent>
+                             <p className="text-xs text-muted-foreground text-center">
+                                This is a computer-generated receipt and does not require a signature. If you have any questions about this receipt, please contact our support team.
+                            </p>
+                        </CardContent>
+                    </div>
                 </Card>
                 <div className="max-w-2xl mx-auto mt-4 flex justify-end gap-2">
                     <Button onClick={handleDownloadPdf}><Download className="mr-2 h-4 w-4" /> Download PDF</Button>
@@ -178,3 +179,4 @@ export default function ReceiptPage({ params }: { params: Promise<{ id: string }
         </DashboardLayout>
     );
 }
+
