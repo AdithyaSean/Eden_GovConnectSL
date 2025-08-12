@@ -19,7 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { Clock, AlertTriangle, FileCheck2, Hourglass, Star } from "lucide-react";
+import { Clock, AlertTriangle, FileCheck2, Hourglass, Star, UserX } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { collection, getDocs, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -121,10 +121,11 @@ export default function AdminAnalyticsPage() {
         const noShowApps = appointmentApps.filter(app => {
             if (!app.details?.appointmentDate) return false;
             const appointmentDate = (app.details.appointmentDate as Timestamp).toDate();
-            // Considered a no-show if appointment was in the past and status is still pending/in progress
-            return new Date() > appointmentDate && (app.status === 'Pending' || app.status === 'In Progress');
+            // Considered a no-show if appointment was in the past and status is still pending/in progress/approved but not completed
+            return new Date() > appointmentDate && (app.status === 'Pending' || app.status === 'In Progress' || app.status === 'Approved');
         }).length;
         const noShowRate = appointmentApps.length > 0 ? Math.round((noShowApps / appointmentApps.length) * 100) : 0;
+
 
         // Processing Time Trend Data
         const monthlyProcessingData: {[key: string]: { totalDays: number, count: number }} = {};
@@ -202,12 +203,12 @@ export default function AdminAnalyticsPage() {
             </Card>
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Document Readiness</CardTitle>
-                    <FileCheck2 className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm font-medium">Appointment No-Show Rate</CardTitle>
+                    <UserX className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">{analyticsData.docReadiness}%</div>
-                    <p className="text-xs text-muted-foreground">Applications with all docs on first submission</p>
+                    <div className="text-2xl font-bold">{analyticsData.noShowRate}%</div>
+                    <p className="text-xs text-muted-foreground">Users who missed scheduled appointments</p>
                 </CardContent>
             </Card>
              <Card>
@@ -275,7 +276,11 @@ export default function AdminAnalyticsPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {analyticsData.recentFeedback.map(app => (
+                        {analyticsData.recentFeedback.length === 0 ? (
+                             <TableRow>
+                                <TableCell colSpan={4} className="h-24 text-center">No feedback submitted yet.</TableCell>
+                            </TableRow>
+                        ) : analyticsData.recentFeedback.map(app => (
                             <TableRow key={app.id}>
                                 <TableCell className="font-medium">{app.service}</TableCell>
                                 <TableCell>{app.user}</TableCell>
@@ -294,3 +299,5 @@ export default function AdminAnalyticsPage() {
     </AdminLayout>
   );
 }
+
+    
