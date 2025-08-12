@@ -19,7 +19,7 @@ export default function SignupPage() {
             <div className="flex justify-center mb-4">
                <UserSquare className="h-12 w-12 text-primary" />
             </div>
-          <CardTitle className="text-2xl">Sign Up</CardTitle>
+          <CardTitle className="text-2xl">Create Citizen Account</CardTitle>
           <CardDescription>
             Enter your information to create an account
           </CardDescription>
@@ -28,18 +28,18 @@ export default function SignupPage() {
           <div className="grid gap-4">
             <div className="grid gap-2">
                 <Label htmlFor="full-name">Full Name</Label>
-                <Input id="full-name" placeholder="Sri Lankan" required />
+                <Input id="full-name" placeholder="Name as in NIC" required />
             </div>
              <div className="grid gap-2">
                 <Label htmlFor="national-id">National ID Number</Label>
-                <Input id="national-id" placeholder="e.g. 199812345678" required />
+                <Input id="national-id" placeholder="e.g. 19981234567V" required />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="m@example.com"
+                placeholder="you@example.com"
                 required
               />
             </div>

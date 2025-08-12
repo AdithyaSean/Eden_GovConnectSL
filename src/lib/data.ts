@@ -1,5 +1,6 @@
+
 import type { NavItem, Service } from "./types";
-import { Home, Briefcase, Users, MoreHorizontal, Landmark, FileQuestion, Car, Fingerprint, GraduationCap, FileText, HeartPulse, CreditCard, LifeBuoy } from 'lucide-react';
+import { Home, Briefcase, Users, MoreHorizontal, Landmark, FileQuestion, Car, Fingerprint, GraduationCap, FileText, HeartPulse, CreditCard, LifeBuoy, Zap, BookUser, ReceiptText, Calendar } from 'lucide-react';
 
 export const navItems: NavItem[] = [
   {
@@ -13,9 +14,9 @@ export const navItems: NavItem[] = [
     icon: Briefcase,
   },
   {
-    title: "Family & Dependents",
-    href: "/family",
-    icon: Users,
+    title: "Appointments",
+    href: "/appointments",
+    icon: Calendar,
   },
   {
     title: "Payments",
@@ -67,62 +68,51 @@ export const services: Service[] = [
     }
   },
   {
-    title: "Renew Driving License",
-    slug: "renew-driving-license",
-    description: "Renew your driving license before it expires.",
+    title: "Driving Licence Services",
+    slug: "driving-licence-services",
+    description: "Apply for a new license or renew an existing one.",
     status: "Renewal Due",
     statusVariant: "warning",
     icon: "Car",
     actions: [],
     content: {
-        longDescription: "This service enables citizens to renew their driving licenses. The renewal process can be initiated before the expiry date. A medical fitness certificate is required for certain age groups and license categories.",
+        longDescription: "This service enables citizens to apply for a new driving license or renew their existing one. A medical fitness certificate may be required for certain age groups and license categories.",
         sections: [
             {
-                title: "Renewal Process",
-                content: "To renew your driving license, please follow these steps:",
+                title: "Application Process",
+                content: "To apply for or renew your driving license, please follow these steps:",
                 list: [
-                    "Obtain a medical fitness certificate from a government hospital or a registered medical practitioner.",
+                    "Obtain a medical fitness certificate from a government hospital or a registered medical practitioner if required.",
                     "Visit the Department of Motor Traffic (DMT) head office or a district office.",
-                    "Submit the completed renewal application form.",
-                    "Provide your current driving license, National Identity Card, and the medical certificate.",
-                    "Pay the renewal fee at the counter.",
-                    "Your photograph and biometric data will be captured, and the new license will be issued."
+                    "Submit the completed application form for a new license or renewal.",
+                    "Provide your National Identity Card and other necessary documents.",
+                    "Pay the relevant fee at the counter.",
+                    "Your photograph and biometric data will be captured. For new licenses, a written and practical test is required."
                 ]
             },
             {
                 title: "Fees and Charges",
-                content: "The fee for renewal depends on the license category and the validity period. Please refer to the latest fee schedule on the DMT website for accurate information."
+                content: "The fees depend on the license category and the type of service. Please refer to the latest fee schedule on the DMT website for accurate information."
             }
         ]
     }
   },
   {
-    title: "Taqdeer",
-    slug: "taqdeer",
-    description: "A government appreciation program for citizens.",
-    status: "Renewal Due",
-    statusVariant: "warning",
-    icon: "Landmark",
+    title: "Passport Services",
+    slug: "passport-services",
+    description: "Apply for a new passport or renew your existing one.",
+    status: "Active",
+    statusVariant: "success",
+    icon: "BookUser",
     actions: [],
     content: {
-        longDescription: "Taqdeer is a national appreciation program designed to recognize and reward the contributions of outstanding citizens and residents. The program aims to foster a culture of excellence and community service across various fields.",
-        sections: [
-            {
-                title: "About the Program",
-                content: "The Taqdeer program evaluates individuals based on their professional achievements, community involvement, and adherence to national values. It is open to all citizens who meet the eligibility criteria."
-            },
-            {
-                title: "How to Participate",
-                content: "Nominations can be submitted through the official Taqdeer portal. Applicants are required to provide detailed information about their accomplishments and contributions, supported by relevant documents.",
-                list: [
-                    "Visit the official Taqdeer program website.",
-                    "Create an account or log in.",
-                    "Complete the online nomination form with accurate details.",
-                    "Upload supporting documents, awards, and certificates.",
-                    "Submit the application before the deadline."
-                ]
-            }
-        ]
+      longDescription: "This service allows you to apply for a new Sri Lankan passport or renew an existing one online. You can fill out the form, upload the required documents, and submit your application for processing.",
+      sections: [
+        {
+          title: "Instructions",
+          content: "Please ensure all details are accurate and the uploaded documents are clear and legible. Any incorrect information may lead to delays or rejection of your application."
+        },
+      ]
     }
   },
   {
@@ -289,19 +279,41 @@ export const services: Service[] = [
         }
       ]
     }
+  },
+  {
+    title: "Fine Payment",
+    slug: "fine-payment",
+    description: "View and pay traffic or other government fines.",
+    status: "Active",
+    statusVariant: "success",
+    icon: "ReceiptText",
+    actions: [],
+    content: {
+      longDescription: "View your fine history and pay any outstanding penalties for traffic violations or other government-related infractions.",
+      sections: [
+        {
+          title: "Your Fines",
+          content: "Below is a list of all pending and paid fines associated with your account."
+        }
+      ]
+    }
+  },
+  {
+    title: "Registered Vehicles",
+    slug: "registered-vehicles",
+    description: "View all vehicles registered under your NIC.",
+    status: "Active",
+    statusVariant: "success",
+    icon: "Car",
+    actions: [],
+    content: {
+      longDescription: "View and manage all vehicles registered under your National Identity Card. Check registration status, download certificates, and get notified about upcoming renewals.",
+      sections: [
+        {
+          title: "Your Registered Vehicles",
+          content: "A list of all vehicles currently registered under your name."
+        }
+      ]
+    }
   }
 ];
-
-
-export const trafficServices = [
-  {
-    title: "Toyota Aqua",
-    description: "WP-CAR-1234",
-    icon: "Car"
-  },
-   {
-    title: "Honda Vezel",
-    description: "SP-CAB-5678",
-    icon: "Car"
-  }
-]
