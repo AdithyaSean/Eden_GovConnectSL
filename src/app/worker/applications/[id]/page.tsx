@@ -106,11 +106,13 @@ export default function WorkerApplicationDetailsPage({ params }: { params: Promi
       setTargetStatus(null);
     }
   }
-
-  const formatDate = (date: Timestamp | string) => {
+  
+  const formatDate = (date: Timestamp | string | undefined) => {
     if (!date) return 'N/A';
-    if (typeof date === 'string') return date;
-    return date.toDate().toLocaleDateString();
+    if (typeof date === 'string') return new Date(date).toLocaleDateString();
+    if (date instanceof Timestamp) return date.toDate().toLocaleString();
+    if (date instanceof Date) return date.toLocaleString();
+    return 'Invalid Date';
   };
   
   if(loading) {
@@ -245,6 +247,25 @@ export default function WorkerApplicationDetailsPage({ params }: { params: Promi
                 </CardContent>
             </Card>
 
+            {application.details && Object.keys(application.details).length > 0 && (
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Appointment Details</CardTitle>
+                        <CardDescription>This application includes an appointment or specific request details.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {Object.entries(application.details).map(([key, value]) => (
+                             <div key={key} className="grid grid-cols-3 items-center gap-4">
+                                <Label className="capitalize">{key.replace(/([A-Z])/g, ' $1')}</Label>
+                                <p className="col-span-2 font-medium">
+                                    {key.toLowerCase().includes('date') ? formatDate(value) : String(value)}
+                                </p>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+            )}
+
           </div>
         </div>
       </div>
@@ -280,3 +301,5 @@ export default function WorkerApplicationDetailsPage({ params }: { params: Promi
     </>
   );
 }
+
+    
