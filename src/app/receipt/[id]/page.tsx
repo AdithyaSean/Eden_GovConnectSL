@@ -15,6 +15,8 @@ import { doc, getDoc, Timestamp } from 'firebase/firestore';
 import { Printer, Download } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
 
 async function getPaymentData(paymentId: string): Promise<Payment | null> {
     const docRef = doc(db, 'payments', paymentId);
