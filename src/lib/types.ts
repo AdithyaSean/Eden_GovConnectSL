@@ -72,6 +72,8 @@ export interface Application {
     documents?: { [key: string]: string };
     details?: { [key: string]: any };
     workerComment?: string;
+    appointmentRating?: number;
+    appointmentFeedback?: string;
 }
 
 export interface User {

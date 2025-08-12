@@ -19,12 +19,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { Clock, AlertTriangle, FileCheck2, Hourglass } from "lucide-react";
+import { Clock, AlertTriangle, FileCheck2, Hourglass, Star } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { collection, getDocs, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { Application } from "@/lib/types";
 import { subMonths, format, differenceInDays, addDays } from 'date-fns';
+import { Rating } from "@/components/rating";
 
 export default function AdminAnalyticsPage() {
     const [applications, setApplications] = useState<Application[]>([]);
@@ -58,6 +59,8 @@ export default function AdminAnalyticsPage() {
                 avgProcessingTime: 0,
                 noShowRate: 0,
                 processingTimeData: [],
+                avgAppointmentRating: 0,
+                recentFeedback: [],
             };
         }
 
@@ -144,6 +147,16 @@ export default function AdminAnalyticsPage() {
             }))
             .slice(-6); // Get last 6 months
 
+        // Appointment Ratings
+        const ratedApps = applications.filter(app => typeof app.appointmentRating === 'number');
+        const totalRating = ratedApps.reduce((acc, app) => acc + (app.appointmentRating || 0), 0);
+        const avgAppointmentRating = ratedApps.length > 0 ? (totalRating / ratedApps.length) : 0;
+        const recentFeedback = ratedApps
+            .filter(app => app.appointmentFeedback)
+            .sort((a, b) => (b.submitted as Timestamp).toMillis() - (a.submitted as Timestamp).toMillis())
+            .slice(0, 5);
+
+
         return {
             docReadiness,
             peakHour: formatPeakHour(peakHour),
@@ -151,6 +164,8 @@ export default function AdminAnalyticsPage() {
             avgProcessingTime,
             noShowRate,
             processingTimeData,
+            avgAppointmentRating,
+            recentFeedback
         }
 
     }, [applications]);
@@ -175,12 +190,14 @@ export default function AdminAnalyticsPage() {
             </Card>
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Appointment No-Show Rate</CardTitle>
-                    <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm font-medium">Avg. Appointment Rating</CardTitle>
+                    <Star className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">{analyticsData.noShowRate}%</div>
-                    <p className="text-xs text-muted-foreground">For biometrics & in-person visits</p>
+                    <div className="text-2xl font-bold flex items-center gap-1">
+                        {analyticsData.avgAppointmentRating.toFixed(1)} <span className="text-lg">/ 5</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Based on citizen feedback</p>
                 </CardContent>
             </Card>
             <Card>
@@ -244,32 +261,28 @@ export default function AdminAnalyticsPage() {
 
         <Card>
             <CardHeader>
-                <CardTitle>Recent Applications Document Status</CardTitle>
-                <CardDescription>Overview of document completion for the latest applications.</CardDescription>
+                <CardTitle>Recent Appointment Feedback</CardTitle>
+                <CardDescription>Latest ratings and comments submitted by citizens for their appointments.</CardDescription>
             </CardHeader>
             <CardContent>
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Application ID</TableHead>
                             <TableHead>Service</TableHead>
                             <TableHead>User</TableHead>
-                            <TableHead>Documents Status</TableHead>
+                            <TableHead>Rating</TableHead>
+                            <TableHead>Feedback</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {applications.slice(0,5).map(app => (
+                        {analyticsData.recentFeedback.map(app => (
                             <TableRow key={app.id}>
-                                <TableCell className="font-medium truncate max-w-28">{app.id}</TableCell>
-                                <TableCell>{app.service}</TableCell>
+                                <TableCell className="font-medium">{app.service}</TableCell>
                                 <TableCell>{app.user}</TableCell>
                                 <TableCell>
-                                    <Badge variant={app.documents && Object.keys(app.documents).length > 0 ? "default" : "destructive"}
-                                        className={app.documents && Object.keys(app.documents).length > 0 ? "bg-green-600" : ""}
-                                    >
-                                        {app.documents && Object.keys(app.documents).length > 0 ? "Complete" : "Incomplete"}
-                                    </Badge>
+                                    <Rating rating={app.appointmentRating || 0} />
                                 </TableCell>
+                                <TableCell className="text-muted-foreground">{app.appointmentFeedback}</TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
