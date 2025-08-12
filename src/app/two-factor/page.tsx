@@ -15,12 +15,13 @@ import { useAuth } from "@/hooks/use-auth";
 import { UserSquare } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function TwoFactorPage() {
     const { user, loading } = useAuth();
     const router = useRouter();
 
-    // If a user is not being loaded, they shouldn't be here.
+    // If a user is not being loaded and is not present, they shouldn't be here.
     useEffect(() => {
         if (!loading && !user) {
             router.push('/login');
@@ -37,7 +38,20 @@ export default function TwoFactorPage() {
   if (loading || !user) {
       return (
          <div className="flex items-center justify-center min-h-screen bg-background">
-            <p>Loading...</p>
+            <Card className="mx-auto max-w-sm w-full">
+                <CardHeader className="text-center">
+                    <div className="flex justify-center mb-4">
+                        <Skeleton className="h-12 w-12 rounded-full" />
+                    </div>
+                    <Skeleton className="h-8 w-3/4 mx-auto" />
+                    <Skeleton className="h-4 w-1/2 mx-auto mt-2" />
+                    <Skeleton className="h-4 w-full mx-auto mt-1" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                   <Skeleton className="h-10 w-full" />
+                   <Skeleton className="h-10 w-full" />
+                </CardContent>
+            </Card>
         </div>
       )
   }
