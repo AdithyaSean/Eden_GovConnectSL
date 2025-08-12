@@ -23,8 +23,8 @@ import type { Service } from "@/lib/types";
 
 const serviceComponentMap = {
   "missing-documents": MissingDocumentsService,
-  "renew-driving-license": RenewDrivingLicenseService,
-  "passport-renewal": PassportRenewalService,
+  "driving-licence-services": RenewDrivingLicenseService,
+  "passport-services": PassportRenewalService,
   "national-id-services": NationalIdService,
   "land-registry": LandRegistryService,
   "exam-results": ExamResultsService,

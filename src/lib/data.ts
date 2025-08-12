@@ -63,45 +63,45 @@ export const services: Service[] = [
     }
   },
   {
-    title: "Renew Driving License",
-    slug: "renew-driving-license",
-    description: "Renew your driving license before it expires.",
+    title: "Driving Licence Services",
+    slug: "driving-licence-services",
+    description: "Apply for a new license or renew an existing one.",
     status: "Renewal Due",
     statusVariant: "warning",
     icon: "Car",
     actions: [],
     content: {
-        longDescription: "This service enables citizens to renew their driving licenses. The renewal process can be initiated before the expiry date. A medical fitness certificate is required for certain age groups and license categories.",
+        longDescription: "This service enables citizens to apply for a new driving license or renew their existing one. A medical fitness certificate may be required for certain age groups and license categories.",
         sections: [
             {
-                title: "Renewal Process",
-                content: "To renew your driving license, please follow these steps:",
+                title: "Application Process",
+                content: "To apply for or renew your driving license, please follow these steps:",
                 list: [
-                    "Obtain a medical fitness certificate from a government hospital or a registered medical practitioner.",
+                    "Obtain a medical fitness certificate from a government hospital or a registered medical practitioner if required.",
                     "Visit the Department of Motor Traffic (DMT) head office or a district office.",
-                    "Submit the completed renewal application form.",
-                    "Provide your current driving license, National Identity Card, and the medical certificate.",
-                    "Pay the renewal fee at the counter.",
-                    "Your photograph and biometric data will be captured, and the new license will be issued."
+                    "Submit the completed application form for a new license or renewal.",
+                    "Provide your National Identity Card and other necessary documents.",
+                    "Pay the relevant fee at the counter.",
+                    "Your photograph and biometric data will be captured. For new licenses, a written and practical test is required."
                 ]
             },
             {
                 title: "Fees and Charges",
-                content: "The fee for renewal depends on the license category and the validity period. Please refer to the latest fee schedule on the DMT website for accurate information."
+                content: "The fees depend on the license category and the type of service. Please refer to the latest fee schedule on the DMT website for accurate information."
             }
         ]
     }
   },
   {
-    title: "Passport Renewal",
-    slug: "passport-renewal",
-    description: "Renew your passport online.",
+    title: "Passport Services",
+    slug: "passport-services",
+    description: "Apply for a new passport or renew your existing one.",
     status: "Active",
     statusVariant: "success",
     icon: "BookUser",
     actions: [],
     content: {
-      longDescription: "This service allows you to renew your Sri Lankan passport online. You can fill out the form, upload the required documents, and submit your application for processing.",
+      longDescription: "This service allows you to apply for a new Sri Lankan passport or renew an existing one online. You can fill out the form, upload the required documents, and submit your application for processing.",
       sections: [
         {
           title: "Instructions",

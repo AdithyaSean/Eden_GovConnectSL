@@ -12,19 +12,23 @@ import { useAuth } from '@/hooks/use-auth';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
+import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 
 type UploadedFilesState = {
   [key: string]: string;
 };
 
-const requiredDocs = ["oldPassport", "photo", "nic"];
+const renewalDocs = ["oldPassport", "photo", "nic"];
+const newDocs = ["birthCertificate", "photo", "nic"];
 
 export function PassportRenewalService({ service }) {
   const { toast } = useToast();
+  const [serviceType, setServiceType] = useState('renewal');
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFilesState>({});
   const { user } = useAuth();
   const router = useRouter();
   
+  const requiredDocs = serviceType === 'renewal' ? renewalDocs : newDocs;
   const isReadyToSubmit = requiredDocs.every(doc => uploadedFiles[doc]);
 
   const handleUploadComplete = (docName: string, base64: string) => {
@@ -37,6 +41,11 @@ export function PassportRenewalService({ service }) {
         delete newFiles[docName];
         return newFiles;
     });
+  }
+
+  const handleServiceTypeChange = (value: string) => {
+    setServiceType(value);
+    setUploadedFiles({}); // Reset uploads when changing service type
   }
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -66,7 +75,7 @@ export function PassportRenewalService({ service }) {
         });
 
         toast({
-            title: "Renewal Request Submitted",
+            title: "Application Submitted",
             description: `Your application has been received and is now available in 'My Applications'.`,
         });
 
@@ -82,7 +91,25 @@ export function PassportRenewalService({ service }) {
         <div className="space-y-8">
             <Card>
                 <CardHeader>
-                    <CardTitle>Passport Renewal Form</CardTitle>
+                    <CardTitle>Select Service</CardTitle>
+                </CardHeader>
+                <CardContent>
+                     <RadioGroup defaultValue={serviceType} onValueChange={handleServiceTypeChange} className="flex gap-8">
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="renewal" id="r-renewal" />
+                            <Label htmlFor="r-renewal">Renew Existing Passport</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="new" id="r-new" />
+                            <Label htmlFor="r-new">Apply for New Passport</Label>
+                        </div>
+                    </RadioGroup>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>{serviceType === 'renewal' ? 'Passport Renewal Form' : 'New Passport Application Form'}</CardTitle>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
@@ -93,14 +120,18 @@ export function PassportRenewalService({ service }) {
                         <Label htmlFor="nicNumber">NIC Number</Label>
                         <Input id="nicNumber" name="nicNumber" placeholder="e.g., 199012345V" required defaultValue={user?.nic} />
                     </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="oldPassport">Old Passport Number</Label>
-                        <Input id="oldPassport" name="oldPassport" placeholder="e.g., N1234567" required />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="expiryDate">Date of Expiry</Label>
-                        <Input id="expiryDate" name="expiryDate" type="date" required />
-                    </div>
+                     {serviceType === 'renewal' && (
+                        <>
+                            <div className="space-y-2">
+                                <Label htmlFor="oldPassport">Old Passport Number</Label>
+                                <Input id="oldPassport" name="oldPassport" placeholder="e.g., N1234567" required />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="expiryDate">Date of Expiry</Label>
+                                <Input id="expiryDate" name="expiryDate" type="date" required />
+                            </div>
+                        </>
+                     )}
                      <div className="space-y-2">
                         <Label htmlFor="contactNumber">Contact Number</Label>
                         <Input id="contactNumber" name="contactNumber" type="tel" placeholder="+94 77 123 4567" required />
@@ -117,24 +148,49 @@ export function PassportRenewalService({ service }) {
                     <CardTitle>Upload Documents</CardTitle>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <FileUpload 
-                        id="old-passport-upload"
-                        label="Scanned Copy of Old Passport"
-                        onUploadComplete={(base64) => handleUploadComplete("oldPassport", base64)}
-                        onFileRemove={() => handleFileRemove("oldPassport")}
-                    />
-                    <FileUpload 
-                        id="photo-upload"
-                        label="Recent Passport-size Photograph"
-                        onUploadComplete={(base64) => handleUploadComplete("photo", base64)}
-                        onFileRemove={() => handleFileRemove("photo")}
-                    />
-                    <FileUpload
-                        id="nic-upload"
-                        label="Copy of NIC"
-                        onUploadComplete={(base64) => handleUploadComplete("nic", base64)}
-                        onFileRemove={() => handleFileRemove("nic")}
-                    />
+                    {serviceType === 'renewal' ? (
+                        <>
+                            <FileUpload 
+                                id="old-passport-upload"
+                                label="Scanned Copy of Old Passport"
+                                onUploadComplete={(base64) => handleUploadComplete("oldPassport", base64)}
+                                onFileRemove={() => handleFileRemove("oldPassport")}
+                            />
+                            <FileUpload 
+                                id="photo-upload"
+                                label="Recent Passport-size Photograph"
+                                onUploadComplete={(base64) => handleUploadComplete("photo", base64)}
+                                onFileRemove={() => handleFileRemove("photo")}
+                            />
+                            <FileUpload
+                                id="nic-upload"
+                                label="Copy of NIC"
+                                onUploadComplete={(base64) => handleUploadComplete("nic", base64)}
+                                onFileRemove={() => handleFileRemove("nic")}
+                            />
+                        </>
+                    ) : (
+                         <>
+                            <FileUpload 
+                                id="birth-cert-upload"
+                                label="Copy of Birth Certificate"
+                                onUploadComplete={(base64) => handleUploadComplete("birthCertificate", base64)}
+                                onFileRemove={() => handleFileRemove("birthCertificate")}
+                            />
+                            <FileUpload 
+                                id="photo-upload-new"
+                                label="Recent Passport-size Photograph"
+                                onUploadComplete={(base64) => handleUploadComplete("photo", base64)}
+                                onFileRemove={() => handleFileRemove("photo")}
+                            />
+                            <FileUpload
+                                id="nic-upload-new"
+                                label="Copy of NIC"
+                                onUploadComplete={(base64) => handleUploadComplete("nic", base64)}
+                                onFileRemove={() => handleFileRemove("nic")}
+                            />
+                        </>
+                    )}
                 </CardContent>
             </Card>
 
@@ -146,7 +202,7 @@ export function PassportRenewalService({ service }) {
                      <p className="text-sm text-muted-foreground">Please review all your details before submitting. Once submitted, you can track its status in the "My Applications" section.</p>
                 </CardContent>
                 <CardFooter>
-                    <Button type="submit" size="lg" disabled={!isReadyToSubmit}>Submit Renewal Request</Button>
+                    <Button type="submit" size="lg" disabled={!isReadyToSubmit}>Submit Application</Button>
                 </CardFooter>
             </Card>
         </div>

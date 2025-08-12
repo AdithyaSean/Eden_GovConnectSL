@@ -14,7 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { FileText, Clock, UserCheck } from "lucide-react";
 
-const immigrationServices = ["Passport Renewal"];
+const immigrationServices = ["Passport Services"];
 
 export default function WorkerImmigrationDashboard() {
   const [applications, setApplications] = useState<Application[]>([]);

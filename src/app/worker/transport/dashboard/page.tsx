@@ -16,7 +16,7 @@ import Link from "next/link";
 
 
 const transportServices = [
-    "Renew Driving License",
+    "Driving Licence Services",
 ];
 
 
@@ -36,7 +36,7 @@ export default function WorkerTransportDashboard() {
         setApplications(appsData);
 
         // Fetch stats
-        const renewalsQuery = query(collection(db, "applications"), where("service", "==", "Renew Driving License"), where("status", "in", ["Pending", "In Progress", "Pending Payment"]));
+        const renewalsQuery = query(collection(db, "applications"), where("service", "==", "Driving Licence Services"), where("status", "in", ["Pending", "In Progress", "Pending Payment"]));
         
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -87,7 +87,7 @@ export default function WorkerTransportDashboard() {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending License Renewals</CardTitle>
+              <CardTitle className="text-sm font-medium">Pending Licence Renewals</CardTitle>
               <FileText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -119,7 +119,7 @@ export default function WorkerTransportDashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle>License Renewal Applications</CardTitle>
+            <CardTitle>Licence Renewal Applications</CardTitle>
             <CardDescription>All scheduled biometrics and driving test appointments.</CardDescription>
           </CardHeader>
           <CardContent>
