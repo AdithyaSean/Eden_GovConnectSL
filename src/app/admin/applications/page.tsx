@@ -6,34 +6,73 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { db } from "@/lib/firebase";
 import { collection, getDocs, Timestamp } from "firebase/firestore";
-import type { Application } from "@/lib/types";
+import type { Application, User } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 
 export default function ApplicationsPage() {
   const [applications, setApplications] = useState<Application[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    const fetchApplications = async () => {
+    const fetchAllData = async () => {
+      setLoading(true);
       try {
-        const querySnapshot = await getDocs(collection(db, "applications"));
-        const apps = querySnapshot.docs.map(doc => ({
+        // Fetch both applications and users in parallel
+        const [appsSnapshot, usersSnapshot] = await Promise.all([
+          getDocs(collection(db, "applications")),
+          getDocs(collection(db, "users")),
+        ]);
+
+        const apps = appsSnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         } as Application));
         setApplications(apps);
+
+        const usersData = usersSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as User));
+        setUsers(usersData);
+
       } catch (error) {
-        console.error("Error fetching applications: ", error);
+        console.error("Error fetching data: ", error);
       } finally {
         setLoading(false);
       }
     };
-    fetchApplications();
+    fetchAllData();
   }, []);
+  
+  const usersById = useMemo(() => {
+      return users.reduce((acc, user) => {
+          acc[user.id] = user;
+          return acc;
+      }, {} as {[key: string]: User});
+  }, [users]);
+
+
+  const filteredApplications = useMemo(() => {
+      if (!searchQuery) {
+          return applications;
+      }
+      const lowercasedQuery = searchQuery.toLowerCase();
+      return applications.filter(app => {
+          const user = app.userId ? usersById[app.userId] : null;
+          const matchesName = app.user.toLowerCase().includes(lowercasedQuery);
+          const matchesId = app.id.toLowerCase().includes(lowercasedQuery);
+          const matchesNic = user ? user.nic.toLowerCase().includes(lowercasedQuery) : false;
+          return matchesName || matchesId || matchesNic;
+      });
+  }, [searchQuery, applications, usersById]);
 
   const formatDate = (date: Timestamp | string) => {
     if (!date) return 'N/A';
@@ -51,6 +90,15 @@ export default function ApplicationsPage() {
           <CardHeader>
             <CardTitle>All Submitted Applications</CardTitle>
             <CardDescription>View and manage all user applications.</CardDescription>
+             <div className="relative w-full pt-4">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input 
+                    placeholder="Search by name, reference ID, or NIC..." 
+                    className="pl-10"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)} 
+                />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -76,7 +124,7 @@ export default function ApplicationsPage() {
                         </TableCell>
                       </TableRow>
                     ))
-                  ) : applications.map((app) => (
+                  ) : filteredApplications.map((app) => (
                     <TableRow key={app.id}>
                       <TableCell className="font-medium truncate max-w-28">{app.id}</TableCell>
                       <TableCell>{app.user}</TableCell>
@@ -114,5 +162,3 @@ export default function ApplicationsPage() {
     </AdminLayout>
   );
 }
-
-    
