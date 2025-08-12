@@ -19,13 +19,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Download } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
 import { collection, query, where, getDocs, Timestamp, orderBy } from "firebase/firestore";
 import type { Payment } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
+import Link from "next/link";
 
 
 export default function PaymentsPage() {
@@ -123,9 +124,10 @@ export default function PaymentsPage() {
                                     <span className={`px-2 py-1 text-xs rounded-full ${payment.status === 'Success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{payment.status}</span>
                                 </TableCell>
                                 <TableCell className="text-right">
-                                    <Button variant="ghost" size="icon">
-                                        <Download className="h-4 w-4" />
-                                        <span className="sr-only">Download Receipt</span>
+                                    <Button asChild variant="outline" size="sm">
+                                        <Link href={`/receipt/${payment.id}`}>
+                                            View Receipt <ArrowRight className="ml-2 h-4 w-4" />
+                                        </Link>
                                     </Button>
                                 </TableCell>
                             </TableRow>

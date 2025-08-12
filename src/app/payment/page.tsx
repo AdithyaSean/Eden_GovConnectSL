@@ -41,6 +41,7 @@ export default function PaymentPage() {
   const ref = searchParams.get("ref") || null;
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [newPaymentId, setNewPaymentId] = useState<string | null>(null);
   const { user } = useAuth();
 
   const handlePayment = async (e: React.FormEvent) => {
@@ -53,12 +54,14 @@ export default function PaymentPage() {
     setIsProcessing(true);
 
     try {
-        // 1. Update application status
-        const appRef = doc(db, "applications", ref);
-        await updateDoc(appRef, { status: "In Progress" });
+        // 1. Update application status (if it's an application payment)
+        if(ref.length === 20) { // Simple check if it's likely a Firestore ID
+            const appRef = doc(db, "applications", ref);
+            await updateDoc(appRef, { status: "In Progress" });
+        }
 
         // 2. Create a payment record
-        await addDoc(collection(db, "payments"), {
+        const paymentDocRef = await addDoc(collection(db, "payments"), {
             userId: user.id,
             service: service,
             amount: amount,
@@ -66,13 +69,14 @@ export default function PaymentPage() {
             status: "Success",
             applicationRef: ref
         });
+        setNewPaymentId(paymentDocRef.id);
 
         // 3. Create a notification
          await addDoc(collection(db, "notifications"), {
             userId: user.id,
             title: "Payment Successful",
             description: `Your payment of LKR ${amount} for '${service}' was successful.`,
-            href: "/payments",
+            href: `/receipt/${paymentDocRef.id}`,
             icon: "CheckCircle",
             read: false,
             createdAt: serverTimestamp()
@@ -96,16 +100,23 @@ export default function PaymentPage() {
               <AlertDialogTitle>Payment Successful!</AlertDialogTitle>
               <AlertDialogDescription>
                 Your payment for {service} has been processed successfully. Your
-                application status has been updated to "In Progress".
+                application status has been updated.
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter>
-              <Button variant="outline" asChild>
-                <Link href="/payments">View Payment History</Link>
-              </Button>
-              <AlertDialogAction asChild>
-                <Link href="/my-applications">Go to My Applications</Link>
-              </AlertDialogAction>
+            <AlertDialogFooter className="sm:justify-between w-full gap-2 sm:gap-0">
+               {newPaymentId && (
+                    <Button variant="outline" asChild>
+                        <Link href={`/receipt/${newPaymentId}`}>View Receipt</Link>
+                    </Button>
+                )}
+              <div className="flex flex-col-reverse sm:flex-row gap-2">
+                  <Button variant="secondary" asChild>
+                    <Link href="/my-applications">My Applications</Link>
+                  </Button>
+                  <AlertDialogAction asChild>
+                    <Link href="/dashboard">Go to Dashboard</Link>
+                  </AlertDialogAction>
+              </div>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
