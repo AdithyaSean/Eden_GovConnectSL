@@ -1,3 +1,5 @@
+
+"use client";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { services } from "@/lib/data";
 import { notFound } from "next/navigation";
@@ -18,6 +20,7 @@ import { RegisteredVehiclesService } from "@/components/services/registered-vehi
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { use, useEffect, useState } from "react";
 
 const serviceComponentMap = {
   "missing-documents": MissingDocumentsService,
@@ -33,8 +36,8 @@ const serviceComponentMap = {
   "registered-vehicles": RegisteredVehiclesService,
 };
 
-export default async function ServiceDetailPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
+export default function ServiceDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = use(params);
   const service = services.find((s) => s.slug === slug);
 
   if (!service) {

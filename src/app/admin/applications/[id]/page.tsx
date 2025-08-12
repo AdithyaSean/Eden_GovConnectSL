@@ -17,7 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 
 
-export default function ApplicationDetailsPage({ params }: { params: { id: string } }) {
+export default function ApplicationDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { toast } = useToast();
   const [application, setApplication] = useState<Application | null>(null);

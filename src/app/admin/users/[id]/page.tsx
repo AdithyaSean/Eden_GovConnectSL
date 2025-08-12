@@ -22,7 +22,7 @@ const roles = [
 ];
 
 
-export default function UserProfilePage({ params }: { params: { id: string } }) {
+export default function UserProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { toast } = useToast();
   const [user, setUser] = useState<User | null>(null);
