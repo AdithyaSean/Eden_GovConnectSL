@@ -14,18 +14,25 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { services } from "@/lib/data";
+
+const statuses = ['Pending', 'Approved', 'Rejected', 'In Progress', 'Completed', 'In Review', 'Pending Payment'];
+const serviceNames = ["all", ...services.map(s => s.title)];
+
 
 export default function ApplicationsPage() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [serviceFilter, setServiceFilter] = useState("all");
 
   useEffect(() => {
     const fetchAllData = async () => {
       setLoading(true);
       try {
-        // Fetch both applications and users in parallel
         const [appsSnapshot, usersSnapshot] = await Promise.all([
           getDocs(collection(db, "applications")),
           getDocs(collection(db, "users")),
@@ -61,18 +68,21 @@ export default function ApplicationsPage() {
 
 
   const filteredApplications = useMemo(() => {
-      if (!searchQuery) {
-          return applications;
-      }
-      const lowercasedQuery = searchQuery.toLowerCase();
       return applications.filter(app => {
+          const lowercasedQuery = searchQuery.toLowerCase();
           const user = app.userId ? usersById[app.userId] : null;
-          const matchesName = app.user.toLowerCase().includes(lowercasedQuery);
-          const matchesId = app.id.toLowerCase().includes(lowercasedQuery);
-          const matchesNic = user ? user.nic.toLowerCase().includes(lowercasedQuery) : false;
-          return matchesName || matchesId || matchesNic;
+
+          const matchesSearch = searchQuery === "" ||
+              app.user.toLowerCase().includes(lowercasedQuery) ||
+              app.id.toLowerCase().includes(lowercasedQuery) ||
+              (user && user.nic.toLowerCase().includes(lowercasedQuery));
+          
+          const matchesStatus = statusFilter === 'all' || app.status === statusFilter;
+          const matchesService = serviceFilter === 'all' || app.service === serviceFilter;
+
+          return matchesSearch && matchesStatus && matchesService;
       });
-  }, [searchQuery, applications, usersById]);
+  }, [searchQuery, applications, usersById, statusFilter, serviceFilter]);
 
   const formatDate = (date: Timestamp | string) => {
     if (!date) return 'N/A';
@@ -90,14 +100,33 @@ export default function ApplicationsPage() {
           <CardHeader>
             <CardTitle>All Submitted Applications</CardTitle>
             <CardDescription>View and manage all user applications.</CardDescription>
-             <div className="relative w-full pt-4">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input 
-                    placeholder="Search by name, reference ID, or NIC..." 
-                    className="pl-10"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)} 
-                />
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+                <div className="relative md:col-span-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input 
+                        placeholder="Search by name, ID, or NIC..." 
+                        className="pl-10"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)} 
+                    />
+                </div>
+                 <Select value={serviceFilter} onValueChange={setServiceFilter}>
+                    <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Filter by service" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {serviceNames.map(name => <SelectItem key={name} value={name}>{name === 'all' ? 'All Services' : name}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Filter by status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Statuses</SelectItem>
+                        {statuses.map(status => <SelectItem key={status} value={status}>{status}</SelectItem>)}
+                    </SelectContent>
+                </Select>
             </div>
           </CardHeader>
           <CardContent>
