@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { Check, Download, File, User, X, ArrowLeft } from "lucide-react";
@@ -27,6 +29,9 @@ export default function WorkerApplicationDetailsPage({ params }: { params: Promi
   const [application, setApplication] = useState<Application | null>(null);
   const [applicant, setApplicant] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isStatusUpdateDialogOpen, setIsStatusUpdateDialogOpen] = useState(false);
+  const [comment, setComment] = useState("");
+  const [targetStatus, setTargetStatus] = useState<Application['status'] | null>(null);
   
 
   const createNotification = async (userId: string, title: string, description: string, href: string) => {
@@ -54,7 +59,6 @@ export default function WorkerApplicationDetailsPage({ params }: { params: Promi
             const appData = { id: appDoc.id, ...appDoc.data() } as Application;
             setApplication(appData);
             
-            // Now fetch the applicant's data
             if(appData.userId) {
                 const userDoc = await getDoc(doc(db, "users", appData.userId));
                 if (userDoc.exists()) {
@@ -74,23 +78,32 @@ export default function WorkerApplicationDetailsPage({ params }: { params: Promi
     fetchApplication();
   }, [id]);
 
-  const handleStatusUpdate = async (status: Application['status']) => {
-    if(application) {
-      await updateDoc(doc(db, "applications", application.id), { status });
-      setApplication(prev => prev ? { ...prev, status } : null);
+  const openStatusUpdateDialog = (status: Application['status']) => {
+    setTargetStatus(status);
+    setComment(application?.workerComment || "");
+    setIsStatusUpdateDialogOpen(true);
+  }
+
+  const handleStatusUpdate = async () => {
+    if(application && targetStatus) {
+      await updateDoc(doc(db, "applications", application.id), { status: targetStatus, workerComment: comment });
+      setApplication(prev => prev ? { ...prev, status: targetStatus, workerComment: comment } : null);
       toast({
           title: "Status Updated",
-          description: `Application has been marked as ${status}.`,
+          description: `Application has been marked as ${targetStatus}.`,
       });
-      // Create a notification for the user
+      
       if (application.userId) {
           await createNotification(
               application.userId,
-              `Application ${status}`,
-              `Your application for '${application.service}' has been ${status.toLowerCase()}.`,
+              `Application ${targetStatus}`,
+              `Your application for '${application.service}' has been ${targetStatus.toLowerCase()}. ${comment ? 'A comment was added.' : ''}`,
               "/my-applications"
           );
       }
+      setIsStatusUpdateDialogOpen(false);
+      setComment("");
+      setTargetStatus(null);
     }
   }
 
@@ -131,6 +144,7 @@ export default function WorkerApplicationDetailsPage({ params }: { params: Promi
   }
 
   return (
+    <>
     <AdminLayout workerMode>
       <div className="flex-1 space-y-8 p-8 pt-6">
         <div className="flex items-center justify-between space-y-2">
@@ -148,9 +162,9 @@ export default function WorkerApplicationDetailsPage({ params }: { params: Promi
               </div>
             </div>
             <div className="flex items-center gap-2">
-                <Button variant="outline" onClick={() => handleStatusUpdate('In Progress')}>Set to In Progress</Button>
-                <Button className="bg-green-600 hover:bg-green-700" onClick={() => handleStatusUpdate('Approved')}><Check className="mr-2"/>Approve</Button>
-                <Button variant="destructive" onClick={() => handleStatusUpdate('Rejected')}><X className="mr-2"/>Reject</Button>
+                <Button variant="outline" onClick={() => openStatusUpdateDialog('In Progress')}>Set to In Progress</Button>
+                <Button className="bg-green-600 hover:bg-green-700" onClick={() => openStatusUpdateDialog('Approved')}><Check className="mr-2"/>Approve</Button>
+                <Button variant="destructive" onClick={() => openStatusUpdateDialog('Rejected')}><X className="mr-2"/>Reject</Button>
             </div>
         </div>
 
@@ -222,6 +236,12 @@ export default function WorkerApplicationDetailsPage({ params }: { params: Promi
                         <Label>Date Submitted</Label>
                         <p className="col-span-2 font-medium">{formatDate(application.submitted)}</p>
                     </div>
+                    {application.workerComment && (
+                        <div className="grid grid-cols-3 items-start gap-4">
+                            <Label>Latest Comment</Label>
+                            <p className="col-span-2 font-medium bg-muted p-3 rounded-md whitespace-pre-wrap">{application.workerComment}</p>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 
@@ -229,5 +249,34 @@ export default function WorkerApplicationDetailsPage({ params }: { params: Promi
         </div>
       </div>
     </AdminLayout>
+
+    <Dialog open={isStatusUpdateDialogOpen} onOpenChange={setIsStatusUpdateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Update Status to "{targetStatus}"</DialogTitle>
+            <DialogDescription>
+              Add a comment to notify the citizen about this status change. This is optional but recommended.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="comment">Comment</Label>
+              <Textarea 
+                id="comment" 
+                value={comment} 
+                onChange={(e) => setComment(e.target.value)} 
+                placeholder="e.g., 'Your documents have been verified. Please await appointment confirmation.'"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button type="button" onClick={handleStatusUpdate}>Confirm Update</Button>
+          </DialogFooter>
+        </DialogContent>
+    </Dialog>
+    </>
   );
 }

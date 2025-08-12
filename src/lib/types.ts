@@ -69,6 +69,7 @@ export interface Application {
     submitted: Timestamp | string;
     documents?: { [key: string]: string };
     details?: { [key: string]: any };
+    workerComment?: string;
 }
 
 export interface User {
