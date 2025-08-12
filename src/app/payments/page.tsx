@@ -42,10 +42,18 @@ export default function PaymentsPage() {
             
             setLoading(true);
             try {
-                const q = query(collection(db, "payments"), where("userId", "==", user.id), orderBy("date", "desc"));
+                const q = query(collection(db, "payments"), where("userId", "==", user.id));
                 const querySnapshot = await getDocs(q);
                 const paymentsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Payment));
-                setPaymentHistory(paymentsData);
+                
+                // Sort on the client side to avoid needing a composite index
+                const sortedPayments = paymentsData.sort((a, b) => {
+                    const dateA = a.date instanceof Timestamp ? a.date.toMillis() : new Date(a.date).getTime();
+                    const dateB = b.date instanceof Timestamp ? b.date.toMillis() : new Date(b.date).getTime();
+                    return dateB - dateA;
+                });
+
+                setPaymentHistory(sortedPayments);
             } catch (error) {
                 console.error("Error fetching payments:", error);
             } finally {
