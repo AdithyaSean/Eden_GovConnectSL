@@ -14,8 +14,10 @@ import type { Payment, User } from '@/lib/types';
 import { doc, getDoc, Timestamp } from 'firebase/firestore';
 import { Printer, Download } from 'lucide-react';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 
 async function getPaymentData(paymentId: string): Promise<Payment | null> {
@@ -33,6 +35,7 @@ export default function ReceiptPage({ params }: { params: Promise<{ id: string }
     const { user, loading: authLoading } = useAuth();
     const [payment, setPayment] = useState<Payment | null>(null);
     const [loading, setLoading] = useState(true);
+    const receiptRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const fetchPayment = async () => {
@@ -43,6 +46,20 @@ export default function ReceiptPage({ params }: { params: Promise<{ id: string }
         }
         fetchPayment();
     }, [id]);
+
+    const handleDownloadPdf = () => {
+        const input = receiptRef.current;
+        if (input) {
+            html2canvas(input, { scale: 2 }).then((canvas) => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                pdf.save(`receipt-${payment?.id}.pdf`);
+            });
+        }
+    };
 
     if (loading || authLoading) {
         return (
@@ -88,7 +105,7 @@ export default function ReceiptPage({ params }: { params: Promise<{ id: string }
     return (
         <DashboardLayout>
             <div className="flex-1 space-y-8 p-4 md:p-8 pt-6">
-                <Card className="max-w-2xl mx-auto" id="receipt-content">
+                <Card className="max-w-2xl mx-auto" id="receipt-content" ref={receiptRef}>
                     <CardHeader className="text-center bg-muted/30 p-8">
                         <div className="flex justify-center mb-4">
                              <Image src="https://placehold.co/150x50" alt="GovConnect SL Logo" width={150} height={50} data-ai-hint="logo" />
@@ -155,7 +172,7 @@ export default function ReceiptPage({ params }: { params: Promise<{ id: string }
                     </CardContent>
                 </Card>
                 <div className="max-w-2xl mx-auto mt-4 flex justify-end gap-2">
-                    <Button onClick={() => window.print()}><Download className="mr-2 h-4 w-4" /> Download PDF</Button>
+                    <Button onClick={handleDownloadPdf}><Download className="mr-2 h-4 w-4" /> Download PDF</Button>
                 </div>
             </div>
         </DashboardLayout>
