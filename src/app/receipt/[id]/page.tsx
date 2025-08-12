@@ -155,8 +155,7 @@ export default function ReceiptPage({ params }: { params: Promise<{ id: string }
                     </CardContent>
                 </Card>
                 <div className="max-w-2xl mx-auto mt-4 flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => window.print()}><Printer className="mr-2 h-4 w-4" /> Print</Button>
-                    <Button><Download className="mr-2 h-4 w-4" /> Download PDF</Button>
+                    <Button onClick={() => window.print()}><Download className="mr-2 h-4 w-4" /> Download PDF</Button>
                 </div>
             </div>
         </DashboardLayout>
