@@ -1,4 +1,6 @@
-import Link from "next/link";
+
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,9 +11,37 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/hooks/use-auth";
 import { UserSquare } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function TwoFactorPage() {
+    const { user, loading } = useAuth();
+    const router = useRouter();
+
+    // If a user is not being loaded, they shouldn't be here.
+    useEffect(() => {
+        if (!loading && !user) {
+            router.push('/login');
+        }
+    }, [user, loading, router]);
+
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // In a real app, this code would be verified. For now, we proceed.
+    router.push('/dashboard');
+  }
+
+  if (loading || !user) {
+      return (
+         <div className="flex items-center justify-center min-h-screen bg-background">
+            <p>Loading...</p>
+        </div>
+      )
+  }
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
       <Card className="mx-auto max-w-sm w-full">
@@ -21,24 +51,26 @@ export default function TwoFactorPage() {
             </div>
           <CardTitle className="text-2xl">Two-Factor Authentication</CardTitle>
           <CardDescription>
-            We've sent a verification code to your registered mobile number ending in ****567.
+            We've sent a verification code to your registered mobile number ending in ****567. For this demo, any code will work.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="2fa-code">Authentication Code</Label>
-              <Input
-                id="2fa-code"
-                type="text"
-                placeholder="123456"
-                required
-              />
+          <form onSubmit={handleSubmit}>
+            <div className="grid gap-4">
+                <div className="grid gap-2">
+                <Label htmlFor="2fa-code">Authentication Code</Label>
+                <Input
+                    id="2fa-code"
+                    type="text"
+                    placeholder="123456"
+                    required
+                />
+                </div>
+                <Button type="submit" className="w-full">
+                    Verify
+                </Button>
             </div>
-            <Button type="submit" className="w-full" asChild>
-                <Link href="/dashboard">Verify</Link>
-            </Button>
-          </div>
+          </form>
            <div className="mt-4 text-center text-sm">
             <button className="underline text-sm">Resend code</button>
           </div>

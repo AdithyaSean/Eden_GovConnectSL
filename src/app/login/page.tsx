@@ -16,26 +16,49 @@ import { UserSquare } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 export default function LoginPage() {
   const [nic, setNic] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nic) {
+    if (!nic || !password) {
         toast({
-            title: "NIC Required",
-            description: "Please enter your National ID number.",
+            title: "All Fields Required",
+            description: "Please enter your National ID and password.",
             variant: "destructive"
         });
         return;
     }
-    // In a real app, you'd validate credentials against a backend.
-    // For this prototype, we store the NIC in localStorage to simulate a session.
-    localStorage.setItem("loggedInNic", nic);
-    router.push("/two-factor");
+    setLoading(true);
+
+    try {
+      // Citizens use a dummy email format for Firebase Auth: `nic@citizen.gov.lk`
+      const email = `${nic}@citizen.gov.lk`;
+      await signInWithEmailAndPassword(auth, email, password);
+      
+      // Clear any previous admin/worker session info
+      localStorage.removeItem("workerId");
+      localStorage.removeItem("workerRole");
+
+      router.push("/two-factor");
+
+    } catch (error: any) {
+        console.error("Login failed: ", error);
+        toast({
+            title: "Login Failed",
+            description: "Invalid credentials. Please check your NIC and password.",
+            variant: "destructive"
+        });
+    } finally {
+        setLoading(false);
+    }
   }
 
   return (
@@ -58,10 +81,11 @@ export default function LoginPage() {
                 <Input
                   id="national-id"
                   type="text"
-                  placeholder="e.g. 19981234567V"
+                  placeholder="e.g. 199012345V"
                   required
                   value={nic}
                   onChange={(e) => setNic(e.target.value)}
+                  disabled={loading}
                 />
               </div>
               <div className="grid gap-2">
@@ -74,10 +98,17 @@ export default function LoginPage() {
                     Forgot your password?
                   </Link>
                 </div>
-                <Input id="password" type="password" required />
+                <Input 
+                  id="password" 
+                  type="password" 
+                  required 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                />
               </div>
-              <Button type="submit" className="w-full">
-                  Login
+              <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Logging in..." : "Login"}
               </Button>
             </div>
           </form>
