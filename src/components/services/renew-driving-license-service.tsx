@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileUpload } from '../file-upload';
 import { Input } from '../ui/input';
