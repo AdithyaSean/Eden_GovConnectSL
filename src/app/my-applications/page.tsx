@@ -17,6 +17,13 @@ import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
 import { Label } from "@/components/ui/label";
 
+const serviceFees = {
+    "Passport Services": 3500.00,
+    "Driving Licence Services": 2500.00,
+    "Land Registry": 1000.00,
+    "Missing Documents": 1500.00 // Example fee
+};
+
 export default function MyApplicationsPage() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,6 +61,16 @@ export default function MyApplicationsPage() {
     if (!date) return 'N/A';
     return date.toDate().toLocaleDateString();
   };
+  
+  const getPaymentAmount = (service: string, details?: any) => {
+      if (service === 'Passport Services') {
+          return details?.serviceType === 'new' ? 5000.00 : 3500.00;
+      }
+      if (service === 'Driving Licence Services') {
+          return details?.serviceType === 'new' ? 3500.00 : 2500.00;
+      }
+      return serviceFees[service] || 0.00;
+  }
 
   return (
     <>
@@ -111,7 +128,14 @@ export default function MyApplicationsPage() {
                                           }
                                           >{app.status}</Badge>
                                       </TableCell>
-                                      <TableCell className="text-right">
+                                      <TableCell className="text-right flex items-center justify-end gap-2">
+                                           {app.status === 'Pending Payment' && (
+                                              <Button asChild size="sm">
+                                                  <Link href={`/payment?service=${encodeURIComponent(app.service)}&amount=${getPaymentAmount(app.service, app.details)}&ref=${app.id}`}>
+                                                      Pay Now
+                                                  </Link>
+                                              </Button>
+                                          )}
                                           <Button variant="ghost" size="icon" onClick={() => setSelectedApp(app)}>
                                               <MoreHorizontal className="h-4 w-4" />
                                               <span className="sr-only">View Details</span>
