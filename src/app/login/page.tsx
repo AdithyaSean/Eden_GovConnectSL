@@ -52,7 +52,7 @@ export default function LoginPage() {
 
     } catch (error: any) {
         console.error("Login failed: ", error);
-        if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        if (error.code === 'auth/invalid-credential') {
             toast({
                 title: "Login Failed",
                 description: "Invalid credentials. Please check your NIC and password.",
