@@ -13,6 +13,18 @@ Planned:
 - Add PromptTemplate metadata field & guardrail enforcement logic (PLAN §3.1).
 - Pin exact commit SHA for `browser-use` integration plan (PLAN §3.4).
 
+## 2025-08-14 – Sprint-1 Simulated Automation Slice (Prototype)
+Category | Change
+-------- | ------
+Code Stubs | In-memory Prompt Registry with seeds and lightweight version logging wired into flows (`chat`, `suggest-services`, `summarize-service-info`).
+Code Stubs | Dev Debug Panel (Alt+D) with last 100 events, client emitter (`emitDebug`) and server logger; panel mounted in root layout.
+Code Stubs | Passport renewal demo page (`/services/passport-renewal/demo`) using `DynamicForm`, run status polling, and receipt display.
+Code Stubs | Simulated automation APIs: create runs, get run status, list checkpoints, resolve checkpoint; in-memory store with events/receipts.
+Code Stubs | Automation prompt builder utility + dev script (`scripts/dev-prompt-demo.ts`) printing sample prompt JSON.
+Code Stubs | Application status transition validator + demo script (`scripts/validators-demo.ts`).
+Docs | README updated with simulated prototype usage and dev scripts.
+Security | Draft `firestore.rules` added (not enforced in prototype).
+
 ## 2025-08-13 – Documentation Consistency Alignment (Prototype)
 Category | Change
 -------- | ------
