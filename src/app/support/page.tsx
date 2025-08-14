@@ -71,13 +71,15 @@ export default function SupportPage() {
             });
             toast({ title: "Reply Sent" });
             setUserReply("");
-            await fetchTickets(); // Refresh data
-            // Update active ticket in state
+            
+            // Optimistically update the UI
             setActiveTicket(prev => prev ? {
                  ...prev, 
                  messages: [...(prev.messages || []), newMessage], 
                  status: "Open" 
             } : null);
+            // Fetch the latest state in the background
+            await fetchTickets();
 
         } catch (error) {
             console.error("Error sending reply:", error);
@@ -93,8 +95,8 @@ export default function SupportPage() {
         try {
              await updateDoc(ticketRef, { status: "Closed" });
              toast({ title: "Ticket Closed"});
-             await fetchTickets();
              setActiveTicket(prev => prev ? {...prev, status: "Closed"} : null);
+             await fetchTickets();
         } catch(e){
             toast({ title: "Error", description: "Could not close ticket.", variant: "destructive" });
         }
@@ -111,6 +113,7 @@ export default function SupportPage() {
             return toast({ title: "Please fill out all fields.", variant: "destructive" });
         }
         
+        setIsSubmitting(true);
         const firstMessage: SupportMessage = {
             content: message,
             author: "Citizen",
@@ -129,12 +132,17 @@ export default function SupportPage() {
                 email: user.email,
             });
             toast({ title: "Support Ticket Created", description: "Our team will get back to you shortly."});
-            await fetchTickets();
-            const newTicket = await getDoc(newTicketRef);
-            setActiveTicket({ id: newTicket.id, ...newTicket.data() } as SupportTicket);
-
+            const newTicketSnap = await getDoc(newTicketRef);
+            if(newTicketSnap.exists()){
+                const newTicket = { id: newTicketSnap.id, ...newTicketSnap.data() } as SupportTicket;
+                setActiveTicket(newTicket);
+                setTickets(prev => [newTicket, ...prev]);
+            }
+            (e.target as HTMLFormElement).reset();
         } catch(err){
             toast({ title: "Failed to create ticket", variant: "destructive" });
+        } finally {
+            setIsSubmitting(false);
         }
     }
     
@@ -228,7 +236,7 @@ export default function SupportPage() {
                                         disabled={isSubmitting}
                                     />
                                     <div className="flex justify-between items-center mt-2">
-                                        <Button onClick={handleUserReply} disabled={isSubmitting}>{isSubmitting ? "Sending..." : "Send Reply"}</Button>
+                                        <Button onClick={handleUserReply} disabled={isSubmitting || !userReply.trim()}>{isSubmitting ? "Sending..." : "Send Reply"}</Button>
                                         <Button variant="link" onClick={handleCloseTicket}>My issue is resolved, close this ticket.</Button>
                                     </div>
                                 </div>
@@ -245,15 +253,17 @@ export default function SupportPage() {
                             <CardContent className="space-y-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="subject">Subject</Label>
-                                    <Input id="subject" name="subject" placeholder="e.g., Passport photo upload failed" />
+                                    <Input id="subject" name="subject" placeholder="e.g., Passport photo upload failed" required />
                                 </div>
                                  <div className="space-y-2">
                                     <Label htmlFor="message">Message</Label>
-                                    <Textarea id="message" name="message" placeholder="Please describe your issue in detail." />
+                                    <Textarea id="message" name="message" placeholder="Please describe your issue in detail." required />
                                 </div>
                             </CardContent>
                             <CardFooter>
-                                <Button type="submit">Create Ticket</Button>
+                                <Button type="submit" disabled={isSubmitting}>
+                                    {isSubmitting ? "Creating..." : "Create Ticket"}
+                                </Button>
                             </CardFooter>
                          </Card>
                     </form>
@@ -265,3 +275,5 @@ export default function SupportPage() {
     </DashboardLayout>
   );
 }
+
+    

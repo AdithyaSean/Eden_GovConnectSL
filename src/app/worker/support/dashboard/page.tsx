@@ -32,8 +32,7 @@ export default function WorkerSupportDashboard() {
       const allTickets = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SupportTicket));
       
       const filteredAndSortedTickets = allTickets
-        .filter(ticket => ticket.status === 'Open' || ticket.status === 'In Progress')
-        .sort((a, b) => (a.submittedAt as Timestamp).toMillis() - (b.submittedAt as Timestamp).toMillis());
+        .sort((a, b) => (b.submittedAt as Timestamp).toMillis() - (a.submittedAt as Timestamp).toMillis());
 
       setTickets(filteredAndSortedTickets);
     } catch (error) {
@@ -86,23 +85,28 @@ export default function WorkerSupportDashboard() {
               activeTicket.userId,
               `Reply for ticket: ${activeTicket.subject}`,
               `A support agent has replied to your ticket.`,
-              `/support#${activeTicket.id}` // a hash could link directly to the ticket view
+              `/support`
           );
       }
 
       toast({ title: "Reply Sent", description: `Ticket has been marked as ${status}.`});
       setReplyMessage("");
       
+      // Optimistically update UI
+      const updatedTicket = {
+          ...activeTicket,
+          messages: [...(activeTicket.messages || []), newMessage],
+          status
+      };
+      
       if (status === 'Closed') {
           setActiveTicket(null);
+          setTickets(prev => prev.filter(t => t.id !== activeTicket.id));
       } else {
-          setActiveTicket(prev => prev ? {
-              ...prev,
-              messages: [...(prev.messages || []), newMessage],
-              status
-          } : null);
+          setActiveTicket(updatedTicket);
+          setTickets(prev => prev.map(t => t.id === updatedTicket.id ? updatedTicket : t));
       }
-      fetchTickets();
+      
     } catch (e) {
       console.error("Error sending reply: ", e);
       toast({ title: "Error", description: "Could not send reply.", variant: "destructive"});
@@ -127,13 +131,13 @@ export default function WorkerSupportDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             <Card className="lg:col-span-1">
                 <CardHeader>
-                    <CardTitle>Ticket Queue ({tickets.length})</CardTitle>
+                    <CardTitle>Ticket Queue ({tickets.filter(t => t.status !== 'Closed').length})</CardTitle>
                     <CardDescription>Open tickets from citizens.</CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-2 p-2">
                     {loading ? <Skeleton className="h-20" /> :
-                     tickets.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">No open tickets.</p> :
-                     tickets.map(ticket => (
+                     tickets.filter(t => t.status !== 'Closed').length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">No open tickets.</p> :
+                     tickets.filter(t => t.status !== 'Closed').map(ticket => (
                         <button 
                             key={ticket.id} 
                             onClick={() => setActiveTicket(ticket)} 
@@ -169,11 +173,11 @@ export default function WorkerSupportDashboard() {
                         <CardContent className="space-y-6">
                            <div>
                             <Label className="font-semibold">Conversation History</Label>
-                            <div className="mt-2 p-4 bg-muted rounded-md max-h-80 overflow-y-auto text-sm space-y-4 whitespace-pre-wrap">
+                            <div className="mt-2 p-4 bg-muted rounded-md max-h-80 overflow-y-auto text-sm space-y-4">
                                 {(activeTicket.messages || []).map((msg, index) => (
                                     <div key={index} className={cn("p-3 rounded-lg", msg.author === 'Citizen' ? 'bg-primary/10' : 'bg-secondary')}>
                                         <p className="font-semibold">{msg.author} <span className="text-xs text-muted-foreground ml-2">{formatDate(msg.timestamp)}</span></p>
-                                        <p className="text-sm text-foreground">{msg.content}</p>
+                                        <p className="text-sm text-foreground whitespace-pre-wrap">{msg.content}</p>
                                     </div>
                                 ))}
                             </div>
@@ -190,10 +194,10 @@ export default function WorkerSupportDashboard() {
                             />
                            </div>
                            <div className="flex justify-end gap-2">
-                               <Button variant="outline" onClick={() => handleReplySubmit('In Progress')} disabled={isSubmitting}>
+                               <Button variant="outline" onClick={() => handleReplySubmit('In Progress')} disabled={isSubmitting || !replyMessage.trim()}>
                                    {isSubmitting ? "Sending..." : "Send & Keep Open"}
                                 </Button>
-                               <Button onClick={() => handleReplySubmit('Closed')} disabled={isSubmitting}>
+                               <Button onClick={() => handleReplySubmit('Closed')} disabled={isSubmitting || !replyMessage.trim()}>
                                    {isSubmitting ? "Sending..." : "Send & Close Ticket"}
                                 </Button>
                            </div>
@@ -210,3 +214,5 @@ export default function WorkerSupportDashboard() {
     </AdminLayout>
   );
 }
+
+    
