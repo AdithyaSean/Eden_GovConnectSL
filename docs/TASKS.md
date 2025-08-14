@@ -1,74 +1,75 @@
-# TASKS (Next Prototype Iteration – Implementation Sprint 2)
 
-Goal: Build on Sprint 1 stubs. Persist `agentRuns` and `auditLogs` to Firestore from the demo form submission. Integrate the checkpoint admin panel with live data from the simulated automation store. Refine the admin UI for managing applications and users.
+# TASKS (Next Prototype Iteration – Implementation Sprint 3)
 
-Sprint 1 Stubs Completed (Reference):
-- `src/lib/service-schemas/passport-renewal.ts` (User A)
-- `src/components/dynamic-form.tsx` (User A)
-- `src/app/services/passport-renewal/demo/page.tsx` (User A)
-- `src/lib/automation/prompt-builder.ts` (User B)
-- `src/lib/prompts/registry.ts` (User C)
-- `firestore.rules` (User D)
-- `src/lib/security/validators.ts` (User D)
-- `src/app/admin/checkpoints/page.tsx` (User E)
-- `src/components/checkpoint-table.tsx` (User E)
+Goal: Implement the core internationalization (i18n) framework using `next-intl` and refine data models and flows to support multiple languages. Enhance the AI chat flow to be language-aware. Introduce Firestore security rules for basic data protection.
+
+Sprint 2 Stubs Completed (Reference):
+- AgentRun and AuditLog persistence in Firestore.
+- Admin application management UI refined with date filters and details view.
+- `next-intl` package added and initial configuration scaffolded.
+- Checkpoint Admin table now fetches and resolves live (simulated) data.
+- User Profile page enhanced with contact update and preference tabs.
 
 ---
 
-## User A – Persist AgentRun to Firestore
+## User A – Implement i18n in UI Components
 Deliverables:
-1.  Modify the `onSubmit` handler in `src/app/services/passport-renewal/demo/page.tsx`.
-2.  After the `/api/automation/runs` call succeeds, create a new document in the `agentRuns` collection in Firestore.
-3.  The document should store the `runId`, `serviceSlug`, `status`, `createdAt`, and the `values` from the form.
-4.  Create a corresponding `auditLogs` entry for the `AgentRunStart` event.
+1.  Using the `en.json` file created in Sprint 2, internationalize the main dashboard at `src/app/[locale]/dashboard/page.tsx`.
+2.  Extract static text from the dashboard's `Card` titles (e.g., "My Digital Documents") and `ServiceCard` titles into `en.json`.
+3.  Use the `useTranslations` hook from `next-intl` to display the localized strings.
+4.  Add a sample `si.json` (Sinhala) file in `src/messages` with a few translated keys to demonstrate the setup.
 Verification:
-- Submitting the passport renewal form creates a new document in the `agentRuns` collection in Firestore.
+- The dashboard UI text is loaded from `en.json` when viewing `/en/dashboard`.
+- The app should still run without errors if navigated to `/si/dashboard`, even if translations are incomplete.
 
-## User B – Refine Admin Application Management
+## User B – Language-Aware Chat Flow
 Deliverables:
-1.  In `src/app/admin/applications/page.tsx`, enhance the filtering capabilities. Add a date range filter for the 'Submitted' date.
-2.  In `src/app/admin/applications/[id]/page.tsx`, display the `details` object from the application document in a readable format within a new Card component if it exists.
+1.  Update the `askGemini` flow in `src/ai/flows/chat.ts` to accept a `locale` parameter (e.g., "en", "si", "ta").
+2.  Modify the system prompt to instruct the AI to respond in the requested language. For example: `You are an AI assistant... Your response must be in {{locale}}.`
+3.  In `src/components/chat-interface.tsx`, get the current locale using the `useLocale` hook from `next-intl` and pass it to the `askGemini` flow.
 Verification:
-- Admin can filter applications by a date range.
-- Viewing an application shows all submitted form data from the `details` field.
+- Chatting with the AI from the `/en/chat` page should result in English responses.
+- If tested from a future `/si/chat` page, the AI should attempt to respond in Sinhala.
 
-## User C – Internationalization (i18n) Scaffolding
+## User C – Implement Basic Firestore Security Rules
 Deliverables:
-1.  Add `next-intl` to `package.json`.
-2.  Create a `src/messages` directory with `en.json`. Add a sample message for the dashboard title.
-3.  Update `src/app/layout.tsx` and create a new `src/app/[locale]` directory to handle routing.
-4.  Update the `middleware.ts` to handle locale detection and redirection.
+1.  Update the `firestore.rules` file with basic security rules based on the draft in `docs/firestore-rules-draft.md`.
+2.  Implement rules for the `users` collection: only authenticated users can read their own data, and only admins can write.
+3.  Implement rules for the `applications` collection: users can create applications and read/write their own, while a `worker` role can read all applications.
+4.  (No deployment needed, just update the file content for the next prototype stage).
 Verification:
-- The app runs under `/en/dashboard` and displays the title from the JSON message file.
+- The `firestore.rules` file contains rules that reflect the access matrix for `users` and `applications`.
 
-## User D – Live Checkpoint Integration
+## User D – Admin User Management Enhancements
 Deliverables:
-1.  Update `src/components/checkpoint-table.tsx` to fetch live checkpoint data from `/api/automation/checkpoints` instead of using a static array.
-2.  The "Resolve" button should now make a POST request to `/api/automation/callback` with the correct `runId` and `checkpointId`.
-3.  After successfully resolving a checkpoint, the table should auto-refresh and the resolved item should disappear.
+1.  In the "Add New User" dialog at `src/app/admin/users/page.tsx`, automatically create an auth user in Firebase Authentication using `createUserWithEmailAndPassword` upon form submission.
+2.  Ensure the UID from the newly created auth user is used as the document ID in the `users` collection in Firestore for consistency.
+3.  Add password validation to require at least 6 characters.
 Verification:
-- The admin checkpoint page at `/admin/checkpoints` displays real pending checkpoints from the simulation and can resolve them.
+- Adding a new worker from the admin panel creates an account in both Firebase Auth and Firestore.
+- The user can then log in with the specified credentials.
 
-## User E – User Profile Page Enhancements
+## User E – Worker Profile Page
 Deliverables:
-1.  In `src/app/profile/page.tsx`, allow the user to update their contact number.
-2.  Add a new tab for "Communication Preferences" where a user can toggle receiving email or SMS notifications (UI only, no backend logic).
-3.  Display a list of recent login activity (mock data is fine) in a new "Security" tab.
+1.  Create a new page at `src/app/worker/profile/[id]/page.tsx`.
+2.  This page should fetch and display the worker's profile information (name, email, role) from the `users` collection.
+3.  Allow the worker to update their own password (UI only, no backend logic for now).
+4.  Allow the worker to update their profile picture, saving it to their user document in Firestore (similar to the admin profile page).
 Verification:
-- User can see and edit their contact number.
-- New tabs and fields are visible on the profile page.
+- A logged-in worker can navigate to their profile page and see their details.
+- The UI for updating the password and profile picture is functional.
 
 ---
 Shared Non-Functional Requirements:
-- All new components should be responsive.
-- Use shadcn/ui components where appropriate.
-- Ensure new database interactions are secure and efficient.
+- Ensure all new UI elements are responsive.
+- Continue using shadcn/ui components for consistency.
+- All database interactions must respect the new security rules.
 
 Out of Scope This Sprint:
-- Full i18n implementation across the entire app.
-- Real-time updates for the admin dashboard stats.
-- Role-based access control enforcement in the UI.
+- Full translation of all content into Sinhala and Tamil.
+- Real-time updates based on language changes without a page refresh.
+- Enforcing complex, field-level validation in Firestore rules.
 
 Submission Guidelines:
-- Update `CHANGELOG.md` with a new entry for Sprint 2 deliverables.
-- Reference the originating task in PRs (e.g., "Completes User A task for Sprint 2").
+- Update `CHANGELOG.md` with a new entry for Sprint 3 deliverables.
+- Reference the originating task in PRs (e.g., "Completes User A task for Sprint 3").

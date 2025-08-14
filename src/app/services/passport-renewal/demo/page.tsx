@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -6,9 +7,13 @@ import { passportRenewalSchema } from "@/lib/service-schemas/passport-renewal";
 import { Button } from "@/components/ui/button";
 import { emitDebug } from "@/lib/debug/client";
 import { buildAutomationPrompt } from "@/lib/automation/prompt-builder";
+import { db } from "@/lib/firebase";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function PassportRenewalDemoPage() {
   const schema = useMemo(() => passportRenewalSchema, []);
+  const { user } = useAuth();
   const [runId, setRunId] = useState<string | null>(null);
   const [lastResponse, setLastResponse] = useState<any>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -73,14 +78,10 @@ export default function PassportRenewalDemoPage() {
         ? crypto.randomUUID()
         : Math.random().toString(36).slice(2);
 
-    // eslint-disable-next-line no-console
-    console.log("[Demo] Submitting to /api/automation/runs", { traceId, payload });
     emitDebug("automation.submit.begin", { payload }, traceId);
 
     if (ENABLE_PROMPT_BUILD) {
-      const autop = buildAutomationPrompt(schema, payload.values, {});
-      // eslint-disable-next-line no-console
-      console.log("[Demo] Built automation prompt", autop);
+      const autop = buildAutomationPrompt(schema, payload.values, { name: user?.name, nic: user?.nic, email: user?.email });
       emitDebug("automation.prompt.built", autop, traceId);
     }
 
@@ -103,15 +104,41 @@ export default function PassportRenewalDemoPage() {
 
     const data = await res.json().catch(() => ({}));
     setLastResponse(data);
+
     if (data?.runId) {
       setRunId(data.runId);
       emitDebug("automation.run.created", { runId: data.runId }, traceId);
+      
+      try {
+        // Persist AgentRun to Firestore
+        await addDoc(collection(db, "agentRuns"), {
+          runId: data.runId,
+          serviceSlug: payload.schema.serviceSlug,
+          status: 'running',
+          createdAt: serverTimestamp(),
+          values: payload.values,
+          userId: user?.id ?? null
+        });
+        
+        // Create audit log
+        await addDoc(collection(db, "auditLogs"), {
+          action: "AgentRunStart",
+          entityType: "agentRun",
+          entityId: data.runId,
+          actorId: user?.id ?? "system",
+          actorType: "user",
+          timestamp: serverTimestamp(),
+          details: { service: payload.schema.serviceSlug }
+        });
+        
+        emitDebug("firestore.persist.success", { runId: data.runId });
+      } catch (error) {
+        emitDebug("firestore.persist.error", { runId: data.runId, error });
+        console.error("Error persisting agent run:", error);
+      }
     }
-
-    // eslint-disable-next-line no-console
-    console.log("[Demo] Response from /api/automation/runs", data);
+    
     emitDebug("automation.submit.end", { response: data }, traceId);
-
     setSubmitting(false);
   };
 
@@ -120,7 +147,7 @@ export default function PassportRenewalDemoPage() {
       <div className="space-y-1">
         <h1 className="text-2xl font-bold">Passport Renewal (Demo)</h1>
         <p className="text-sm text-muted-foreground">
-          Dynamic form rendered from schema. On submit, sends a request to the simulated automation API.
+          Dynamic form rendered from schema. On submit, sends a request to the simulated automation API and persists the run to Firestore.
         </p>
       </div>
 

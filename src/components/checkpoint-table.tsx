@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
@@ -11,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useToast } from "@/hooks/use-toast";
 
 type CheckpointRow = {
   id: string;
@@ -33,6 +35,7 @@ export default function CheckpointTable({ title = "Pending Checkpoints", autoRef
   const [items, setItems] = useState<CheckpointRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [resolving, setResolving] = useState<Record<string, boolean>>({});
+  const { toast } = useToast();
 
   const pending = useMemo(() => items.filter((i) => i.status === "pending"), [items]);
 
@@ -43,14 +46,10 @@ export default function CheckpointTable({ title = "Pending Checkpoints", autoRef
       const data = await res.json();
       if (data?.ok && Array.isArray(data.checkpoints)) {
         setItems(data.checkpoints as CheckpointRow[]);
-        // eslint-disable-next-line no-console
-        console.log("[Admin] Loaded checkpoints", data.checkpoints);
       } else {
-        // eslint-disable-next-line no-console
         console.warn("[Admin] Unexpected checkpoints payload", data);
       }
     } catch (e: any) {
-      // eslint-disable-next-line no-console
       console.error("[Admin] Failed to load checkpoints", e);
     } finally {
       setLoading(false);
@@ -70,9 +69,6 @@ export default function CheckpointTable({ title = "Pending Checkpoints", autoRef
         ? (crypto as any).randomUUID()
         : Math.random().toString(36).slice(2);
 
-    // eslint-disable-next-line no-console
-    console.log("[Admin] Resolving checkpoint", { traceId, checkpointId: cp.id, runId: cp.runId });
-
     try {
       const res = await fetch("/api/automation/callback", {
         method: "POST",
@@ -84,15 +80,27 @@ export default function CheckpointTable({ title = "Pending Checkpoints", autoRef
         }),
       });
       const data = await res.json().catch(() => ({}));
-      // eslint-disable-next-line no-console
-      console.log("[Admin] Callback response", data);
       if (data?.ok) {
-        // Optimistic UI: remove from list
-        setItems((arr) => arr.filter((i) => i.id !== cp.id));
+        toast({
+          title: "Checkpoint Resolved",
+          description: `Checkpoint ${cp.id} has been resolved.`,
+        });
+        // Optimistic UI update or refetch
+        fetchData();
+      } else {
+        toast({
+          title: "Resolution Failed",
+          description: data?.error || "Could not resolve the checkpoint.",
+          variant: "destructive",
+        });
       }
     } catch (e: any) {
-      // eslint-disable-next-line no-console
       console.error("[Admin] Failed to resolve checkpoint", e);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred.",
+        variant: "destructive",
+      });
     } finally {
       setResolving((r) => ({ ...r, [cp.id]: false }));
     }

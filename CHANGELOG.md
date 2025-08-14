@@ -1,3 +1,4 @@
+
 <!--
 CHANGELOG.md
 Purpose: Track notable changes to documentation, data model diagrams, and implementation stubs during the prototype & early sprints.
@@ -6,6 +7,16 @@ Versioning Strategy (Prototype Phase): Date-based entries with optional tags (Pr
 -->
 
 # Changelog
+
+## 2025-08-16 – Sprint 2 Implementation
+Category | Change
+-------- | ------
+Code | Persisted `agentRuns` and `auditLogs` to Firestore from the demo form submission.
+Code | Refined the admin application management UI with a date range filter and a details card for form data.
+Code | Added `next-intl` and scaffolded the project for internationalization (i18n).
+Code | Integrated the admin checkpoint table with live API data for fetching and resolving checkpoints.
+Code | Enhanced the user profile page to allow contact number updates and added tabs for future preferences.
+Docs | Updated `TASKS.md` to define scope for Sprint 3 implementation.
 
 ## 2025-08-15 – Sprint 1 Implementation Stubs
 Category | Change

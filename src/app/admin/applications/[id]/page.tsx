@@ -92,8 +92,9 @@ export default function ApplicationDetailsPage({ params }: { params: Promise<{ i
 
   const formatDate = (date: Timestamp | string) => {
     if (!date) return 'N/A';
-    if (typeof date === 'string') return date;
-    return date.toDate().toLocaleDateString();
+    if (typeof date === 'string') return new Date(date).toLocaleString();
+    if (date instanceof Timestamp) return date.toDate().toLocaleString();
+    return 'Invalid Date';
   };
   
   if(loading) {
@@ -216,6 +217,31 @@ export default function ApplicationDetailsPage({ params }: { params: Promise<{ i
                     </div>
                 </CardContent>
             </Card>
+
+            {application.details && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Submitted Form Data</CardTitle>
+                  <CardDescription>
+                    Additional data provided by the user in the application form.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {Object.entries(application.details).map(([key, value]) => (
+                    <div key={key} className="grid grid-cols-3 items-start gap-4">
+                      <Label className="capitalize text-muted-foreground">
+                        {key.replace(/([A-Z])/g, ' $1')}
+                      </Label>
+                      <p className="col-span-2 font-medium">
+                        {typeof value === 'object' && value instanceof Timestamp
+                          ? formatDate(value)
+                          : String(value)}
+                      </p>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
 
           </div>
         </div>

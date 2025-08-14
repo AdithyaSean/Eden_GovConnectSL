@@ -13,9 +13,14 @@ import type { Application, User } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, Calendar as CalendarIcon } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { services } from "@/lib/data";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import type { DateRange } from "react-day-picker";
+import { cn } from "@/lib/utils";
 
 const statuses = ['Pending', 'Approved', 'Rejected', 'In Progress', 'Completed', 'In Review', 'Pending Payment'];
 const serviceNames = ["all", ...services.map(s => s.title)];
@@ -28,6 +33,7 @@ export default function ApplicationsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [serviceFilter, setServiceFilter] = useState("all");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -79,10 +85,19 @@ export default function ApplicationsPage() {
           
           const matchesStatus = statusFilter === 'all' || app.status === statusFilter;
           const matchesService = serviceFilter === 'all' || app.service === serviceFilter;
+          
+          let matchesDate = true;
+          if (dateRange?.from && app.submitted) {
+            const submittedDate = (app.submitted as Timestamp).toDate();
+            matchesDate = submittedDate >= dateRange.from;
+            if (dateRange.to) {
+              matchesDate = matchesDate && submittedDate <= dateRange.to;
+            }
+          }
 
-          return matchesSearch && matchesStatus && matchesService;
+          return matchesSearch && matchesStatus && matchesService && matchesDate;
       });
-  }, [searchQuery, applications, usersById, statusFilter, serviceFilter]);
+  }, [searchQuery, applications, usersById, statusFilter, serviceFilter, dateRange]);
 
   const formatDate = (date: Timestamp | string) => {
     if (!date) return 'N/A';
@@ -100,7 +115,7 @@ export default function ApplicationsPage() {
           <CardHeader>
             <CardTitle>All Submitted Applications</CardTitle>
             <CardDescription>View and manage all user applications.</CardDescription>
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4">
                 <div className="relative md:col-span-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input 
@@ -110,6 +125,42 @@ export default function ApplicationsPage() {
                         onChange={(e) => setSearchQuery(e.target.value)} 
                     />
                 </div>
+                <Popover>
+                    <PopoverTrigger asChild>
+                    <Button
+                        id="date"
+                        variant={"outline"}
+                        className={cn(
+                        "justify-start text-left font-normal",
+                        !dateRange && "text-muted-foreground"
+                        )}
+                    >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dateRange?.from ? (
+                        dateRange.to ? (
+                            <>
+                            {format(dateRange.from, "LLL dd, y")} -{" "}
+                            {format(dateRange.to, "LLL dd, y")}
+                            </>
+                        ) : (
+                            format(dateRange.from, "LLL dd, y")
+                        )
+                        ) : (
+                        <span>Pick a date range</span>
+                        )}
+                    </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                        initialFocus
+                        mode="range"
+                        defaultMonth={dateRange?.from}
+                        selected={dateRange}
+                        onSelect={setDateRange}
+                        numberOfMonths={2}
+                    />
+                    </PopoverContent>
+                </Popover>
                  <Select value={serviceFilter} onValueChange={setServiceFilter}>
                     <SelectTrigger className="w-full">
                         <SelectValue placeholder="Filter by service" />
