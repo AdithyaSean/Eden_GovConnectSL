@@ -12,13 +12,23 @@ import { collection, getDocs, query, Timestamp, orderBy } from "firebase/firesto
 import type { SupportTicket } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
-import { Search, ArrowRight } from "lucide-react";
+import { Search, ArrowRight, Calendar as CalendarIcon } from "lucide-react";
 import Link from "next/link";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DateRange } from "react-day-picker";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format, isWithinInterval } from "date-fns";
+import { cn } from "@/lib/utils";
+
+const statuses = ["All", "Open", "In Progress", "Closed"];
 
 export default function WorkerSupportDashboard() {
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
   const fetchTickets = async () => {
     setLoading(true);
@@ -39,13 +49,16 @@ export default function WorkerSupportDashboard() {
   }, []);
 
   const filteredTickets = useMemo(() => {
-    if (!searchQuery) {
-      return tickets;
-    }
-    return tickets.filter(ticket =>
-      ticket.userNic?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [searchQuery, tickets]);
+    return tickets.filter(ticket => {
+      const matchesSearch = !searchQuery || ticket.userNic?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = statusFilter === 'All' || ticket.status === statusFilter;
+      const matchesDate = !dateRange || !dateRange.from || !dateRange.to || isWithinInterval(
+        (ticket.submittedAt as Timestamp).toDate(),
+        { start: dateRange.from, end: dateRange.to }
+      );
+      return matchesSearch && matchesStatus && matchesDate;
+    });
+  }, [searchQuery, tickets, statusFilter, dateRange]);
 
   const formatDate = (date: Timestamp | Date | undefined) => {
     if (!date) return 'N/A';
@@ -63,15 +76,61 @@ export default function WorkerSupportDashboard() {
         <Card>
           <CardHeader>
             <CardTitle>Ticket Queue ({filteredTickets.length})</CardTitle>
-            <CardDescription>All support tickets from citizens. Search by NIC to find specific tickets.</CardDescription>
-            <div className="relative pt-4">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                placeholder="Search by citizen NIC..."
-                className="pl-10"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+            <CardDescription>All support tickets from citizens. Use the filters to narrow down your search.</CardDescription>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by citizen NIC..."
+                    className="pl-10"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                 <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Filter by status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {statuses.map(status => <SelectItem key={status} value={status}>{status === 'All' ? 'All Statuses' : status}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+                 <Popover>
+                    <PopoverTrigger asChild>
+                    <Button
+                        id="date"
+                        variant={"outline"}
+                        className={cn(
+                        "justify-start text-left font-normal",
+                        !dateRange && "text-muted-foreground"
+                        )}
+                    >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dateRange?.from ? (
+                        dateRange.to ? (
+                            <>
+                            {format(dateRange.from, "LLL dd, y")} -{" "}
+                            {format(dateRange.to, "LLL dd, y")}
+                            </>
+                        ) : (
+                            format(dateRange.from, "LLL dd, y")
+                        )
+                        ) : (
+                        <span>Pick a date range</span>
+                        )}
+                    </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                        initialFocus
+                        mode="range"
+                        defaultMonth={dateRange?.from}
+                        selected={dateRange}
+                        onSelect={setDateRange}
+                        numberOfMonths={2}
+                    />
+                    </PopoverContent>
+                </Popover>
             </div>
           </CardHeader>
           <CardContent>
