@@ -48,40 +48,41 @@ interface AdminLayoutProps {
 export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) {
   const pathname = usePathname();
   const [worker, setWorker] = useState<User | null>(null);
-
-  const fetchWorkerData = async () => {
-    const roleFromStorage = localStorage.getItem("workerRole");
-    const idFromStorage = localStorage.getItem("workerId");
-    
-    if (workerMode && idFromStorage) {
-        const userDoc = await getDoc(doc(db, "users", idFromStorage));
-        if (userDoc.exists()) {
-            setWorker({ id: userDoc.id, ...userDoc.data() } as User);
-        }
-    } else if (!workerMode) {
-        // For admin, we can use a mock user object since auth is simulated
-        // We'll use the profile pic from local storage if it exists
-        const adminAvatar = localStorage.getItem('adminAvatar');
-        setWorker({
-            id: 'super-admin-01',
-            name: 'Admin User',
-            email: 'admin@gov.lk',
-            role: 'Super Admin',
-            status: 'Active',
-            joined: new Date().toISOString(),
-            nic: '',
-            photoURL: adminAvatar || undefined
-        });
-    }
-  };
+  const [workerRole, setWorkerRole] = useState<string | null>(null);
+  const [workerId, setWorkerId] = useState<string | null>(null);
 
   useEffect(() => {
+    const fetchWorkerData = async () => {
+      const idFromStorage = localStorage.getItem("workerId");
+      setWorkerId(idFromStorage);
+      if (workerMode && idFromStorage) {
+        const userDoc = await getDoc(doc(db, "users", idFromStorage));
+        if (userDoc.exists()) {
+          const userData = { id: userDoc.id, ...userDoc.data() } as User;
+          setWorker(userData);
+          setWorkerRole(userData.role);
+        }
+      } else if (!workerMode) {
+        const adminAvatar = localStorage.getItem('adminAvatar');
+        setWorker({
+          id: 'super-admin-01',
+          name: 'Admin User',
+          email: 'admin@gov.lk',
+          role: 'Super Admin',
+          status: 'Active',
+          joined: new Date().toISOString(),
+          nic: '',
+          photoURL: adminAvatar || undefined
+        });
+      }
+    };
+    
     fetchWorkerData();
-  }, [pathname, workerMode]);
-
+    // This effect should only run on mount to get localStorage data
+  }, []);
 
   const getWorkerNavItems = () => {
-    const role = worker?.role || localStorage.getItem('workerRole');
+    const role = worker?.role || workerRole;
     if (role) {
       const navItem = allWorkerNavItems.find(item => item.role === role);
       return navItem ? [
@@ -95,7 +96,7 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
   
   const getDashboardHref = () => {
     if (!workerMode) return "/admin/dashboard";
-    const role = worker?.role || localStorage.getItem('workerRole');
+    const role = worker?.role || workerRole;
     if (role) {
         const item = allWorkerNavItems.find(i => i.role === role);
         return item ? item.href : '/admin/login';
@@ -105,7 +106,6 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
 
   const getProfileHref = () => {
       if (!workerMode) return "/admin/profile";
-      const workerId = worker?.id || localStorage.getItem('workerId');
       if(workerId) return `/worker/profile/${workerId}`;
       return '/admin/login';
   }
