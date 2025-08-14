@@ -48,6 +48,11 @@ export default function LoginPage() {
       }
       
       const email = citizenDoc.data().email;
+      if (!email) {
+          toast({ title: "Login Failed", description: "No email associated with this NIC.", variant: "destructive" });
+          setLoading(false);
+          return;
+      }
 
       // 2. Sign in with the retrieved email and password
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -97,6 +102,10 @@ export default function LoginPage() {
       }
       
       const email = citizenDoc.data().email;
+      if(!email) {
+          toast({ title: "Error", description: "No email is associated with this account.", variant: "destructive" });
+          return;
+      }
       await sendPasswordResetEmail(auth, email);
       toast({ title: "Password Reset Email Sent", description: `A reset link has been sent to the email associated with your NIC.` });
     } catch (error) {

@@ -14,8 +14,8 @@ import Link from "next/link";
 const seedData = {
     users: [
         // Citizens
-        { id: "user-nimal-silva", name: "Nimal Silva", email: "", nic: "199012345V", role: "Citizen", status: "Active" },
-        { id: "user-kamala-perera", name: "Kamala Perera", email: "", nic: "198523456V", role: "Citizen", status: "Active" },
+        { id: "user-nimal-silva", name: "Nimal Silva", email: "nimal.silva.citizen@gov.lk", nic: "199012345V", role: "Citizen", status: "Active" },
+        { id: "user-kamala-perera", name: "Kamala Perera", email: "kamala.perera.citizen@gov.lk", nic: "198523456V", role: "Citizen", status: "Active" },
         // Admin
         { id: "super-admin-01", name: "S. Weerasinghe", email: "admin@gov.lk", nic: "", role: "Super Admin", status: "Active" },
         // Workers
@@ -34,9 +34,13 @@ const seedData = {
         { id: "worker-finepayment-01", name: "Inspector Silva", email: "worker.finepayment@gov.lk", nic: "", role: "worker_finepayment", status: "Active"},
         { id: "worker-vehicles-01", name: "Vehicle Registrar", email: "worker.registeredvehicles@gov.lk", nic: "", role: "worker_registeredvehicles", status: "Active"},
     ],
+    citizens: [
+        { uid: "", fullName: "Nimal Silva", email: "nimal.silva.citizen@gov.lk", nic: "199012345V" },
+        { uid: "", fullName: "Kamala Perera", email: "kamala.perera.citizen@gov.lk", nic: "198523456V" },
+    ],
     applications: [
-        { user: "Nimal Silva", userId: "user-nimal-silva", service: "Renew Driving License", status: "In Progress", submitted: new Date("2024-07-20") },
-        { user: "Nimal Silva", userId: "user-nimal-silva", service: "Passport Renewal", status: "Approved", submitted: new Date("2024-06-15") },
+        { user: "Nimal Silva", userId: "user-nimal-silva", service: "Driving Licence Services", status: "In Progress", submitted: new Date("2024-07-20") },
+        { user: "Nimal Silva", userId: "user-nimal-silva", service: "Passport Services", status: "Approved", submitted: new Date("2024-06-15") },
         { user: "Nimal Silva", userId: "user-nimal-silva", service: "Fine Payment", status: "Completed", submitted: new Date("2024-07-10") },
         { user: "Kamala Perera", userId: "user-kamala-perera", service: "National ID Services", status: "Pending", submitted: new Date("2024-07-22") },
         { user: "Kamala Perera", userId: "user-kamala-perera", service: "Registered Vehicles", status: "In Review", submitted: new Date("2024-05-30") },
@@ -53,8 +57,8 @@ const seedData = {
     ],
     payments: [
         { service: "Fine Payment", date: new Date("2024-07-10"), amount: "2000.00", status: "Success", userId: "user-nimal-silva" },
-        { service: "Passport Renewal Fee", date: new Date("2024-06-15"), amount: "3500.00", status: "Success", userId: "user-nimal-silva" },
-        { service: "Driving License Renewal", date: new Date("2023-08-01"), amount: "2500.00", status: "Success", userId: "user-kamala-perera" },
+        { service: "Passport Services", date: new Date("2024-06-15"), amount: "3500.00", status: "Success", userId: "user-nimal-silva" },
+        { service: "Driving Licence Services", date: new Date("2023-08-01"), amount: "2500.00", status: "Success", userId: "user-kamala-perera" },
     ],
     supportTickets: [
         { name: "Nimal Silva", email: "nimal.s@example.com", subject: "Passport photo upload failed", message: "I tried to upload my photo for passport renewal, but it keeps giving me an error. Can you please help?", status: "Open", submittedAt: new Date("2024-07-28"), userNic: "199012345V", userId: "user-nimal-silva", reply: ""},
@@ -83,21 +87,20 @@ export default function SeedPage() {
         addLog("Starting database reset...");
 
         try {
-            // Step 1: Create/Update all users in Firebase Auth and Firestore
+            // Step 1: Create/Update all users in Firebase Auth and Firestore 'users' collection
             addLog(`Found ${seedData.users.length} users to process...`);
             for (const user of seedData.users) {
-                 const authEmail = user.role === 'Citizen' ? `${user.nic}@citizen.gov.lk` : user.email;
                 let authUserUid = '';
                 try {
-                    addLog(`Processing user: ${user.name} (${authEmail})`);
-                    const userCredential = await createUserWithEmailAndPassword(auth, authEmail, PASSWORD);
+                    addLog(`Processing user: ${user.name} (${user.email})`);
+                    const userCredential = await createUserWithEmailAndPassword(auth, user.email, PASSWORD);
                     authUserUid = userCredential.user.uid;
                     addLog(` -> Successfully created auth user: ${authUserUid}`);
 
                 } catch (error: any) {
                     if (error.code === 'auth/email-already-in-use') {
                         addLog(` -> Auth user already exists. Signing in to get UID...`);
-                        const userCredential = await signInWithEmailAndPassword(auth, authEmail, PASSWORD);
+                        const userCredential = await signInWithEmailAndPassword(auth, user.email, PASSWORD);
                         authUserUid = userCredential.user.uid;
                         await signOut(auth); // Sign out after operation
                         addLog(` -> UID is ${authUserUid}.`);
@@ -108,15 +111,28 @@ export default function SeedPage() {
                 }
 
                 const userRef = doc(db, "users", authUserUid);
-                // Use the original ID for the map, but the new auth UID for the document ID and 'id' field
                 tempUserUidMap[user.id] = authUserUid;
-                await setDoc(userRef, { ...user, id: authUserUid, joined: Timestamp.now() });
-                addLog(` -> Successfully created/updated Firestore profile for ${user.name} with ID ${authUserUid}.`);
+                await setDoc(userRef, { ...user, uid: authUserUid, id: authUserUid, joined: Timestamp.now() });
+                addLog(` -> Successfully created/updated Firestore profile for ${user.name} in 'users' collection.`);
             }
             
-            setUserUidMap(tempUserUidMap); // Set the map state
+            // Step 2: Create citizen profiles in 'citizens' collection
+            addLog(`Found ${seedData.citizens.length} citizens to process...`);
+            for (const citizen of seedData.citizens) {
+                const userAuthData = seedData.users.find(u => u.nic === citizen.nic);
+                if (userAuthData) {
+                    const citizenAuthId = tempUserUidMap[userAuthData.id];
+                    if (citizenAuthId) {
+                        const citizenRef = doc(db, "citizens", citizen.nic);
+                        await setDoc(citizenRef, { ...citizen, uid: citizenAuthId });
+                        addLog(` -> Created citizen profile for ${citizen.fullName} with UID ${citizenAuthId}`);
+                    }
+                }
+            }
+            
+            setUserUidMap(tempUserUidMap);
 
-            // Step 2: Seed other collections
+            // Step 3: Seed other collections
             addLog("Seeding other collections (applications, fines, etc.)...");
             const batch = writeBatch(db);
 
