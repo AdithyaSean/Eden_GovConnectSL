@@ -128,7 +128,7 @@ export interface SupportTicket {
     email: string;
     subject: string;
     status: 'Open' | 'In Progress' | 'Closed';
-    submittedAt: Timestamp | string;
+    submittedAt: Timestamp;
     userNic: string;
     userId?: string; 
     messages: SupportMessage[];
