@@ -5,15 +5,13 @@ import {getFirestore} from 'firebase/firestore';
 import {getAuth} from 'firebase/auth';
 import {getStorage} from 'firebase/storage';
 
-// Your web app's Firebase configuration is automatically provided by Firebase App Hosting.
 const firebaseConfig = {
-  "projectId": "hackthon-e7xuj",
-  "appId": "1:7919745878:web:92f26fb183878dbe3334f7",
-  "storageBucket": "hackthon-e7xuj.appspot.com",
-  "apiKey": "AIzaSyCXdmf4zicHxUsPkcZxkrHiWq8ks-1IqlY",
-  "authDomain": "hackthon-e7xuj.firebaseapp.com",
-  "measurementId": "",
-  "messagingSenderId": "7919745878"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 
 

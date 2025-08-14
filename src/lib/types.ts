@@ -76,16 +76,24 @@ export interface Application {
     appointmentFeedback?: string;
 }
 
+// User type for admins, workers etc. (doc ID is UID)
 export interface User {
-    id: string;
+    uid: string;
     name: string;
     email: string;
-    nic: string;
     role: string;
-    joined: Timestamp | string;
-    status: 'Active' | 'Suspended';
     photoURL?: string;
 }
+
+// Citizen type (doc ID is NIC)
+export interface Citizen {
+    uid: string;
+    fullName: string;
+    nic: string;
+    email: string;
+    photoURL?: string;
+}
+
 
 export interface Payment {
     id: string;
