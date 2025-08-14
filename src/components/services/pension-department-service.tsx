@@ -141,22 +141,6 @@ export function PensionDepartmentService({ service }) {
 
   return (
     <div className="space-y-8">
-         <Card>
-            <CardHeader>
-                <CardTitle>Application Status</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <div className="flex items-center gap-4">
-                    <Progress value={60} className="w-full" />
-                    <span className="text-lg font-bold">60%</span>
-                </div>
-                 <p className="text-sm text-muted-foreground mt-2">Current stage: Departmental Approval</p>
-            </CardContent>
-            <CardFooter>
-                <Button>Check Status</Button>
-            </CardFooter>
-        </Card>
-
         <form onSubmit={handleSubmit}>
             <div className="space-y-8">
                  <Card>

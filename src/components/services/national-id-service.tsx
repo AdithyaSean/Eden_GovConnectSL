@@ -145,16 +145,6 @@ export function NationalIdService({ service }) {
 
   return (
     <div className="space-y-8">
-        <Card>
-            <CardHeader>
-                <CardTitle>Application Status</CardTitle>
-            </CardHeader>
-            <CardContent className="flex gap-2">
-                <Input placeholder="Enter your Application Reference Number" />
-                <Button>Check Status</Button>
-            </CardContent>
-        </Card>
-
         <form onSubmit={handleSubmit}>
             <div className="space-y-8">
                  <Card>
