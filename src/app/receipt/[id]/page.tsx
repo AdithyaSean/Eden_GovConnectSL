@@ -30,7 +30,7 @@ async function getPaymentData(paymentId: string): Promise<Payment | null> {
 }
 
 export default function ReceiptPage({ params }: { params: { id: string } }) {
-    const { id } = use(params);
+    const { id } = params;
     const { user, loading: authLoading } = useAuth();
     const [payment, setPayment] = useState<Payment | null>(null);
     const [loading, setLoading] = useState(true);
