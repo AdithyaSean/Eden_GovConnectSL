@@ -160,16 +160,6 @@ export function TaxPaymentsService({ service }) {
         
         <Card>
             <CardHeader>
-                <CardTitle>Download Certificates</CardTitle>
-            </CardHeader>
-            <CardContent className="flex gap-4">
-                <Button variant="secondary">Download Tax Clearance Certificate 2023</Button>
-                <Button variant="secondary">Download Income Statement 2023</Button>
-            </CardContent>
-        </Card>
-
-        <Card>
-            <CardHeader>
                 <CardTitle>FAQs & Deadlines</CardTitle>
             </CardHeader>
             <CardContent>
