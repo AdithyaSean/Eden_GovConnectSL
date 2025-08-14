@@ -23,6 +23,15 @@ Getting Started (Dev Skeleton):
 
 No production automation implemented yet—prototype phase emphasizes design clarity before coding deep integrations.
 
+## Prototype Usage (Simulated)
+- Navigate to /services/passport-renewal/demo to submit the schema-driven form. You will receive a runId; status auto-updates, and receipt.externalRef appears on completion.
+- Visit /admin/checkpoints to resolve any pending captcha checkpoints. Resolving completes the run.
+- Dev Debug Panel: press Alt+D to toggle. Events also log in the server console with traceIds.
+
+## Dev Scripts
+- Build automation prompt sample: npx tsx scripts/dev-prompt-demo.ts
+- Validate status transitions: npx tsx scripts/validators-demo.ts
+
 Next Steps After Prototype:
 * Implement dynamic form renderer
 * Persist agentRuns & auditLogs

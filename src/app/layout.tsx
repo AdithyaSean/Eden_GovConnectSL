@@ -2,6 +2,7 @@
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
+import DevDebugPanel from "@/components/dev-debug-panel";
 
 export const metadata: Metadata = {
   title: 'GovConnect SL',
@@ -23,6 +24,7 @@ export default function RootLayout({
       <body className="font-sans antialiased">
           {children}
           <Toaster />
+          <DevDebugPanel />
       </body>
     </html>
   );

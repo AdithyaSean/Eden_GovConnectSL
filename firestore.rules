@@ -1,0 +1,96 @@
+// firestore.rules (Draft) — NOT ENFORCED IN PROTOTYPE
+// Mirrors docs/firestore-rules-draft.md. This is a starting point for RBAC and field constraints.
+// NOTE: These rules are design-only during Sprint-1 and may not compile until claims plumbing exists.
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions (draft)
+    function isAuthed() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isAuthed() && request.auth.uid == uid;
+    }
+
+    // Custom claims expected: roles: ["user","worker","admin"]
+    function hasRole(r) {
+      return isAuthed() && request.auth.token.roles != null && (r in request.auth.token.roles);
+    }
+
+    function hasRoleAny(arr) {
+      return isAuthed()
+        && request.auth.token.roles != null
+        && arr.exists(r => r in request.auth.token.roles);
+    }
+
+    // users collection
+    match /users/{uid} {
+      allow read: if isAuthed() && (request.auth.uid == uid || hasRole('admin'));
+      allow write: if hasRole('admin');
+    }
+
+    // applications collection
+    match /applications/{id} {
+      // Read if owner or privileged roles
+      allow read: if (isAuthed() && isOwner(resource.data.userId)) || hasRoleAny(['worker','admin']);
+
+      // Create if authed and creating own record
+      allow create: if isAuthed() && request.resource.data.userId == request.auth.uid;
+
+      // Update if owner or privileged roles
+      allow update: if (isAuthed() && isOwner(resource.data.userId)) || hasRoleAny(['worker','admin']);
+
+      // Delete admin only
+      allow delete: if hasRole('admin');
+    }
+
+    // payments collection
+    match /payments/{id} {
+      allow read: if (isAuthed() && isOwner(resource.data.userId)) || hasRoleAny(['worker','admin']);
+      allow create: if isAuthed() && request.resource.data.userId == request.auth.uid;
+      // Updates typically server-only; restrict to admin for draft
+      allow update: if hasRole('admin');
+      allow delete: if hasRole('admin');
+    }
+
+    // notifications collection
+    match /notifications/{id} {
+      allow read: if (isAuthed() && isOwner(resource.data.userId)) || hasRole('admin');
+      allow write: if hasRole('admin');
+    }
+
+    // supportTickets collection
+    match /supportTickets/{id} {
+      allow read, write: if (isAuthed() && isOwner(resource.data.userId)) || hasRoleAny(['worker','admin']);
+    }
+
+    // agentRuns collection (draft shape)
+    match /agentRuns/{id} {
+      allow read: if (isAuthed() && isOwner(resource.data.userId)) || hasRoleAny(['worker','admin']);
+      allow write: if hasRoleAny(['worker','admin']); // typically server-only
+    }
+
+    // auditLogs collection
+    match /auditLogs/{id} {
+      allow read: if hasRoleAny(['worker','admin']) || (isAuthed() && isOwner(resource.data.actorId) && resource.data.actorType == 'user');
+      // append-only via server; restrict to authed in draft
+      allow write: if isAuthed();
+    }
+
+    // promptTemplates collection
+    match /promptTemplates/{id} {
+      allow read: if true;
+      allow write: if hasRole('admin');
+    }
+
+    // checkpoints collection
+    match /checkpoints/{id} {
+      allow read: if hasRoleAny(['worker','admin']) || (isAuthed() && isOwner(resource.data.actorUserId));
+      allow update: if hasRoleAny(['worker','admin']); // resolution actions only
+      allow create: if isAuthed(); // typically via server action
+    }
+  }
+}

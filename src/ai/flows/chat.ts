@@ -4,6 +4,8 @@
  */
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
+import { getPrompt } from '@/lib/prompts/registry';
+import { logger } from '@/lib/debug/logger';
 
 // Define the schema for a single chat message
 const MessageSchema = z.object({
@@ -31,14 +33,15 @@ const chatFlow = ai.defineFlow(
   async ({history, newMessage}) => {
 
     const systemPrompt = `You are a helpful and friendly AI assistant for GovConnect SL, a platform for Sri Lankan government services. Your goal is to provide clear, concise, and accurate information to citizens. Answer based on the user's query and the conversation history.`;
+
+    // Log prompt registry version (prototype)
+    const __tpl = getPrompt("chat", "en");
+    if (__tpl) {
+      logger.info("PromptRegistry", { key: __tpl.key, version: __tpl.version, locale: __tpl.locale });
+    }
     
-    // Generate the response from the Gemini model
-    const response = await ai.generate({
-      model: 'googleai/gemini-2.0-flash',
-      prompt: newMessage,
-      history: history,
-      systemInstruction: systemPrompt
-    });
+    // Generate the response from the Gemini model (prototype: inline system prompt)
+    const response = await ai.generate(`${systemPrompt}\n\nUser: ${newMessage}`);
 
     return response.text;
   }

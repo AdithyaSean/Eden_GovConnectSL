@@ -10,6 +10,8 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { getPrompt } from '@/lib/prompts/registry';
+import { logger } from '@/lib/debug/logger';
 
 const SuggestServicesInputSchema = z
   .string()
@@ -41,6 +43,10 @@ const suggestServicesFlow = ai.defineFlow(
     outputSchema: SuggestServicesOutputSchema,
   },
   async query => {
+    const __tpl = getPrompt("suggestServices", "en");
+    if (__tpl) {
+      logger.info("PromptRegistry", { key: __tpl.key, version: __tpl.version, locale: __tpl.locale });
+    }
     const {output} = await prompt(query);
     return output!;
   }
