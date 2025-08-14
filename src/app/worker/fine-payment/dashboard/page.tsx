@@ -8,11 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useEffect, useState, FormEvent } from "react";
 import { db } from "@/lib/firebase";
-import { collection, getDocs, query, where, Timestamp, addDoc, doc } from "firebase/firestore";
+import { collection, getDocs, query, where, Timestamp, addDoc, doc, serverTimestamp } from "firebase/firestore";
 import type { Fine, User } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
-import { ArrowRight, Search, UserCheck } from "lucide-react";
+import { ArrowRight, Search, UserCheck, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
@@ -55,14 +55,13 @@ export default function WorkerFinePaymentDashboard() {
       setIsSearching(true);
       setFoundUser(null);
       
-      // Perform client-side search
       const lowercasedQuery = searchNic.toLowerCase();
       const user = allUsers.find(u => u.nic?.toLowerCase().includes(lowercasedQuery));
 
       if(user) {
           setFoundUser(user);
       } else {
-          toast({ title: "User not found", variant: "destructive" });
+          toast({ title: "User not found", description: "No citizen found with that NIC.", variant: "destructive" });
       }
       
       setIsSearching(false);
@@ -84,6 +83,18 @@ export default function WorkerFinePaymentDashboard() {
               dueDate: fineData.dueDate,
               status: 'Pending'
           });
+
+          // Create notification for the user
+          await addDoc(collection(db, "notifications"), {
+              userId: foundUser.id,
+              title: "New Fine Issued",
+              description: `A new fine of LKR ${fineData.amount} for '${fineData.type}' has been added to your record.`,
+              href: `/payments`,
+              icon: "AlertTriangle",
+              read: false,
+              createdAt: serverTimestamp()
+          });
+
           toast({ title: "Fine Added Successfully" });
           fetchFinesAndUsers(); // Refresh the list
           setFoundUser(null);
@@ -101,7 +112,7 @@ export default function WorkerFinePaymentDashboard() {
           <h1 className="text-3xl font-bold tracking-tight">Fine Management Dashboard</h1>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             <div className="lg:col-span-2">
                  <Card>
                   <CardHeader>

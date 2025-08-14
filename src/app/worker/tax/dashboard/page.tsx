@@ -8,11 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useEffect, useState, FormEvent } from "react";
 import { db } from "@/lib/firebase";
-import { collection, getDocs, query, where, Timestamp, addDoc } from "firebase/firestore";
+import { collection, getDocs, query, where, Timestamp, addDoc, serverTimestamp } from "firebase/firestore";
 import type { Application, User, TaxRecord } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
-import { ArrowRight, Search, UserCheck } from "lucide-react";
+import { ArrowRight, Search, UserCheck, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
@@ -73,7 +73,7 @@ export default function WorkerTaxDashboard() {
       if(user) {
           setFoundUser(user);
       } else {
-          toast({ title: "User not found", variant: "destructive" });
+          toast({ title: "User not found", description: "No citizen found with that NIC.", variant: "destructive" });
       }
       setIsSearching(false);
   }
@@ -94,6 +94,18 @@ export default function WorkerTaxDashboard() {
               dueDate: recordData.dueDate,
               status: 'Due'
           });
+
+          // Create notification for the user
+           await addDoc(collection(db, "notifications"), {
+              userId: foundUser.id,
+              title: "New Tax Record Added",
+              description: `A tax record for ${recordData.year} of LKR ${recordData.amount} has been added.`,
+              href: `/payments`,
+              icon: "AlertTriangle",
+              read: false,
+              createdAt: serverTimestamp()
+          });
+
           toast({ title: "Tax Record Added Successfully" });
           fetchAllData(); // Refresh all lists
           setFoundUser(null);
