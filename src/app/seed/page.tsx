@@ -18,7 +18,7 @@ const seedData = {
         { id: "user-nimal-silva", name: "Nimal Silva", email: "nimal.silva.citizen@gov.lk", nic: "199012345V", role: "Citizen", status: "Active" },
         { id: "user-kamala-perera", name: "Kamala Perera", email: "kamala.perera.citizen@gov.lk", nic: "198523456V", role: "Citizen", status: "Active" },
         // Admin
-        { id: "super-admin-01", name: "S. Weerasinghe", email: "admin@gov.lk", nic: "", role: "Super Admin", status: "Active" },
+        { id: "super-admin-01", name: "S. Weerasinghe", email: "worker.admin@gov.lk", nic: "", role: "Super Admin", status: "Active" },
         // Workers
         { id: "worker-transport-01", name: "Ravi Fernando", email: "worker.transport@gov.lk", nic: "", role: "worker_transport", status: "Active" },
         { id: "worker-transport-02", name: "Anura Bandara", email: "worker.transport.2@gov.lk", nic: "", role: "worker_transport", status: "Active" },

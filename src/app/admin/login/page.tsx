@@ -15,7 +15,6 @@ import { Label } from "@/components/ui/label";
 import { Shield } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { db, auth } from "@/lib/firebase";
 import { collection, query, where, getDocs, limit, addDoc, serverTimestamp } from "firebase/firestore";
@@ -29,7 +28,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
 export default function AdminLoginPage() {
@@ -83,7 +81,6 @@ export default function AdminLoginPage() {
             router.push(`/worker/${dashboardPath}/dashboard`);
         } else {
             toast({ title: "Access Denied", description: "This login is for authorized workers and admins only.", variant: "destructive" });
-            // Consider signing out the user if they are not an admin/worker
         }
 
     } catch (error: any) {
@@ -155,7 +152,7 @@ export default function AdminLoginPage() {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="admin@gov.lk or worker.transport@gov.lk"
+                    placeholder="worker.admin@gov.lk"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -199,7 +196,7 @@ export default function AdminLoginPage() {
             <AlertDialogHeader>
               <AlertDialogTitle>Password Reset Request Sent</AlertDialogTitle>
               <AlertDialogDescription>
-                Your request has been sent to the system administrator. Please contact them directly at <span className="font-semibold">admin@gov.lk</span> to complete the password reset process.
+                Your request has been sent to the system administrator. Please contact them directly at <span className="font-semibold">worker.admin@gov.lk</span> to complete the password reset process.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

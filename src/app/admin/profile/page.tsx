@@ -105,7 +105,7 @@ export default function AdminProfilePage() {
                             />
                         </div>
                         <CardTitle>Admin User</CardTitle>
-                        <CardDescription>admin@gov.lk</CardDescription>
+                        <CardDescription>worker.admin@gov.lk</CardDescription>
                     </CardHeader>
                     <CardContent className="text-sm text-center">
                         <p className="font-semibold">Role: <span className="font-normal">Super Admin</span></p>
