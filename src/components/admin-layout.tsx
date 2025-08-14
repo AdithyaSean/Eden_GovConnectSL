@@ -156,10 +156,6 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
              {/* Can add a global search here if needed */}
           </div>
            <SriLankaTime />
-           <Button variant="ghost" size="icon" className="rounded-full">
-              <Bell className="h-5 w-5" />
-              <span className="sr-only">Notifications</span>
-            </Button>
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
