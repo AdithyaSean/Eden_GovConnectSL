@@ -192,7 +192,7 @@ export function NationalIdService({ service }) {
                                 </div>
                                 <div className="flex items-center space-x-2">
                                     <RadioGroupItem value="lost-id" id="r-lost-id" />
-                                    <Label htmlFor="r-lost-id">Apply for Duplicate of Lost ID</Label>
+                                    <Label htmlFor="r-lost-id">Apply for Lost ID</Label>
                                 </div>
                             </RadioGroup>
                         </CardContent>
