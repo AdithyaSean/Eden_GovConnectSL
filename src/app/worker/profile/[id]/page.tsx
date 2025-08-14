@@ -2,7 +2,7 @@
 "use client";
 
 import { use, useEffect, useState, FormEvent, useRef, ChangeEvent } from "react";
-import { notFound } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import { AdminLayout } from "@/components/admin-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -10,19 +10,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { db } from "@/lib/firebase";
+import { db, auth } from "@/lib/firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import type { User } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Camera, Loader2 } from "lucide-react";
+import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 
 export default function WorkerProfilePage({ params }: { params: { id: string } }) {
     const { id } = use(params);
+    const router = useRouter();
     const { toast } = useToast();
     const [worker, setWorker] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
+    const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const formRef = useRef<HTMLFormElement>(null);
 
     const fetchWorker = async () => {
         if (id) {
@@ -52,14 +56,60 @@ export default function WorkerProfilePage({ params }: { params: { id: string } }
         fetchWorker();
     }, [id]);
 
-    const handleUpdatePassword = (e: FormEvent) => {
+    const handleUpdatePassword = async (e: FormEvent) => {
         e.preventDefault();
-        toast({
-            title: "Password Updated",
-            description: "Your password has been changed successfully. You will be logged out.",
-        });
-        // In a real app, you would log the user out here.
+        setIsUpdatingPassword(true);
+
+        const formData = new FormData(e.target as HTMLFormElement);
+        const currentPassword = formData.get("current-password") as string;
+        const newPassword = formData.get("new-password") as string;
+        const confirmPassword = formData.get("confirm-password") as string;
+
+        if (newPassword !== confirmPassword) {
+            toast({ title: "Passwords do not match", variant: "destructive" });
+            setIsUpdatingPassword(false);
+            return;
+        }
+
+        const user = auth.currentUser;
+        if (!user || !user.email) {
+            toast({ title: "Error", description: "No authenticated user found.", variant: "destructive" });
+            setIsUpdatingPassword(false);
+            return;
+        }
+
+        const credential = EmailAuthProvider.credential(user.email, currentPassword);
+
+        try {
+            // Re-authenticate the user to confirm their identity
+            await reauthenticateWithCredential(user, credential);
+            
+            // If re-authentication is successful, update the password
+            await updatePassword(user, newPassword);
+
+            toast({
+                title: "Password Updated Successfully",
+                description: "You will be logged out for security purposes.",
+            });
+            
+            // Log the user out
+            auth.signOut().then(() => {
+                router.push('/admin/login');
+            });
+            formRef.current?.reset();
+
+        } catch (error: any) {
+            console.error(error);
+            if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+                toast({ title: "Update Failed", description: "The current password you entered is incorrect.", variant: "destructive" });
+            } else {
+                toast({ title: "An Error Occurred", description: "Could not update password. Please try again.", variant: "destructive" });
+            }
+        } finally {
+            setIsUpdatingPassword(false);
+        }
     }
+
 
     const handleAvatarClick = () => {
         fileInputRef.current?.click();
@@ -160,7 +210,7 @@ export default function WorkerProfilePage({ params }: { params: { id: string } }
                 </Card>
             </div>
             <div className="md:col-span-2">
-                 <form onSubmit={handleUpdatePassword}>
+                 <form ref={formRef} onSubmit={handleUpdatePassword}>
                     <Card>
                         <CardHeader>
                             <CardTitle>Update Password</CardTitle>
@@ -171,19 +221,21 @@ export default function WorkerProfilePage({ params }: { params: { id: string } }
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
                                 <Label htmlFor="current-password">Current Password</Label>
-                                <Input id="current-password" type="password" required />
+                                <Input id="current-password" name="current-password" type="password" required disabled={isUpdatingPassword}/>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="new-password">New Password</Label>
-                                <Input id="new-password" type="password" required />
+                                <Input id="new-password" name="new-password" type="password" required minLength={6} disabled={isUpdatingPassword}/>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="confirm-password">Confirm New Password</Label>
-                                <Input id="confirm-password" type="password" required />
+                                <Input id="confirm-password" name="confirm-password" type="password" required disabled={isUpdatingPassword}/>
                             </div>
                         </CardContent>
                         <CardFooter>
-                            <Button type="submit">Update Password</Button>
+                            <Button type="submit" disabled={isUpdatingPassword}>
+                                {isUpdatingPassword ? 'Updating...' : 'Update Password'}
+                            </Button>
                         </CardFooter>
                     </Card>
                 </form>
