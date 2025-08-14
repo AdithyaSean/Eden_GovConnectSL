@@ -60,7 +60,7 @@ export default function SupportPage() {
         const ticketRef = doc(db, "supportTickets", activeTicket.id);
         const newMessage: SupportMessage = {
             content: userReply,
-            author: "Support",
+            author: "Citizen",
             timestamp: Timestamp.now()
         };
         
@@ -73,13 +73,16 @@ export default function SupportPage() {
             setUserReply("");
             
             // Optimistically update the UI
-            setActiveTicket(prev => prev ? {
-                 ...prev, 
-                 messages: [...(prev.messages || []), newMessage], 
+            const updatedTicket = {
+                 ...activeTicket, 
+                 messages: [...(activeTicket.messages || []), newMessage], 
                  status: "Open" 
-            } : null);
-            // Fetch the latest state in the background
-            await fetchTickets();
+            };
+            setActiveTicket(updatedTicket);
+            
+            // Update the main tickets list as well
+            setTickets(prev => prev.map(t => t.id === updatedTicket.id ? updatedTicket : t));
+
 
         } catch (error) {
             console.error("Error sending reply:", error);
@@ -95,8 +98,9 @@ export default function SupportPage() {
         try {
              await updateDoc(ticketRef, { status: "Closed" });
              toast({ title: "Ticket Closed"});
-             setActiveTicket(prev => prev ? {...prev, status: "Closed"} : null);
-             await fetchTickets();
+             const updatedTicket = {...activeTicket, status: "Closed"};
+             setActiveTicket(updatedTicket);
+             setTickets(prev => prev.map(t => t.id === updatedTicket.id ? updatedTicket : t));
         } catch(e){
             toast({ title: "Error", description: "Could not close ticket.", variant: "destructive" });
         }
@@ -284,3 +288,5 @@ export default function SupportPage() {
     </DashboardLayout>
   );
 }
+
+    
