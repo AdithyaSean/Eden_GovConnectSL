@@ -18,7 +18,9 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
+import type { User as AppUser } from "@/lib/types";
+
 
 export default function LoginPage() {
   const [nic, setNic] = useState("");
@@ -37,27 +39,37 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // 1. Look up the email from the citizens collection using NIC
-      const citizenDocRef = doc(db, "citizens", nic);
-      const citizenDoc = await getDoc(citizenDocRef);
+      // 1. Look up the citizen profile to get their UID
+      const q = query(collection(db, "users"), where("nic", "==", nic));
+      const querySnapshot = await getDocs(q);
 
-      if (!citizenDoc.exists()) {
+      if (querySnapshot.empty) {
         toast({ title: "Login Failed", description: "No account found with this NIC.", variant: "destructive" });
         setLoading(false);
         return;
       }
       
-      const email = citizenDoc.data().email;
+      const userDoc = querySnapshot.docs[0];
+      const userData = userDoc.data() as AppUser;
+
+      // 2. Check user status before attempting login
+      if (userData.status === 'Suspended' || userData.status === 'Deleted') {
+          toast({ title: "Account Inactive", description: `Your account is currently ${userData.status}. Please contact support.`, variant: "destructive" });
+          setLoading(false);
+          return;
+      }
+      
+      const email = userData.email;
       if (!email) {
           toast({ title: "Login Failed", description: "No email associated with this NIC.", variant: "destructive" });
           setLoading(false);
           return;
       }
 
-      // 2. Sign in with the retrieved email and password
+      // 3. Sign in with the retrieved email and password
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       
-      // 3. Check if email is verified
+      // 4. Check if email is verified
       if (!userCredential.user.emailVerified) {
         // Redirect to 2FA page to prompt for verification
         router.push(`/two-factor?nic=${nic}`);
@@ -94,14 +106,15 @@ export default function LoginPage() {
     }
     
     try {
-      const citizenDocRef = doc(db, "citizens", nic);
-      const citizenDoc = await getDoc(citizenDocRef);
-      if (!citizenDoc.exists()) {
+      const q = query(collection(db, "users"), where("nic", "==", nic));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
         toast({ title: "Account not found", description: "No account is associated with this NIC.", variant: "destructive" });
         return;
       }
       
-      const email = citizenDoc.data().email;
+      const email = querySnapshot.docs[0].data().email;
       if(!email) {
           toast({ title: "Error", description: "No email is associated with this account.", variant: "destructive" });
           return;

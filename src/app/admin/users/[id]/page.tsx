@@ -9,13 +9,24 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { ShieldAlert, UserCog, UserX, ArrowLeft } from "lucide-react";
+import { ShieldAlert, UserCog, UserX, ArrowLeft, UserCheck } from "lucide-react";
 import { useEffect, useState, use } from "react";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, updateDoc, Timestamp } from "firebase/firestore";
 import type { User } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 const roles = [
     "Citizen", "Super Admin", "worker_transport", "worker_immigration", "worker_identity", "worker_health", "worker_tax", "worker_pension", "worker_landregistry", "worker_exams", "worker_finepayment", "worker_registeredvehicles", "worker_missingdocuments", "worker_support"
@@ -28,9 +39,9 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   
-  useEffect(() => {
-    const fetchUser = async () => {
-      if (id) {
+  const fetchUser = async () => {
+    if (id) {
+        setLoading(true);
         try {
           const userDoc = await getDoc(doc(db, "users", id));
           if (userDoc.exists()) {
@@ -41,16 +52,23 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
         } finally {
             setLoading(false);
         }
-      } else {
+    } else {
         setLoading(false);
-      }
-    };
+    }
+  };
+
+  useEffect(() => {
     fetchUser();
   }, [id]);
 
   const handleSaveChanges = async () => {
     if(user) {
-      await updateDoc(doc(db, "users", user.id), { ...user });
+      // Create a copy of the user object to avoid directly mutating state
+      const userToUpdate = { ...user };
+      // Remove id from the object to be saved, as it's the doc key.
+      delete userToUpdate.id;
+
+      await updateDoc(doc(db, "users", user.id), userToUpdate);
       toast({
           title: "Success",
           description: "User profile has been updated successfully.",
@@ -58,12 +76,22 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
     }
   }
   
-  const handleAction = (action: string) => {
-    toast({
-        title: "Action Performed",
-        description: `User has been ${action}.`,
-        variant: action === 'deleted' ? 'destructive' : 'default',
-    });
+  const handleAction = async (action: 'Activated' | 'Suspended' | 'Deleted') => {
+    if(!user) return;
+    
+    try {
+        await updateDoc(doc(db, "users", user.id), { status: action });
+        toast({
+            title: `User ${action}`,
+            description: `User account has been ${action.toLowerCase()}.`,
+            variant: action === 'Deleted' ? 'destructive' : 'default',
+        });
+        // Refetch user data to update UI
+        fetchUser(); 
+    } catch (error) {
+        console.error(`Error performing action ${action}:`, error);
+        toast({ title: "Action Failed", description: "Could not update user status.", variant: "destructive" });
+    }
   }
   
   const formatDate = (date: Timestamp | string) => {
@@ -172,23 +200,7 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
                 </CardContent>
                  <CardFooter>
                     <Button onClick={handleSaveChanges}>Save Changes</Button>
-                </CardFooter>
-            </Card>
-
-             <Card>
-                <CardHeader>
-                    <CardTitle>Security</CardTitle>
-                    <CardDescription>Reset the user's password.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                     <div className="grid grid-cols-3 items-center gap-4">
-                        <Label htmlFor="new-password">New Password</Label>
-                        <Input id="new-password" type="password" className="col-span-2" />
-                    </div>
-                </CardContent>
-                <CardFooter>
-                    <Button>Update Password</Button>
-                </CardFooter>
+                 </CardFooter>
             </Card>
 
             <Card>
@@ -197,9 +209,25 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
                     <CardDescription>Perform administrative actions on this user account.</CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-wrap gap-4">
-                    <Button variant="outline" onClick={() => handleAction('activated')}><UserCog className="mr-2"/>Activate Account</Button>
-                    <Button variant="outline" onClick={() => handleAction('suspended')}><ShieldAlert className="mr-2"/>Suspend Account</Button>
-                    <Button variant="destructive" onClick={() => handleAction('deleted')}><UserX className="mr-2"/>Delete User Account</Button>
+                    <Button variant="outline" onClick={() => handleAction('Active')} disabled={user.status === 'Active'}><UserCheck className="mr-2"/>Activate Account</Button>
+                    <Button variant="outline" onClick={() => handleAction('Suspended')} disabled={user.status === 'Suspended'}><ShieldAlert className="mr-2"/>Suspend Account</Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" disabled={user.status === 'Deleted'}><UserX className="mr-2"/>Delete User Account</Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently mark the user as deleted and prevent them from logging in.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleAction('Deleted')} className="bg-destructive hover:bg-destructive/90">Yes, delete user</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                 </CardContent>
             </Card>
           </div>

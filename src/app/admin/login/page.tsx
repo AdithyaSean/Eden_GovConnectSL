@@ -27,7 +27,6 @@ export default function AdminLoginPage() {
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -38,16 +37,7 @@ export default function AdminLoginPage() {
     localStorage.removeItem("workerId");
     localStorage.removeItem("workerRole");
 
-    if (isAdmin) {
-      // Simulate admin login
-      router.push("/admin/dashboard");
-      setLoading(false);
-      return;
-    }
-
     try {
-        await signInWithEmailAndPassword(auth, email, password);
-
         const usersRef = collection(db, "users");
         const q = query(usersRef, where("email", "==", email), limit(1));
         const querySnapshot = await getDocs(q);
@@ -60,6 +50,15 @@ export default function AdminLoginPage() {
         
         const userDoc = querySnapshot.docs[0];
         const userData = { id: userDoc.id, ...userDoc.data() } as User;
+        
+        // Check user status before attempting login
+        if (userData.status === 'Suspended' || userData.status === 'Deleted') {
+            toast({ title: "Account Inactive", description: `Your account is currently ${userData.status}. Please contact an administrator.`, variant: "destructive" });
+            setLoading(false);
+            return;
+        }
+
+        await signInWithEmailAndPassword(auth, email, password);
 
         if (userData.role.startsWith("worker_")) {
             localStorage.setItem("workerId", userData.id);
@@ -123,12 +122,6 @@ export default function AdminLoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox id="is-admin" checked={isAdmin} onCheckedChange={(checked) => setIsAdmin(checked as boolean)} />
-                <Label htmlFor="is-admin" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Simulate Admin Login (No DB check)
-                </Label>
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Logging in..." : "Login"}
