@@ -27,6 +27,19 @@ import type { Application } from "@/lib/types";
 import { subMonths, format, differenceInDays, addDays } from 'date-fns';
 import { Rating } from "@/components/rating";
 
+const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="p-2 bg-background border rounded-md shadow-lg">
+                <p className="label font-bold">{`${label}`}</p>
+                <p className="intro text-sm">{`${payload[0].name} : ${payload[0].value}`}</p>
+            </div>
+        );
+    }
+    return null;
+};
+
+
 export default function AdminAnalyticsPage() {
     const [applications, setApplications] = useState<Application[]>([]);
     const [loading, setLoading] = useState(true);
@@ -235,8 +248,8 @@ export default function AdminAnalyticsPage() {
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis dataKey="hour" fontSize={12} tickLine={false} axisLine={false} />
                             <YAxis fontSize={12} tickLine={false} axisLine={false} allowDecimals={false}/>
-                            <Tooltip />
-                            <Bar dataKey="applications" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                            <Tooltip content={<CustomTooltip />} />
+                            <Bar dataKey="applications" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Applications"/>
                         </BarChart>
                     </ResponsiveContainer>
                 </CardContent>
@@ -252,8 +265,8 @@ export default function AdminAnalyticsPage() {
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis dataKey="month" fontSize={12} tickLine={false} axisLine={false} />
                             <YAxis fontSize={12} tickLine={false} axisLine={false} />
-                            <Tooltip />
-                            <Line type="monotone" dataKey="time" stroke="hsl(var(--primary))" strokeWidth={2} />
+                            <Tooltip content={<CustomTooltip />} />
+                            <Line type="monotone" dataKey="time" stroke="hsl(var(--primary))" strokeWidth={2} name="Avg Days"/>
                         </LineChart>
                     </ResponsiveContainer>
                 </CardContent>
@@ -300,4 +313,4 @@ export default function AdminAnalyticsPage() {
   );
 }
 
-    
+  
