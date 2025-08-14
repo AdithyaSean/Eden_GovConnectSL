@@ -5,7 +5,7 @@ import type React from "react";
 import Link from "next/link";
 import { usePathname } from 'next/navigation';
 import { cn } from "@/lib/utils";
-import { Bell, Home, Users, Settings, LogOut, Shield, FileText, PenSquare, Building, BookUser, Car, Fingerprint, GraduationCap, HeartPulse, CreditCard, UserCircle, ReceiptText, ClipboardList, Menu, FileQuestion, LifeBuoy, BarChart3 } from "lucide-react";
+import { Bell, Home, Users, Settings, LogOut, Shield, FileText, PenSquare, Building, BookUser, Car, Fingerprint, GraduationCap, HeartPulse, CreditCard, UserCircle, ReceiptText, ClipboardList, Menu, FileQuestion, LifeBuoy, BarChart3, KeyRound } from "lucide-react";
 import { Button } from "./ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -21,6 +21,8 @@ const adminNavItems = [
   { title: "Applications", href: "/admin/applications", icon: FileText },
   { title: "Users", href: "/admin/users", icon: Users },
   { title: "Analytics", href: "/admin/analytics", icon: BarChart3 },
+  { title: "Password Resets", href: "/admin/password-resets", icon: KeyRound },
+  { title: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
 interface AdminLayoutProps {
