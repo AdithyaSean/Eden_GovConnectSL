@@ -25,21 +25,6 @@ const adminNavItems = [
   { title: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
-const allWorkerNavItems = [
-    { title: "Transport", href: "/worker/transport/dashboard", icon: Car, role: "worker_transport" },
-    { title: "Immigration", href: "/worker/immigration/dashboard", icon: BookUser, role: "worker_immigration" },
-    { title: "Identity", href: "/worker/identity/dashboard", icon: Fingerprint, role: "worker_identity" },
-    { title: "Missing Documents", href: "/worker/missingdocuments/dashboard", icon: FileQuestion, role: "worker_missingdocuments" },
-    { title: "Health", href: "/worker/health/dashboard", icon: HeartPulse, role: "worker_health" },
-    { title: "Tax", href: "/worker/tax/dashboard", icon: CreditCard, role: "worker_tax" },
-    { title: "Pensions", href: "/worker/pension/dashboard", icon: Users, role: "worker_pension" },
-    { title: "Land Registry", href: "/worker/landregistry/dashboard", icon: Building, role: "worker_landregistry" },
-    { title: "Exams", href: "/worker/exams/dashboard", icon: GraduationCap, role: "worker_exams" },
-    { title: "Fine Payment", href: "/worker/fine-payment/dashboard", icon: ReceiptText, role: "worker_finepayment" },
-    { title: "Registered Vehicles", href: "/worker/registered-vehicles/dashboard", icon: ClipboardList, role: "worker_registeredvehicles" },
-    { title: "Support", href: "/worker/support/dashboard", icon: LifeBuoy, role: "worker_support" },
-];
-
 interface AdminLayoutProps {
   children: React.ReactNode;
   workerMode?: boolean;
@@ -119,7 +104,7 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
           </div>
           <div className="flex-1">
             <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
-              {adminNavItems.map((item) => (
+              {!workerMode && adminNavItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
@@ -150,7 +135,7 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
                 <div className="flex items-center gap-2 font-semibold mb-4 h-14 border-b px-6">
                     <LogoComponent />
                 </div>
-                {adminNavItems.map((item) => (
+                {!workerMode && adminNavItems.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
