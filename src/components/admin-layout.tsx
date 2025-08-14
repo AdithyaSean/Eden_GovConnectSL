@@ -155,7 +155,7 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
                 <span className="sr-only">Toggle navigation menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="flex flex-col">
+            <SheetContent side="left" className="flex flex-col p-0">
               <nav className="grid gap-4 text-base font-medium">
                 <Link href={logoHref} className="flex items-center gap-2 font-semibold mb-4">
                   <LogoIcon className="h-6 w-6 text-primary" />
