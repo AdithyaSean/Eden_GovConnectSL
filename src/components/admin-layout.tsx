@@ -48,23 +48,31 @@ interface AdminLayoutProps {
 export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) {
   const pathname = usePathname();
   const [worker, setWorker] = useState<User | null>(null);
-  const [workerRole, setWorkerRole] = useState<string | null>(null);
   const [workerId, setWorkerId] = useState<string | null>(null);
+  const [logoHref, setLogoHref] = useState('/admin/login');
 
   useEffect(() => {
     const fetchWorkerData = async () => {
       const idFromStorage = localStorage.getItem("workerId");
       const roleFromStorage = localStorage.getItem("workerRole");
+      
       setWorkerId(idFromStorage);
-      setWorkerRole(roleFromStorage);
 
-      if (workerMode && idFromStorage) {
-        const userDoc = await getDoc(doc(db, "users", idFromStorage));
-        if (userDoc.exists()) {
-          const userData = { id: userDoc.id, ...userDoc.data() } as User;
-          setWorker(userData);
+      if (workerMode) {
+        if(roleFromStorage) {
+            const item = allWorkerNavItems.find(i => i.role === roleFromStorage);
+            setLogoHref(item ? item.href : '/admin/login');
         }
-      } else if (!workerMode) {
+
+        if (idFromStorage) {
+            const userDoc = await getDoc(doc(db, "users", idFromStorage));
+            if (userDoc.exists()) {
+              const userData = { id: userDoc.id, ...userDoc.data() } as User;
+              setWorker(userData);
+            }
+        }
+      } else { // Admin Mode
+        setLogoHref("/admin/dashboard");
         const adminAvatar = localStorage.getItem('adminAvatar');
         setWorker({
           id: 'super-admin-01',
@@ -84,22 +92,12 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
 
   const navItems = workerMode ? [] : adminNavItems;
   
-  const getDashboardHref = () => {
-    if (!workerMode) return "/admin/dashboard";
-    if (workerRole) {
-        const item = allWorkerNavItems.find(i => i.role === workerRole);
-        return item ? item.href : '/admin/login';
-    }
-    return '/admin/login';
-  }
-
   const getProfileHref = () => {
       if (!workerMode) return "/admin/profile";
       if(workerId) return `/worker/profile/${workerId}`;
       return '/admin/login';
   }
 
-  const logoHref = getDashboardHref();
   const profileHref = getProfileHref();
   const logoText = workerMode ? "Worker Portal" : "Admin Panel";
   const LogoIcon = workerMode ? PenSquare : Shield;
