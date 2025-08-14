@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { ShieldAlert, UserCog, UserX, ArrowLeft, UserCheck } from "lucide-react";
+import { ShieldAlert, UserCog, UserX, ArrowLeft, UserCheck, KeyRound } from "lucide-react";
 import { useEffect, useState, use } from "react";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, updateDoc, Timestamp } from "firebase/firestore";
@@ -76,7 +76,7 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
     }
   }
   
-  const handleAction = async (action: 'Activated' | 'Suspended' | 'Deleted') => {
+  const handleAction = async (action: 'Active' | 'Suspended' | 'Deleted') => {
     if(!user) return;
     
     try {
@@ -211,6 +211,22 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
                 <CardContent className="flex flex-wrap gap-4">
                     <Button variant="outline" onClick={() => handleAction('Active')} disabled={user.status === 'Active'}><UserCheck className="mr-2"/>Activate Account</Button>
                     <Button variant="outline" onClick={() => handleAction('Suspended')} disabled={user.status === 'Suspended'}><ShieldAlert className="mr-2"/>Suspend Account</Button>
+                     <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                         <Button variant="outline"><KeyRound className="mr-2"/>Change Password</Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Manual Password Change</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            To change this user's password, please go to the Firebase Authentication console, find the user by their email or UID, and use the "Reset Password" function. This will send them an email to set a new password.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogAction>OK</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button variant="destructive" disabled={user.status === 'Deleted'}><UserX className="mr-2"/>Delete User Account</Button>
