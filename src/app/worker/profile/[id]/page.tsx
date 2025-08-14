@@ -16,7 +16,7 @@ import type { User } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Camera, Loader2 } from "lucide-react";
 
-export default function WorkerProfilePage({ params }: { params: Promise<{ id: string }> }) {
+export default function WorkerProfilePage({ params }: { params: { id: string } }) {
     const { id } = use(params);
     const { toast } = useToast();
     const [worker, setWorker] = useState<User | null>(null);

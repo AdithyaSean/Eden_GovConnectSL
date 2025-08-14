@@ -29,7 +29,7 @@ async function getPaymentData(paymentId: string): Promise<Payment | null> {
     return null;
 }
 
-export default function ReceiptPage({ params }: { params: Promise<{ id: string }> }) {
+export default function ReceiptPage({ params }: { params: { id: string } }) {
     const { id } = use(params);
     const { user, loading: authLoading } = useAuth();
     const [payment, setPayment] = useState<Payment | null>(null);
@@ -179,4 +179,3 @@ export default function ReceiptPage({ params }: { params: Promise<{ id: string }
         </DashboardLayout>
     );
 }
-

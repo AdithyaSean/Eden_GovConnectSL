@@ -20,7 +20,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
 
-export default function WorkerApplicationDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+export default function WorkerApplicationDetailsPage({ params }: { params: { id: string } }) {
   const { id } = use(params);
   const searchParams = useSearchParams();
   const fromPath = searchParams.get('from');
