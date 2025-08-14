@@ -105,17 +105,22 @@ export interface Payment {
     applicationRef?: string;
 }
 
+export interface SupportMessage {
+    content: string;
+    author: 'Citizen' | 'Support';
+    timestamp: Timestamp | Date;
+}
+
 export interface SupportTicket {
     id: string;
     name: string;
     email: string;
     subject: string;
-    message: string;
     status: 'Open' | 'In Progress' | 'Closed';
     submittedAt: Timestamp | string;
     userNic: string;
-    userId?: string; // Add userId
-    reply: string;
+    userId?: string; 
+    messages: SupportMessage[];
 }
 
 export interface Notification {

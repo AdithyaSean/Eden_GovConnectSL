@@ -8,8 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Textarea } from "@/components/ui/textarea";
 import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
-import { collection, getDocs, query, where, Timestamp, doc, updateDoc, orderBy } from "firebase/firestore";
-import type { SupportTicket } from "@/lib/types";
+import { collection, getDocs, query, where, Timestamp, doc, updateDoc, orderBy, addDoc, arrayUnion } from "firebase/firestore";
+import type { SupportTicket, SupportMessage } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
@@ -22,6 +22,7 @@ export default function WorkerSupportDashboard() {
   const [activeTicket, setActiveTicket] = useState<SupportTicket | null>(null);
   const [replyMessage, setReplyMessage] = useState("");
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchTickets = async () => {
     setLoading(true);
@@ -46,50 +47,82 @@ export default function WorkerSupportDashboard() {
     fetchTickets();
   }, []);
 
-  useEffect(() => {
-    if(activeTicket) {
-      const updatedTicket = tickets.find(t => t.id === activeTicket.id);
-      if(updatedTicket) {
-        setActiveTicket(updatedTicket);
-      }
+  const createNotification = async (userId: string, title: string, description: string, href: string) => {
+    try {
+        await addDoc(collection(db, "notifications"), {
+            userId,
+            title,
+            description,
+            href,
+            icon: "MessageSquare",
+            read: false,
+            createdAt: serverTimestamp()
+        });
+    } catch (error) {
+        console.error("Error creating notification:", error);
     }
-  }, [tickets, activeTicket]);
+  }
 
 
   const handleReplySubmit = async (status: 'In Progress' | 'Closed') => {
     if (!activeTicket || !replyMessage) return;
 
+    setIsSubmitting(true);
     const ticketRef = doc(db, "supportTickets", activeTicket.id);
-    const newReply = `${activeTicket.reply || ''}\n\n[Support Reply on ${new Date().toLocaleString()}]:\n${replyMessage}`;
+    const newMessage: SupportMessage = {
+        content: replyMessage,
+        author: "Support",
+        timestamp: Timestamp.now()
+    };
 
     try {
       await updateDoc(ticketRef, {
-        reply: newReply,
+        messages: arrayUnion(newMessage),
         status: status
       });
+
+      if (activeTicket.userId) {
+          await createNotification(
+              activeTicket.userId,
+              `Reply for ticket: ${activeTicket.subject}`,
+              `A support agent has replied to your ticket.`,
+              `/support#${activeTicket.id}` // a hash could link directly to the ticket view
+          );
+      }
+
       toast({ title: "Reply Sent", description: `Ticket has been marked as ${status}.`});
       setReplyMessage("");
+      
       if (status === 'Closed') {
           setActiveTicket(null);
+      } else {
+          setActiveTicket(prev => prev ? {
+              ...prev,
+              messages: [...(prev.messages || []), newMessage],
+              status
+          } : null);
       }
       fetchTickets();
     } catch (e) {
       console.error("Error sending reply: ", e);
       toast({ title: "Error", description: "Could not send reply.", variant: "destructive"});
+    } finally {
+        setIsSubmitting(false);
     }
   }
 
-  const formatDate = (date: Timestamp | string) => {
+  const formatDate = (date: Timestamp | Date | undefined) => {
     if (!date) return 'N/A';
-    if (typeof date === 'string') return date;
-    return date.toDate().toLocaleString();
+    if (date instanceof Timestamp) return date.toDate().toLocaleString();
+    if (date instanceof Date) return date.toLocaleString();
+    return 'Invalid Date';
   };
 
   return (
     <AdminLayout workerMode>
       <div className="flex-1 p-4 md:p-8 pt-6">
         <div className="flex items-center justify-between space-y-2 mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">Citizen Support Center</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Citizen Support Dashboard</h1>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             <Card className="lg:col-span-1">
@@ -136,17 +169,13 @@ export default function WorkerSupportDashboard() {
                         <CardContent className="space-y-6">
                            <div>
                             <Label className="font-semibold">Conversation History</Label>
-                            <div className="mt-2 p-4 bg-muted rounded-md max-h-60 overflow-y-auto text-sm space-y-4 whitespace-pre-wrap">
-                                 <div>
-                                     <Label className="font-semibold">Citizen's Message History:</Label>
-                                     <p className="text-sm text-muted-foreground">{activeTicket.message}</p>
-                                   </div>
-                                   {activeTicket.reply && (
-                                     <div>
-                                         <Label className="font-semibold">Your Reply History:</Label>
-                                         <p className="text-sm text-muted-foreground bg-primary/10 p-3 rounded-md">{activeTicket.reply}</p>
-                                     </div>
-                                   )}
+                            <div className="mt-2 p-4 bg-muted rounded-md max-h-80 overflow-y-auto text-sm space-y-4 whitespace-pre-wrap">
+                                {(activeTicket.messages || []).map((msg, index) => (
+                                    <div key={index} className={cn("p-3 rounded-lg", msg.author === 'Citizen' ? 'bg-primary/10' : 'bg-secondary')}>
+                                        <p className="font-semibold">{msg.author} <span className="text-xs text-muted-foreground ml-2">{formatDate(msg.timestamp)}</span></p>
+                                        <p className="text-sm text-foreground">{msg.content}</p>
+                                    </div>
+                                ))}
                             </div>
                            </div>
                            <div>
@@ -157,11 +186,16 @@ export default function WorkerSupportDashboard() {
                                 placeholder="Type your response to the citizen here..." 
                                 value={replyMessage}
                                 onChange={(e) => setReplyMessage(e.target.value)}
+                                disabled={isSubmitting}
                             />
                            </div>
                            <div className="flex justify-end gap-2">
-                               <Button variant="outline" onClick={() => handleReplySubmit('In Progress')}>Send & Keep Open</Button>
-                               <Button onClick={() => handleReplySubmit('Closed')}>Send & Close Ticket</Button>
+                               <Button variant="outline" onClick={() => handleReplySubmit('In Progress')} disabled={isSubmitting}>
+                                   {isSubmitting ? "Sending..." : "Send & Keep Open"}
+                                </Button>
+                               <Button onClick={() => handleReplySubmit('Closed')} disabled={isSubmitting}>
+                                   {isSubmitting ? "Sending..." : "Send & Close Ticket"}
+                                </Button>
                            </div>
                         </CardContent>
                      </Card>

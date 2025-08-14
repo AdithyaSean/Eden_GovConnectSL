@@ -9,10 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { FormEvent, useEffect, useState } from "react";
-import { collection, addDoc, serverTimestamp, query, where, getDocs, Timestamp, doc, updateDoc } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, query, where, getDocs, Timestamp, doc, updateDoc, arrayUnion } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/hooks/use-auth";
-import type { SupportTicket } from "@/lib/types";
+import type { SupportTicket, SupportMessage } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -25,6 +25,7 @@ export default function SupportPage() {
     const [loadingTickets, setLoadingTickets] = useState(true);
     const [activeTicket, setActiveTicket] = useState<SupportTicket | null>(null);
     const [userReply, setUserReply] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const fetchTickets = async () => {
         if (!user) {
@@ -45,26 +46,44 @@ export default function SupportPage() {
             setLoadingTickets(false);
         }
     }
+    
+    useEffect(() => {
+        if(!authLoading && user){
+            fetchTickets();
+        }
+    }, [user, authLoading]);
 
     const handleUserReply = async () => {
         if (!userReply.trim() || !activeTicket) return;
         
+        setIsSubmitting(true);
         const ticketRef = doc(db, "supportTickets", activeTicket.id);
+        const newMessage: SupportMessage = {
+            content: userReply,
+            author: "Citizen",
+            timestamp: Timestamp.now()
+        };
         
         try {
-            const newMessage = `${activeTicket.message}\n\n[User Reply on ${new Date().toLocaleString()}]:\n${userReply}`;
             await updateDoc(ticketRef, {
-                message: newMessage,
-                status: "Open"
+                messages: arrayUnion(newMessage),
+                status: "Open" // Re-open the ticket if the user replies
             });
             toast({ title: "Reply Sent" });
             setUserReply("");
-            await fetchTickets();
-            setActiveTicket(prev => prev ? {...prev, message: newMessage, status: "Open"} : null);
+            await fetchTickets(); // Refresh data
+            // Update active ticket in state
+            setActiveTicket(prev => prev ? {
+                 ...prev, 
+                 messages: [...(prev.messages || []), newMessage], 
+                 status: "Open" 
+            } : null);
 
         } catch (error) {
             console.error("Error sending reply:", error);
             toast({ title: "Reply Failed", variant: "destructive" });
+        } finally {
+            setIsSubmitting(false);
         }
     };
     
@@ -81,16 +100,49 @@ export default function SupportPage() {
         }
     }
     
-    useEffect(() => {
-        if(!authLoading && user){
-            fetchTickets();
-        }
-    }, [user, authLoading]);
+    const handleNewTicketSubmit = async (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (!user) return toast({ title: "Please log in.", variant: "destructive"});
+        
+        const formData = new FormData(e.target as HTMLFormElement);
+        const { subject, message } = Object.fromEntries(formData.entries()) as { subject: string, message: string };
 
-    const formatDate = (date: Timestamp | string) => {
+        if (!subject.trim() || !message.trim()) {
+            return toast({ title: "Please fill out all fields.", variant: "destructive" });
+        }
+        
+        const firstMessage: SupportMessage = {
+            content: message,
+            author: "Citizen",
+            timestamp: Timestamp.now()
+        };
+
+        try {
+             const newTicketRef = await addDoc(collection(db, "supportTickets"), {
+                subject,
+                messages: [firstMessage],
+                status: 'Open',
+                submittedAt: serverTimestamp(),
+                userNic: user.nic,
+                userId: user.id,
+                name: user.name,
+                email: user.email,
+            });
+            toast({ title: "Support Ticket Created", description: "Our team will get back to you shortly."});
+            await fetchTickets();
+            const newTicket = await getDoc(newTicketRef);
+            setActiveTicket({ id: newTicket.id, ...newTicket.data() } as SupportTicket);
+
+        } catch(err){
+            toast({ title: "Failed to create ticket", variant: "destructive" });
+        }
+    }
+    
+    const formatDate = (date: Timestamp | Date | undefined) => {
         if (!date) return 'N/A';
-        if (typeof date === 'string') return date;
-        return date.toDate().toLocaleString();
+        if (date instanceof Timestamp) return date.toDate().toLocaleString();
+        if (date instanceof Date) return date.toLocaleString();
+        return 'Invalid Date';
     };
 
   return (
@@ -129,7 +181,7 @@ export default function SupportPage() {
                                     </Badge>
                                 </div>
                                 <p className="text-sm text-muted-foreground mt-1">
-                                    Last update: {formatDate(ticket.submittedAt)}
+                                    Last update: {formatDate(ticket.messages?.[ticket.messages.length - 1]?.timestamp)}
                                 </p>
                             </button>
                         ))
@@ -155,17 +207,13 @@ export default function SupportPage() {
                         <CardContent className="space-y-6">
                            <div>
                                 <h3 className="font-semibold mb-2">Conversation History</h3>
-                                <div className="mt-2 p-4 bg-muted rounded-md max-h-60 overflow-y-auto text-sm space-y-4">
-                                   <div>
-                                     <Label className="font-semibold">Your Message History:</Label>
-                                     <p className="text-sm text-muted-foreground whitespace-pre-wrap">{activeTicket.message}</p>
-                                   </div>
-                                   {activeTicket.reply && (
-                                     <div>
-                                         <Label className="font-semibold">Support Reply History:</Label>
-                                         <p className="text-sm text-muted-foreground whitespace-pre-wrap bg-primary/10 p-3 rounded-md">{activeTicket.reply}</p>
-                                     </div>
-                                   )}
+                                <div className="mt-2 p-4 bg-muted rounded-md max-h-80 overflow-y-auto text-sm space-y-4">
+                                   {(activeTicket.messages || []).map((msg, index) => (
+                                       <div key={index} className={cn("p-3 rounded-lg", msg.author === 'Citizen' ? 'bg-primary/10' : 'bg-secondary')}>
+                                           <p className="font-semibold">{msg.author} <span className="text-xs text-muted-foreground ml-2">{formatDate(msg.timestamp)}</span></p>
+                                           <p className="text-sm text-foreground whitespace-pre-wrap">{msg.content}</p>
+                                       </div>
+                                   ))}
                                 </div>
                            </div>
                            {activeTicket.status !== 'Closed' && (
@@ -177,9 +225,10 @@ export default function SupportPage() {
                                         placeholder="Type your reply here..."
                                         value={userReply}
                                         onChange={(e) => setUserReply(e.target.value)}
+                                        disabled={isSubmitting}
                                     />
                                     <div className="flex justify-between items-center mt-2">
-                                        <Button onClick={handleUserReply}>Send Reply</Button>
+                                        <Button onClick={handleUserReply} disabled={isSubmitting}>{isSubmitting ? "Sending..." : "Send Reply"}</Button>
                                         <Button variant="link" onClick={handleCloseTicket}>My issue is resolved, close this ticket.</Button>
                                     </div>
                                 </div>
@@ -187,9 +236,27 @@ export default function SupportPage() {
                         </CardContent>
                      </Card>
                 ) : (
-                    <div className="flex items-center justify-center h-full min-h-[400px] bg-muted rounded-lg">
-                        <p className="text-muted-foreground">Select a ticket to view details or create a new one.</p>
-                    </div>
+                    <form onSubmit={handleNewTicketSubmit}>
+                         <Card>
+                             <CardHeader>
+                                <CardTitle>Create a New Support Ticket</CardTitle>
+                                <CardDescription>Can't find your issue? Submit a new ticket and our team will assist you.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="subject">Subject</Label>
+                                    <Input id="subject" name="subject" placeholder="e.g., Passport photo upload failed" />
+                                </div>
+                                 <div className="space-y-2">
+                                    <Label htmlFor="message">Message</Label>
+                                    <Textarea id="message" name="message" placeholder="Please describe your issue in detail." />
+                                </div>
+                            </CardContent>
+                            <CardFooter>
+                                <Button type="submit">Create Ticket</Button>
+                            </CardFooter>
+                         </Card>
+                    </form>
                 )}
             </div>
         </div>
