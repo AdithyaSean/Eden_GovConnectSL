@@ -10,12 +10,12 @@ import { sendEmailVerification } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { useState } from "react";
+import { auth } from '@/lib/firebase';
 
 export default function TwoFactorPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const { user, loading: authLoading } = useAuth();
   
   const handleResend = async () => {
     if (!auth.currentUser) {
