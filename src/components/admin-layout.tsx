@@ -49,21 +49,13 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
   const pathname = usePathname();
   const [worker, setWorker] = useState<User | null>(null);
   const [workerId, setWorkerId] = useState<string | null>(null);
-  const [logoHref, setLogoHref] = useState('/admin/login');
-
+  
   useEffect(() => {
     const fetchWorkerData = async () => {
       const idFromStorage = localStorage.getItem("workerId");
-      const roleFromStorage = localStorage.getItem("workerRole");
-      
       setWorkerId(idFromStorage);
 
       if (workerMode) {
-        if(roleFromStorage) {
-            const item = allWorkerNavItems.find(i => i.role === roleFromStorage);
-            setLogoHref(item ? item.href : '/admin/login');
-        }
-
         if (idFromStorage) {
             const userDoc = await getDoc(doc(db, "users", idFromStorage));
             if (userDoc.exists()) {
@@ -72,7 +64,6 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
             }
         }
       } else { // Admin Mode
-        setLogoHref("/admin/dashboard");
         const adminAvatar = localStorage.getItem('adminAvatar');
         setWorker({
           id: 'super-admin-01',
@@ -90,8 +81,6 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
     fetchWorkerData();
   }, [workerMode, pathname]);
 
-  const navItems = workerMode ? [] : adminNavItems;
-  
   const getProfileHref = () => {
       if (!workerMode) return "/admin/profile";
       if(workerId) return `/worker/profile/${workerId}`;
@@ -104,20 +93,33 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
   
   const fallbackInitial = worker ? worker.name?.charAt(0).toUpperCase() : (workerMode ? 'W' : 'A');
 
+  const LogoComponent = () => {
+    if (workerMode) {
+      return (
+        <div className="flex items-center gap-2 font-semibold">
+          <LogoIcon className="h-6 w-6 text-primary" />
+          <span>{logoText}</span>
+        </div>
+      );
+    }
+    return (
+      <Link href="/admin/dashboard" className="flex items-center gap-2 font-semibold">
+        <LogoIcon className="h-6 w-6 text-primary" />
+        <span>{logoText}</span>
+      </Link>
+    );
+  };
 
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
       <div className="hidden border-r bg-muted/40 md:block">
         <div className="flex h-full max-h-screen flex-col gap-2">
           <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-            <Link href={logoHref} className="flex items-center gap-2 font-semibold">
-              <LogoIcon className="h-6 w-6 text-primary" />
-              <span>{logoText}</span>
-            </Link>
+            <LogoComponent />
           </div>
           <div className="flex-1">
             <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
-              {navItems.map((item) => (
+              {adminNavItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
@@ -145,11 +147,10 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
             </SheetTrigger>
             <SheetContent side="left" className="flex flex-col p-0">
               <nav className="grid gap-4 text-base font-medium">
-                <Link href={logoHref} className="flex items-center gap-2 font-semibold mb-4">
-                  <LogoIcon className="h-6 w-6 text-primary" />
-                  <span>{logoText}</span>
-                </Link>
-                {navItems.map((item) => (
+                <div className="flex items-center gap-2 font-semibold mb-4 h-14 border-b px-6">
+                    <LogoComponent />
+                </div>
+                {adminNavItems.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
