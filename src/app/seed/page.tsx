@@ -3,13 +3,14 @@
 
 import { useState } from "react";
 import { db, auth } from "@/lib/firebase";
-import { collection, writeBatch, Timestamp, doc, getDoc, setDoc } from "firebase/firestore";
+import { collection, writeBatch, Timestamp, doc, getDoc, setDoc, query, where, getDocs, limit } from "firebase/firestore";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CheckCircle, AlertTriangle } from "lucide-react";
 import Link from "next/link";
+import type { User } from "@/lib/types";
 
 const seedData = {
     users: [
@@ -99,21 +100,41 @@ export default function SeedPage() {
 
                 } catch (error: any) {
                     if (error.code === 'auth/email-already-in-use') {
-                        addLog(` -> Auth user already exists. Signing in to get UID...`);
-                        const userCredential = await signInWithEmailAndPassword(auth, user.email, PASSWORD);
-                        authUserUid = userCredential.user.uid;
-                        await signOut(auth); // Sign out after operation
-                        addLog(` -> UID is ${authUserUid}.`);
+                        addLog(` -> Auth user already exists. Fetching UID from Firestore...`);
+                        // Query Firestore to get the user by email
+                        const usersRef = collection(db, "users");
+                        const q = query(usersRef, where("email", "==", user.email), limit(1));
+                        const querySnapshot = await getDocs(q);
+
+                        if (!querySnapshot.empty) {
+                           const existingUserDoc = querySnapshot.docs[0].data() as User;
+                           authUserUid = existingUserDoc.uid;
+                           addLog(` -> UID found in Firestore: ${authUserUid}.`);
+                        } else {
+                            // This case is unlikely if auth user exists but Firestore user doesn't, but we handle it.
+                            addLog(` -> Auth user exists but no Firestore profile found for ${user.email}. Attempting sign-in to get UID as a fallback.`);
+                             try {
+                                const userCredential = await signInWithEmailAndPassword(auth, user.email, PASSWORD);
+                                authUserUid = userCredential.user.uid;
+                                await signOut(auth); // Sign out after operation
+                                addLog(` -> Fallback sign-in successful. UID is ${authUserUid}.`);
+                            } catch (signInError: any) {
+                                addLog(` -> Fallback sign-in failed: ${signInError.message}. This user will be skipped.`);
+                                continue; // Skip to the next user
+                            }
+                        }
                     } else {
                         addLog(` -> Error creating user ${user.name}: ${error.message}`);
-                        throw error;
+                        throw error; // Rethrow other errors
                     }
                 }
 
-                const userRef = doc(db, "users", authUserUid);
-                tempUserUidMap[user.id] = authUserUid;
-                await setDoc(userRef, { ...user, uid: authUserUid, id: authUserUid, joined: Timestamp.now() });
-                addLog(` -> Successfully created/updated Firestore profile for ${user.name} in 'users' collection.`);
+                if (authUserUid) {
+                    const userRef = doc(db, "users", authUserUid);
+                    tempUserUidMap[user.id] = authUserUid;
+                    await setDoc(userRef, { ...user, uid: authUserUid, id: authUserUid, joined: Timestamp.now() });
+                    addLog(` -> Successfully created/updated Firestore profile for ${user.name} in 'users' collection.`);
+                }
             }
             
             // Step 2: Create citizen profiles in 'citizens' collection
