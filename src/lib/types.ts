@@ -41,7 +41,7 @@ export interface Service {
 }
 
 export interface Fine {
-    id: string;
+    id?: string;
     type: string;
     issuedDate: string;
     amount: string;
