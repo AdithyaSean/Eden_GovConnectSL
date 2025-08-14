@@ -17,7 +17,7 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 
 export default function SignupPage() {
@@ -53,7 +53,7 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      // 1. Check if NIC is already registered in the 'citizens' collection
+      // 1. Check if NIC is already registered in the 'citizens' or 'users' collection
       const citizenDocRef = doc(db, "citizens", nic);
       const citizenDoc = await getDoc(citizenDocRef);
 
@@ -71,7 +71,7 @@ export default function SignupPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // 3. Create citizen profile in Firestore with NIC as document ID
+      // 3. Create citizen profile in Firestore 'citizens' collection
       await setDoc(citizenDocRef, {
         uid: user.uid,
         fullName: fullName,
@@ -79,7 +79,21 @@ export default function SignupPage() {
         email: email,
       });
 
-      // 4. Send verification email
+      // 4. Create user profile in Firestore 'users' collection for consistency
+      const userDocRef = doc(db, "users", user.uid);
+      await setDoc(userDocRef, {
+          uid: user.uid,
+          id: user.uid,
+          name: fullName,
+          nic: nic,
+          email: email,
+          role: "Citizen",
+          status: "Active",
+          joined: serverTimestamp(),
+          photoURL: ""
+      });
+
+      // 5. Send verification email
       await sendEmailVerification(user);
 
       toast({
