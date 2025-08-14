@@ -14,7 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
-const SERVICE_NAMES = ["National Medical ID Card Application", "Medical Appointment Request"];
+const SERVICE_NAME = "Medical Appointment Request";
 
 export default function WorkerHealthDashboard() {
   const [applications, setApplications] = useState<Application[]>([]);
@@ -24,7 +24,7 @@ export default function WorkerHealthDashboard() {
     const fetchApplications = async () => {
       setLoading(true);
       try {
-        const q = query(collection(db, "applications"), where("service", "in", SERVICE_NAMES));
+        const q = query(collection(db, "applications"), where("service", "==", SERVICE_NAME));
         const querySnapshot = await getDocs(q);
         const apps = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
         setApplications(apps);
@@ -53,8 +53,8 @@ export default function WorkerHealthDashboard() {
         </div>
         <Card>
           <CardHeader>
-            <CardTitle>All Health-Related Applications</CardTitle>
-            <CardDescription>Review Medical ID requests and appointments.</CardDescription>
+            <CardTitle>Medical Appointment Requests</CardTitle>
+            <CardDescription>Review and manage all incoming appointment requests.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -62,8 +62,8 @@ export default function WorkerHealthDashboard() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Applicant</TableHead>
-                    <TableHead>Service Type</TableHead>
-                    <TableHead>Submitted / Appointment Date</TableHead>
+                    <TableHead>Hospital & Speciality</TableHead>
+                    <TableHead>Appointment Date</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Action</TableHead>
                   </TableRow>
@@ -77,19 +77,24 @@ export default function WorkerHealthDashboard() {
                     ))
                   ) : applications.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="h-24 text-center">No applications found.</TableCell>
+                        <TableCell colSpan={5} className="h-24 text-center">No appointment requests found.</TableCell>
                       </TableRow>
                   ) : applications.map((app) => (
                     <TableRow key={app.id}>
                       <TableCell className="font-medium">{app.user}</TableCell>
-                      <TableCell>{app.service}</TableCell>
-                      <TableCell>{app.service === 'Medical Appointment Request' ? formatDate(app.details?.appointmentDate) : formatDate(app.submitted)}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                            <span>{app.details?.hospital}</span>
+                            <span className="text-xs text-muted-foreground">{app.details?.speciality}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{formatDate(app.details?.appointmentDate)}</TableCell>
                       <TableCell>
                         <Badge variant={
                           app.status === 'Approved' || app.status === 'Completed' ? 'default'
                           : app.status === 'Pending' ? 'secondary'
                           : 'destructive'
-                        } className={app.status === 'Approved' ? 'bg-green-600' : ''}>
+                        } className={app.status === 'Approved' || app.status === 'Completed' ? 'bg-green-600' : ''}>
                           {app.status}
                         </Badge>
                       </TableCell>
