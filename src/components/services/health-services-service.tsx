@@ -45,34 +45,6 @@ export function HealthServicesService({ service }) {
             return newFiles;
         });
     }
-
-    const handleIdCardSubmit = async (e: FormEvent) => {
-        e.preventDefault();
-        if (!user) {
-            toast({ title: "Please log in.", variant: "destructive" });
-            return;
-        }
-        if(!uploadedFiles.nicOrBirthCert || !uploadedFiles.photo) {
-            toast({ title: "Please upload both documents.", variant: "destructive" });
-            return;
-        }
-        
-        try {
-            await addDoc(collection(db, "applications"), {
-                service: "National Medical ID Card Application",
-                userId: user.id,
-                user: user.name,
-                status: "In Review",
-                submitted: serverTimestamp(),
-                documents: uploadedFiles,
-            });
-            toast({ title: "Application Submitted", description: "Your Medical ID Card application is under review." });
-            router.push('/my-applications');
-        } catch(error) {
-            console.error(error);
-            toast({ title: "Submission Failed", variant: "destructive"});
-        }
-    }
     
     const handleAppointmentSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -110,7 +82,8 @@ export function HealthServicesService({ service }) {
                 details: {
                     ...appointmentDetails,
                     appointmentDate: Timestamp.fromDate(finalAppointmentDate)
-                }
+                },
+                documents: uploadedFiles,
             });
             toast({ title: "Appointment Requested", description: "Your request has been sent. You will be notified upon confirmation." });
             router.push('/my-applications');
@@ -127,85 +100,80 @@ export function HealthServicesService({ service }) {
             <Card>
                 <CardHeader>
                     <CardTitle>Book a Hospital/Clinic Appointment</CardTitle>
+                    <p className="text-sm text-muted-foreground">You can also upload any existing medical reports or prescriptions to help the doctor prepare for your visit.</p>
                 </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label>Select Hospital/Clinic</Label>
-                            <Select name="hospital">
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a location" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="hospital-colombo">National Hospital, Colombo</SelectItem>
-                                    <SelectItem value="hospital-kandy">Teaching Hospital, Kandy</SelectItem>
-                                    <SelectItem value="clinic-galle">Family Clinic, Galle</SelectItem>
-                                </SelectContent>
-                            </Select>
+                <CardContent className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label>Select Hospital/Clinic</Label>
+                                <Select name="hospital">
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select a location" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="hospital-colombo">National Hospital, Colombo</SelectItem>
+                                        <SelectItem value="hospital-kandy">Teaching Hospital, Kandy</SelectItem>
+                                        <SelectItem value="clinic-galle">Family Clinic, Galle</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Select Speciality/Service</Label>
+                                <Select name="speciality">
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select a service" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="opd">General OPD</SelectItem>
+                                        <SelectItem value="cardiology">Cardiology</SelectItem>
+                                        <SelectItem value="dental">Dental</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Select Time</Label>
+                                 <Select onValueChange={setAppointmentTime} value={appointmentTime}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select a time slot" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {timeSlots.map(slot => (
+                                            <SelectItem key={slot} value={slot}>{slot}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
-                        <div className="space-y-2">
-                            <Label>Select Speciality/Service</Label>
-                            <Select name="speciality">
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a service" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="opd">General OPD</SelectItem>
-                                    <SelectItem value="cardiology">Cardiology</SelectItem>
-                                    <SelectItem value="dental">Dental</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Select Time</Label>
-                             <Select onValueChange={setAppointmentTime} value={appointmentTime}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a time slot" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {timeSlots.map(slot => (
-                                        <SelectItem key={slot} value={slot}>{slot}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                        <div className="flex justify-center">
+                            {appointmentDate ? <Calendar
+                                mode="single"
+                                selected={appointmentDate}
+                                onSelect={setAppointmentDate}
+                                className="rounded-md border"
+                            /> : <div className="h-[290px] w-[280px] flex items-center justify-center"><p>Loading calendar...</p></div> }
                         </div>
                     </div>
-                    <div className="flex justify-center">
-                        {appointmentDate ? <Calendar
-                            mode="single"
-                            selected={appointmentDate}
-                            onSelect={setAppointmentDate}
-                            className="rounded-md border"
-                        /> : <div className="h-[290px] w-[280px] flex items-center justify-center"><p>Loading calendar...</p></div> }
+                     <div className="pt-8 border-t">
+                        <h3 className="text-lg font-medium mb-4">Medical Records & History (Optional)</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <FileUpload
+                                id="prescriptions-upload"
+                                label="Upload Prescriptions" 
+                                onUploadComplete={(base64) => handleUploadComplete("prescriptions", base64)}
+                                onFileRemove={() => handleFileRemove("prescriptions")}
+                            />
+                            <FileUpload
+                                id="medical-reports-upload"
+                                label="Upload Medical Reports"
+                                onUploadComplete={(base64) => handleUploadComplete("medicalReports", base64)}
+                                onFileRemove={() => handleFileRemove("medicalReports")}
+                            />
+                        </div>
                     </div>
                 </CardContent>
                 <CardFooter>
                     <Button type="submit">Request Appointment</Button>
-                </CardFooter>
-            </Card>
-        </form>
-
-        <form onSubmit={handleIdCardSubmit}>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Medical Records & History</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <FileUpload
-                        id="nic-bc-upload"
-                        label="Upload Copy of NIC/Birth Certificate" 
-                        onUploadComplete={(base64) => handleUploadComplete("nicOrBirthCert", base64)}
-                        onFileRemove={() => handleFileRemove("nicOrBirthCert")}
-                    />
-                    <FileUpload
-                        id="photo-upload-medical"
-                        label="Upload Passport-size Photograph"
-                        onUploadComplete={(base64) => handleUploadComplete("photo", base64)}
-                        onFileRemove={() => handleFileRemove("photo")}
-                    />
-                </CardContent>
-                <CardFooter>
-                    <Button type="submit">Submit Application</Button>
                 </CardFooter>
             </Card>
         </form>
