@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowRight, PlusCircle, Search } from "lucide-react";
+import { ArrowRight, PlusCircle, Search, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -32,6 +32,7 @@ export default function UsersPage() {
   const [newUserRole, setNewUserRole] = useState("Citizen");
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
+  const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
 
   const fetchUsers = async () => {
@@ -254,7 +255,12 @@ export default function UsersPage() {
               )}
                <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="password" className="text-right">Password</Label>
-                  <Input id="password" name="password" type="password" className="col-span-3" required minLength={6} />
+                  <div className="relative col-span-3">
+                    <Input id="password" name="password" type={showPassword ? "text" : "password"} required minLength={6} className="pr-10"/>
+                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground">
+                        {showPassword ? <EyeOff /> : <Eye />}
+                    </button>
+                  </div>
                 </div>
             </div>
             <DialogFooter>
@@ -269,5 +275,3 @@ export default function UsersPage() {
     </AdminLayout>
   );
 }
-
-    

@@ -14,7 +14,7 @@ import { db, auth } from "@/lib/firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import type { User } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Camera, Loader2 } from "lucide-react";
+import { Camera, Loader2, Eye, EyeOff } from "lucide-react";
 import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 
 export default function WorkerProfilePage({ params }: { params: { id: string } }) {
@@ -27,6 +27,9 @@ export default function WorkerProfilePage({ params }: { params: { id: string } }
     const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const formRef = useRef<HTMLFormElement>(null);
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const fetchWorker = async () => {
         if (id) {
@@ -221,15 +224,30 @@ export default function WorkerProfilePage({ params }: { params: { id: string } }
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
                                 <Label htmlFor="current-password">Current Password</Label>
-                                <Input id="current-password" name="current-password" type="password" required disabled={isUpdatingPassword}/>
+                                <div className="relative">
+                                    <Input id="current-password" name="current-password" type={showCurrentPassword ? "text" : "password"} required disabled={isUpdatingPassword} className="pr-10"/>
+                                    <button type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground">
+                                        {showCurrentPassword ? <EyeOff /> : <Eye />}
+                                    </button>
+                                </div>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="new-password">New Password</Label>
-                                <Input id="new-password" name="new-password" type="password" required minLength={6} disabled={isUpdatingPassword}/>
+                                <div className="relative">
+                                    <Input id="new-password" name="new-password" type={showNewPassword ? "text" : "password"} required minLength={6} disabled={isUpdatingPassword} className="pr-10"/>
+                                    <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground">
+                                        {showNewPassword ? <EyeOff /> : <Eye />}
+                                    </button>
+                                </div>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="confirm-password">Confirm New Password</Label>
-                                <Input id="confirm-password" name="confirm-password" type="password" required disabled={isUpdatingPassword}/>
+                                <div className="relative">
+                                    <Input id="confirm-password" name="confirm-password" type={showConfirmPassword ? "text" : "password"} required disabled={isUpdatingPassword} className="pr-10"/>
+                                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground">
+                                        {showConfirmPassword ? <EyeOff /> : <Eye />}
+                                    </button>
+                                </div>
                             </div>
                         </CardContent>
                         <CardFooter>
