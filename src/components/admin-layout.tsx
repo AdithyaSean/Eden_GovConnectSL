@@ -54,13 +54,15 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
   useEffect(() => {
     const fetchWorkerData = async () => {
       const idFromStorage = localStorage.getItem("workerId");
+      const roleFromStorage = localStorage.getItem("workerRole");
       setWorkerId(idFromStorage);
+      setWorkerRole(roleFromStorage);
+
       if (workerMode && idFromStorage) {
         const userDoc = await getDoc(doc(db, "users", idFromStorage));
         if (userDoc.exists()) {
           const userData = { id: userDoc.id, ...userDoc.data() } as User;
           setWorker(userData);
-          setWorkerRole(userData.role);
         }
       } else if (!workerMode) {
         const adminAvatar = localStorage.getItem('adminAvatar');
@@ -78,13 +80,11 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
     };
     
     fetchWorkerData();
-    // This effect should only run on mount to get localStorage data
-  }, []);
+  }, [workerMode]);
 
   const getWorkerNavItems = () => {
-    const role = worker?.role || workerRole;
-    if (role) {
-      const navItem = allWorkerNavItems.find(item => item.role === role);
+    if (workerRole) {
+      const navItem = allWorkerNavItems.find(item => item.role === workerRole);
       return navItem ? [
           {...navItem, title: "Dashboard", href: navItem.href}
       ] : [];
@@ -96,9 +96,8 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
   
   const getDashboardHref = () => {
     if (!workerMode) return "/admin/dashboard";
-    const role = worker?.role || workerRole;
-    if (role) {
-        const item = allWorkerNavItems.find(i => i.role === role);
+    if (workerRole) {
+        const item = allWorkerNavItems.find(i => i.role === workerRole);
         return item ? item.href : '/admin/login';
     }
     return '/admin/login';
