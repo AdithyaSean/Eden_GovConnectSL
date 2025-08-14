@@ -26,10 +26,15 @@ export default function WorkerSupportDashboard() {
   const fetchTickets = async () => {
     setLoading(true);
     try {
-      const q = query(collection(db, "supportTickets"), where("status", "in", ["Open", "In Progress"]), orderBy("submittedAt", "asc"));
+      const q = query(collection(db, "supportTickets"));
       const querySnapshot = await getDocs(q);
-      const ticketData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SupportTicket));
-      setTickets(ticketData);
+      const allTickets = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SupportTicket));
+      
+      const filteredAndSortedTickets = allTickets
+        .filter(ticket => ticket.status === 'Open' || ticket.status === 'In Progress')
+        .sort((a, b) => (a.submittedAt as Timestamp).toMillis() - (b.submittedAt as Timestamp).toMillis());
+
+      setTickets(filteredAndSortedTickets);
     } catch (error) {
       console.error("Error fetching tickets: ", error);
     } finally {
