@@ -55,10 +55,8 @@ export default function PaymentPage() {
 
     try {
         // 1. Update application status (if it's an application payment)
-        if(ref.length === 20) { // Simple check if it's likely a Firestore ID
-            const appRef = doc(db, "applications", ref);
-            await updateDoc(appRef, { status: "In Progress" });
-        }
+        const appRef = doc(db, "applications", ref);
+        await updateDoc(appRef, { status: "In Progress" });
 
         // 2. Create a payment record
         const paymentDocRef = await addDoc(collection(db, "payments"), {

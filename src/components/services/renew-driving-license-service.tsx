@@ -50,6 +50,7 @@ export function RenewDrivingLicenseService({ service }) {
     const [serviceType, setServiceType] = useState('renewal');
     const [uploadedFiles, setUploadedFiles] = useState<UploadedFilesState>({});
     const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+    const [newApplicationId, setNewApplicationId] = useState<string | null>(null);
     const [formValues, setFormValues] = useState({
         fullName: '',
         nic: '',
@@ -147,7 +148,7 @@ export function RenewDrivingLicenseService({ service }) {
 
 
         try {
-            await addDoc(collection(db, "applications"), {
+            const docRef = await addDoc(collection(db, "applications"), {
                 service: service.title,
                 userId: user.id,
                 user: user.name,
@@ -156,6 +157,7 @@ export function RenewDrivingLicenseService({ service }) {
                 documents: uploadedFiles,
                 details: { ...formValues, appointmentDate: Timestamp.fromDate(appointmentDateTime), serviceType }
             });
+            setNewApplicationId(docRef.id);
             toast({
                 title: "Application Saved Successfully",
                 description: "Your application has been saved. Please proceed with the payment to complete the process.",
@@ -387,7 +389,7 @@ export function RenewDrivingLicenseService({ service }) {
             <AlertDialogCancel onClick={() => router.push('/my-applications')}>
               Pay Later
             </AlertDialogCancel>
-            <AlertDialogAction onClick={() => router.push(`/payment?service=${encodeURIComponent(service.title)}&amount=${serviceType === 'renewal' ? '2500.00' : '3500.00'}`)}>
+            <AlertDialogAction onClick={() => router.push(`/payment?service=${encodeURIComponent(service.title)}&amount=${serviceType === 'renewal' ? '2500.00' : '3500.00'}&ref=${newApplicationId}`)}>
               Pay Now
             </AlertDialogAction>
           </AlertDialogFooter>

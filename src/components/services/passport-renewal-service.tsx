@@ -51,6 +51,7 @@ export function PassportRenewalService({ service }) {
   const [serviceType, setServiceType] = useState('renewal');
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFilesState>({});
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [newApplicationId, setNewApplicationId] = useState<string | null>(null);
   const { user } = useAuth();
   const router = useRouter();
   const [formValues, setFormValues] = useState({
@@ -150,7 +151,7 @@ export function PassportRenewalService({ service }) {
     appointmentDateTime.setHours(numericHours, parseInt(minutes, 10), 0, 0);
 
     try {
-         await addDoc(collection(db, "applications"), {
+         const docRef = await addDoc(collection(db, "applications"), {
             service: service.title,
             userId: user.id,
             user: user.name,
@@ -159,6 +160,7 @@ export function PassportRenewalService({ service }) {
             documents: uploadedFiles,
             details: { ...formValues, appointmentDate: Timestamp.fromDate(appointmentDateTime), serviceType }
         });
+        setNewApplicationId(docRef.id);
         setShowPaymentDialog(true);
     } catch (error) {
          console.error("Error submitting application: ", error);
@@ -347,7 +349,7 @@ export function PassportRenewalService({ service }) {
             <AlertDialogCancel onClick={() => router.push('/my-applications')}>
               Pay Later
             </AlertDialogCancel>
-            <AlertDialogAction onClick={() => router.push(`/payment?service=${encodeURIComponent(service.title)}&amount=${serviceType === 'renewal' ? '3500.00' : '5000.00'}&ref=${user?.id}`)}>
+            <AlertDialogAction onClick={() => router.push(`/payment?service=${encodeURIComponent(service.title)}&amount=${serviceType === 'renewal' ? '3500.00' : '5000.00'}&ref=${newApplicationId}`)}>
               Pay Now
             </AlertDialogAction>
           </AlertDialogFooter>
