@@ -22,7 +22,6 @@ const adminNavItems = [
   { title: "Users", href: "/admin/users", icon: Users },
   { title: "Analytics", href: "/admin/analytics", icon: BarChart3 },
   { title: "Password Resets", href: "/admin/password-resets", icon: KeyRound },
-  { title: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
 interface AdminLayoutProps {
@@ -53,7 +52,7 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
         setWorker({
           id: 'super-admin-01',
           name: 'Admin User',
-          email: 'admin@gov.lk',
+          email: 'worker.admin@gov.lk',
           role: 'Super Admin',
           status: 'Active',
           joined: new Date().toISOString(),
@@ -80,11 +79,16 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
 
   const LogoComponent = () => {
     if (workerMode) {
+      const workerRole = localStorage.getItem("workerRole") || "";
+      let dashboardPath = workerRole.replace('worker_', '');
+      if(dashboardPath === 'finepayment') dashboardPath = 'fine-payment';
+      if(dashboardPath === 'registeredvehicles') dashboardPath = 'registered-vehicles';
+      
       return (
-        <div className="flex items-center gap-2 font-semibold">
-          <LogoIcon className="h-6 w-6 text-primary" />
-          <span>{logoText}</span>
-        </div>
+         <Link href={`/worker/${dashboardPath}/dashboard`} className="flex items-center gap-2 font-semibold">
+            <LogoIcon className="h-6 w-6 text-primary" />
+            <span>{logoText}</span>
+        </Link>
       );
     }
     return (
@@ -110,7 +114,7 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
                   href={item.href}
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-                    pathname.startsWith(item.href) && "bg-muted text-primary"
+                    pathname === item.href && "bg-muted text-primary"
                   )}
                 >
                   <item.icon className="h-4 w-4" />
