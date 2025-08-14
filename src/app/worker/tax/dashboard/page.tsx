@@ -6,22 +6,30 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useEffect, useState } from "react";
+import { useEffect, useState, FormEvent } from "react";
 import { db } from "@/lib/firebase";
-import { collection, getDocs, query, where, Timestamp } from "firebase/firestore";
-import type { Application } from "@/lib/types";
+import { collection, getDocs, query, where, Timestamp, addDoc } from "firebase/firestore";
+import type { Application, User, TaxRecord } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Search, UserCheck } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 
 const SERVICE_NAME = "Tax Document Submission";
 
 export default function WorkerTaxDashboard() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchApplications = async () => {
+  const [taxRecords, setTaxRecords] = useState<TaxRecord[]>([]);
+  const [loadingRecords, setLoadingRecords] = useState(true);
+  const [searchNic, setSearchNic] = useState("");
+  const [foundUser, setFoundUser] = useState<User | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const { toast } = useToast();
+  
+  const fetchSubmissions = async () => {
       setLoading(true);
       try {
         const q = query(collection(db, "applications"), where("service", "==", SERVICE_NAME));
@@ -34,8 +42,71 @@ export default function WorkerTaxDashboard() {
         setLoading(false);
       }
     };
-    fetchApplications();
+    
+  const fetchTaxRecords = async () => {
+      setLoadingRecords(true);
+      try {
+          const q = query(collection(db, "taxRecords"));
+          const querySnapshot = await getDocs(q);
+          const records = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TaxRecord));
+          setTaxRecords(records);
+      } catch (e) {
+          console.error("Error fetching tax records", e);
+      } finally {
+          setLoadingRecords(false);
+      }
+  }
+
+  useEffect(() => {
+    fetchSubmissions();
+    fetchTaxRecords();
   }, []);
+  
+  const handleUserSearch = async () => {
+      if(!searchNic) return;
+      setIsSearching(true);
+      setFoundUser(null);
+      try {
+          const q = query(collection(db, "users"), where("nic", "==", searchNic));
+          const querySnapshot = await getDocs(q);
+          if(!querySnapshot.empty){
+              const user = querySnapshot.docs[0].data() as User;
+              setFoundUser(user);
+          } else {
+              toast({ title: "User not found", variant: "destructive" });
+          }
+      } catch (e) {
+          toast({ title: "Search failed", variant: "destructive" });
+      } finally {
+          setIsSearching(false);
+      }
+  }
+  
+  const handleAddTaxRecord = async (e: FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      if(!foundUser) return;
+      
+      const formData = new FormData(e.target as HTMLFormElement);
+      const recordData = Object.fromEntries(formData.entries());
+      
+      try {
+          await addDoc(collection(db, "taxRecords"), {
+              nic: foundUser.nic,
+              year: Number(recordData.year),
+              type: recordData.type,
+              amount: recordData.amount,
+              dueDate: recordData.dueDate,
+              status: 'Due'
+          });
+          toast({ title: "Tax Record Added Successfully" });
+          fetchTaxRecords(); // Refresh the list
+          setFoundUser(null);
+          setSearchNic("");
+          (e.target as HTMLFormElement).reset();
+      } catch (error) {
+           toast({ title: "Failed to add record", variant: "destructive" });
+      }
+  }
   
   const formatDate = (date: Timestamp | string) => {
     if (!date) return 'N/A';
@@ -49,62 +120,157 @@ export default function WorkerTaxDashboard() {
         <div className="flex items-center justify-between space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">IRD Dashboard</h1>
         </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Tax Document Submissions</CardTitle>
-            <CardDescription>Review and manage all tax-related document submissions from citizens.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Applicant</TableHead>
-                    <TableHead>Documents Uploaded</TableHead>
-                    <TableHead>Submitted On</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading ? (
-                    Array.from({ length: 5 }).map((_, i) => (
-                      <TableRow key={i}>
-                        <TableCell colSpan={5}><Skeleton className="h-8 w-full" /></TableCell>
-                      </TableRow>
-                    ))
-                  ) : applications.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={5} className="h-24 text-center">No applications found.</TableCell>
-                      </TableRow>
-                  ) : applications.map((app) => (
-                    <TableRow key={app.id}>
-                      <TableCell className="font-medium">{app.user}</TableCell>
-                      <TableCell>{Object.keys(app.documents || {}).length}</TableCell>
-                      <TableCell>{formatDate(app.submitted)}</TableCell>
-                      <TableCell>
-                        <Badge variant={
-                          app.status === 'Approved' || app.status === 'Completed' ? 'default'
-                          : app.status === 'Pending' || app.status === 'In Review' ? 'secondary'
-                          : 'destructive'
-                        } className={app.status === 'Approved' ? 'bg-green-600' : ''}>
-                          {app.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button asChild variant="outline" size="sm">
-                          <Link href={`/worker/applications/${app.id}?from=/worker/tax/dashboard`}>
-                            View Details <ArrowRight className="ml-2 h-4 w-4" />
-                          </Link>
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            <div className="lg:col-span-2 space-y-8">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Tax Document Submissions</CardTitle>
+                    <CardDescription>Review and manage all tax-related document submissions from citizens.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Applicant</TableHead>
+                            <TableHead>Documents Uploaded</TableHead>
+                            <TableHead>Submitted On</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead className="text-right">Action</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {loading ? (
+                            Array.from({ length: 3 }).map((_, i) => (
+                              <TableRow key={i}>
+                                <TableCell colSpan={5}><Skeleton className="h-8 w-full" /></TableCell>
+                              </TableRow>
+                            ))
+                          ) : applications.length === 0 ? (
+                              <TableRow>
+                                <TableCell colSpan={5} className="h-24 text-center">No applications found.</TableCell>
+                              </TableRow>
+                          ) : applications.map((app) => (
+                            <TableRow key={app.id}>
+                              <TableCell className="font-medium">{app.user}</TableCell>
+                              <TableCell>{Object.keys(app.documents || {}).length}</TableCell>
+                              <TableCell>{formatDate(app.submitted)}</TableCell>
+                              <TableCell>
+                                <Badge variant={
+                                  app.status === 'Approved' || app.status === 'Completed' ? 'default'
+                                  : app.status === 'Pending' || app.status === 'In Review' ? 'secondary'
+                                  : 'destructive'
+                                } className={app.status === 'Approved' ? 'bg-green-600' : ''}>
+                                  {app.status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Button asChild variant="outline" size="sm">
+                                  <Link href={`/worker/applications/${app.id}?from=/worker/tax/dashboard`}>
+                                    View Details <ArrowRight className="ml-2 h-4 w-4" />
+                                  </Link>
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                   <CardHeader>
+                       <CardTitle>All Tax Records</CardTitle>
+                       <CardDescription>A log of all tax payment records in the system.</CardDescription>
+                   </CardHeader>
+                   <CardContent>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Citizen NIC</TableHead>
+                                    <TableHead>Year</TableHead>
+                                    <TableHead>Tax Type</TableHead>
+                                    <TableHead>Amount</TableHead>
+                                    <TableHead>Status</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {loadingRecords ? <TableRow><TableCell colSpan={5}><Skeleton className="h-8"/></TableCell></TableRow>
+                                : taxRecords.map(record => (
+                                    <TableRow key={record.id}>
+                                        <TableCell>{record.nic}</TableCell>
+                                        <TableCell>{record.year}</TableCell>
+                                        <TableCell>{record.type}</TableCell>
+                                        <TableCell>LKR {record.amount}</TableCell>
+                                        <TableCell>
+                                           <Badge variant={record.status === 'Paid' ? 'default' : 'destructive'}
+                                          className={record.status === 'Paid' ? 'bg-green-600' : ''}>
+                                          {record.status}
+                                        </Badge>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                   </CardContent>
+                </Card>
             </div>
-          </CardContent>
-        </Card>
+            <div className="lg:col-span-1">
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Add Tax Record</CardTitle>
+                        <CardDescription>Search for a citizen and add a new tax record.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="search-nic-tax">Search Citizen by NIC</Label>
+                            <div className="flex gap-2">
+                                <Input id="search-nic-tax" value={searchNic} onChange={e => setSearchNic(e.target.value)} placeholder="Enter NIC..."/>
+                                <Button onClick={handleUserSearch} disabled={isSearching || !searchNic}>
+                                    <Search className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
+                        
+                        {isSearching && <Skeleton className="h-10 w-full" />}
+                        
+                        {foundUser && (
+                            <form className="space-y-4 pt-4 border-t" onSubmit={handleAddTaxRecord}>
+                                <div className="p-3 rounded-md bg-muted flex items-center gap-2">
+                                    <UserCheck className="h-5 w-5 text-green-600" />
+                                    <div>
+                                        <p className="font-semibold">{foundUser.name}</p>
+                                        <p className="text-sm text-muted-foreground">{foundUser.nic}</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="tax-type">Tax Type</Label>
+                                    <Input id="tax-type" name="type" required placeholder="e.g., Income Tax (Q1)" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="tax-year">Year</Label>
+                                    <Input id="tax-year" name="year" type="number" required placeholder="e.g., 2024" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="tax-amount">Amount (LKR)</Label>
+                                    <Input id="tax-amount" name="amount" type="number" required placeholder="e.g., 15000.00" />
+                                </div>
+                                 <div className="space-y-2">
+                                    <Label htmlFor="tax-due-date">Due Date</Label>
+                                    <Input id="tax-due-date" name="dueDate" type="date" required />
+                                </div>
+                                <Button type="submit" className="w-full">Add Tax Record</Button>
+                            </form>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
+
+        </div>
+
       </div>
     </AdminLayout>
   );

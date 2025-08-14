@@ -7,17 +7,14 @@ import { FileUpload } from '../file-upload';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import Link from 'next/link';
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
-
-const taxPayments = [
-    { year: 2023, type: "Income Tax (Q4)", amount: "15,000.00", status: "Paid", dueDate: "2024-01-15" },
-    { year: 2024, type: "Income Tax (Q1)", amount: "18,000.00", status: "Due", dueDate: "2024-04-15" },
-];
+import type { TaxRecord } from '@/lib/types';
+import { Skeleton } from '../ui/skeleton';
 
 type UploadedFilesState = {
   [key: string]: string;
@@ -25,9 +22,29 @@ type UploadedFilesState = {
 
 export function TaxPaymentsService({ service }) {
     const [uploadedFiles, setUploadedFiles] = useState<UploadedFilesState>({});
+    const [taxRecords, setTaxRecords] = useState<TaxRecord[]>([]);
+    const [loading, setLoading] = useState(true);
     const { user } = useAuth();
     const { toast } = useToast();
     const router = useRouter();
+    
+    useEffect(() => {
+        const fetchTaxRecords = async () => {
+            if(!user) return;
+            setLoading(true);
+            const q = query(collection(db, "taxRecords"), where("nic", "==", user.nic));
+            try {
+                const querySnapshot = await getDocs(q);
+                const records = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TaxRecord));
+                setTaxRecords(records);
+            } catch (error) {
+                console.error("Error fetching tax records", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchTaxRecords();
+    }, [user]);
 
     const handleUploadComplete = (docName: string, base64: string) => {
         setUploadedFiles(prev => ({ ...prev, [docName]: base64 }));
@@ -91,7 +108,9 @@ export function TaxPaymentsService({ service }) {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {taxPayments.map((tax, index) => (
+                        {loading ? (
+                            <TableRow><TableCell colSpan={6}><Skeleton className="h-8" /></TableCell></TableRow>
+                        ) : taxRecords.map((tax, index) => (
                             <TableRow key={index}>
                                 <TableCell>{tax.year}</TableCell>
                                 <TableCell>{tax.type}</TableCell>
@@ -104,7 +123,7 @@ export function TaxPaymentsService({ service }) {
                                 </TableCell>
                                 <TableCell className="text-right">
                                     {tax.status === 'Due' && <Button size="sm" asChild>
-                                        <Link href={`/payment?service=Tax+Payment&amount=${tax.amount}&ref=TAX-${tax.year}-Q1`}>Pay Now</Link>
+                                        <Link href={`/payment?service=Tax+Payment&amount=${tax.amount}&ref=${tax.id}`}>Pay Now</Link>
                                     </Button>}
                                 </TableCell>
                             </TableRow>

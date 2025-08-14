@@ -50,6 +50,17 @@ export interface Fine {
     nic: string;
 }
 
+export interface TaxRecord {
+    id: string;
+    year: number;
+    type: string;
+    amount: string;
+    dueDate: string;
+    status: 'Due' | 'Paid';
+    nic: string;
+}
+
+
 export interface Vehicle {
     id: string;
     type: string;
