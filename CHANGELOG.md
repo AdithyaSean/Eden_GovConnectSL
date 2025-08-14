@@ -7,6 +7,19 @@ Versioning Strategy (Prototype Phase): Date-based entries with optional tags (Pr
 
 # Changelog
 
+## 2025-08-15 – Sprint 1 Implementation Stubs
+Category | Change
+-------- | ------
+Code Stubs | Added `src/lib/service-schemas/passport-renewal.ts` with Zod schema for dynamic forms (per `service-schema.md`).
+Code Stubs | Created `src/components/dynamic-form.tsx` to render forms from a schema (per `TASKS.md`, User A).
+Code Stubs | Implemented demo page at `src/app/services/passport-renewal/demo/page.tsx` using the dynamic form (per `TASKS.md`, User A).
+Code Stubs | Added `src/lib/automation/prompt-builder.ts` utility to generate automation prompts from form data (per `browser-automation-plan.md`).
+Code Stubs | Updated Genkit flows (`chat`, `suggest-services`, `summarize-service-info`) to use the new `src/lib/prompts/registry.ts` accessor (per `prompt-registry.md`).
+Code Stubs | Added initial `firestore.rules` draft file (per `firestore-rules-draft.md`).
+Code Stubs | Created `src/lib/security/validators.ts` for application status transition checks (per `TASKS.md`, User D).
+Code Stubs | Added admin checkpoint UI at `src/app/admin/checkpoints/page.tsx` and `src/components/checkpoint-table.tsx` (per `hitl-checkpoints.md`).
+Docs | Updated `TASKS.md` to define scope for Sprint 2 implementation.
+
 ## [Unreleased]
 Planned:
 - Initial Sprint 1 implementations (dynamic form stub, prompt registry accessor, automation prompt builder, validators, checkpoint admin UI) per `docs/TASKS.md`.
