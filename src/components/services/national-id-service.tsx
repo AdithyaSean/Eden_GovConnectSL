@@ -15,13 +15,23 @@ import { addDoc, collection, serverTimestamp, Timestamp } from 'firebase/firesto
 import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Check } from 'lucide-react';
-import { Input } from '../ui/input';
+import { Check, Loader2 } from 'lucide-react';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
-
+import { documentExtractor } from '@/lib/documentExtractor';
+import { extractDocInfo, ExtractDocInfoOutput } from '@/ai/flows/extract-doc-info';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type UploadedFilesState = {
-  [key: string]: string;
+  [key: string]: string; // base64 string
 };
 
 const STEPS = [
@@ -39,6 +49,11 @@ export function NationalIdService({ service }) {
   const [time, setTime] = useState<string>("");
   const [serviceType, setServiceType] = useState("new-id");
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFilesState>({});
+  const [showResultDialog, setShowResultDialog] = useState(false);
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [submissionData, setSubmissionData] = useState<any>(null);
+  const [extractedJson, setExtractedJson] = useState<string>("");
+
   const { toast } = useToast();
   const { user } = useAuth();
   const router = useRouter();
@@ -58,7 +73,7 @@ export function NationalIdService({ service }) {
           return newFiles;
       });
   }
-  
+
   const getDocumentsForServiceType = () => {
     switch (serviceType) {
         case 'new-id':
@@ -75,7 +90,7 @@ export function NationalIdService({ service }) {
   const requiredDocs = getDocumentsForServiceType();
   
   const validateStep = () => {
-    if(currentStep === 2) {
+    if (currentStep === 2) {
        return Object.keys(requiredDocs).every(docKey => uploadedFiles[docKey]);
     }
      if (currentStep === 3) {
@@ -90,7 +105,7 @@ export function NationalIdService({ service }) {
     } else {
         toast({
             title: "Incomplete Step",
-            description: "Please upload all required documents and select an appointment date and time.",
+            description: "Please upload all required documents or select an appointment date and time.",
             variant: "destructive"
         });
     }
@@ -107,31 +122,82 @@ export function NationalIdService({ service }) {
         toast({ title: "Please complete all steps.", variant: "destructive" });
         return;
     }
-    
-    const appointmentDateTime = new Date(date!);
-    const [hours, minutes, ampm] = time.match(/(\d{2}):(\d{2}) (AM|PM)/)!.slice(1);
-    let numericHours = parseInt(hours, 10);
-    if (ampm === 'PM' && numericHours !== 12) {
-        numericHours += 12;
+
+    setIsExtracting(true);
+
+    const primaryDocKey = Object.keys(requiredDocs)[0];
+    const primaryDocBase64 = uploadedFiles[primaryDocKey];
+
+    if (!primaryDocBase64) {
+        toast({ title: "Primary document not found for extraction.", variant: "destructive"});
+        setIsExtracting(false);
+        return;
     }
-    if (ampm === 'AM' && numericHours === 12) {
-        numericHours = 0;
-    }
-    appointmentDateTime.setHours(numericHours, parseInt(minutes, 10), 0, 0);
 
     try {
-        await addDoc(collection(db, "applications"), {
+        const fetchRes = await fetch(primaryDocBase64);
+        const blob = await fetchRes.blob();
+        const file = new File([blob], "primary_document", { type: blob.type });
+
+        const ocrResult = await documentExtractor.extractText(file);
+        if (!ocrResult.success) throw new Error(ocrResult.error);
+
+        const aiResult = await extractDocInfo(ocrResult.text);
+        
+        const appointmentDateTime = new Date(date!);
+        const [hours, minutes, ampm] = time.match(/(\d{2}):(\d{2}) (AM|PM)/)!.slice(1);
+        let numericHours = parseInt(hours, 10);
+        if (ampm === 'PM' && numericHours !== 12) {
+            numericHours += 12;
+        }
+        if (ampm === 'AM' && numericHours === 12) {
+            numericHours = 0;
+        }
+        appointmentDateTime.setHours(numericHours, parseInt(minutes, 10), 0, 0);
+        
+        const fullExtractedData = {
+          serviceType,
+          appointmentDate: appointmentDateTime.toISOString(),
+          time,
+          ...aiResult
+        };
+
+        const finalData = {
             service: service.title,
             userId: user.id,
             user: user.name,
             status: "Pending",
             submitted: serverTimestamp(),
             documents: uploadedFiles,
-            details: {
-                serviceType,
-                appointmentDate: Timestamp.fromDate(appointmentDateTime)
-            }
-        });
+            details: fullExtractedData
+        };
+        
+        setSubmissionData(finalData);
+        setExtractedJson(JSON.stringify(fullExtractedData, null, 2));
+        setShowResultDialog(true);
+
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+        toast({ title: "Extraction & Submission Failed", description: errorMessage, variant: "destructive" });
+    } finally {
+        setIsExtracting(false);
+    }
+  }
+  
+  const handleConfirmSubmit = async () => {
+    if (!submissionData) return;
+
+    // We need to convert the ISO string back to a Firestore Timestamp before saving
+    const dataToSave = {
+      ...submissionData,
+      details: {
+        ...submissionData.details,
+        appointmentDate: Timestamp.fromDate(new Date(submissionData.details.appointmentDate))
+      }
+    };
+
+    try {
+        await addDoc(collection(db, "applications"), dataToSave);
         toast({
             title: "Application Submitted",
             description: "Your National ID application has been received.",
@@ -140,21 +206,16 @@ export function NationalIdService({ service }) {
     } catch (error) {
         console.error("Error submitting application: ", error);
         toast({ title: "Submission Failed", description: "An error occurred. Please try again.", variant: "destructive"});
+    } finally {
+        setShowResultDialog(false);
+        setSubmissionData(null);
     }
   }
 
-  return (
-    <div className="space-y-8">
-        <Card>
-            <CardHeader>
-                <CardTitle>Application Status</CardTitle>
-            </CardHeader>
-            <CardContent className="flex gap-2">
-                <Input placeholder="Enter your Application Reference Number" />
-                <Button>Check Status</Button>
-            </CardContent>
-        </Card>
 
+  return (
+    <>
+    <div className="space-y-8">
         <form onSubmit={handleSubmit}>
             <div className="space-y-8">
                  <Card>
@@ -165,7 +226,7 @@ export function NationalIdService({ service }) {
                         <div className="flex items-center justify-between">
                             {STEPS.map((step, index) => (
                                 <React.Fragment key={step.id}>
-                                    <div className="flex flex-col items-center text-center w-32">
+                                    <div className="flex flex-col items-center text-center w-36">
                                         <div className={cn(
                                             "w-10 h-10 rounded-full flex items-center justify-center border-2",
                                             currentStep > step.id ? "bg-green-600 border-green-600 text-white" : "",
@@ -208,7 +269,7 @@ export function NationalIdService({ service }) {
                         </CardContent>
                     </Card>
                 )}
-                
+
                 {currentStep === 2 && (
                     <Card>
                         <CardHeader>
@@ -270,7 +331,9 @@ export function NationalIdService({ service }) {
                             <CardDescription>Please review all your details from the previous steps. Click submit to complete your application.</CardDescription>
                         </CardHeader>
                         <CardFooter>
-                            <Button size="lg" type="submit">Submit Application</Button>
+                            <Button size="lg" type="submit" disabled={isExtracting}>
+                                {isExtracting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Processing...</> : "Submit Application"}
+                            </Button>
                         </CardFooter>
                     </Card>
                 )}
@@ -280,13 +343,33 @@ export function NationalIdService({ service }) {
                     {currentStep > 1 && <Button type="button" variant="secondary" onClick={handleBack}>Back</Button>}
                     </div>
                     <div>
-                        {currentStep < STEPS.length ? (
+                        {currentStep < STEPS.length && (
                             <Button type="button" onClick={handleNext}>Next</Button>
-                        ) : null}
+                        )}
                     </div>
                 </div>
             </div>
         </form>
     </div>
+    <AlertDialog open={showResultDialog} onOpenChange={setShowResultDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Extracted Information (Testing)</AlertDialogTitle>
+            <AlertDialogDescription>
+              This is the JSON data that will be submitted. It includes info extracted from your document plus your application details. Review it and then confirm.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="max-h-60 overflow-y-auto bg-muted p-4 rounded-md">
+            <pre className="text-xs whitespace-pre-wrap">
+              <code>{extractedJson}</code>
+            </pre>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmSubmit}>Confirm &amp; Submit</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
