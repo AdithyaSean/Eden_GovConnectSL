@@ -21,7 +21,7 @@ import { useSearchParams } from "next/navigation";
 
 
 export default function WorkerApplicationDetailsPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+  const { id } = use(params);
   const searchParams = useSearchParams();
   const fromPath = searchParams.get('from');
 
