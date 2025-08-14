@@ -21,46 +21,51 @@ export default function WorkerFinePaymentDashboard() {
   const [fines, setFines] = useState<Fine[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchNic, setSearchNic] = useState("");
+  const [allUsers, setAllUsers] = useState<User[]>([]);
   const [foundUser, setFoundUser] = useState<User | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const { toast } = useToast();
 
-  const fetchFines = async () => {
+  const fetchFinesAndUsers = async () => {
       setLoading(true);
       try {
-        const q = query(collection(db, "fines"));
-        const querySnapshot = await getDocs(q);
-        const fineData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Fine));
+        const finesQuery = query(collection(db, "fines"));
+        const finesSnapshot = await getDocs(finesQuery);
+        const fineData = finesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Fine));
         setFines(fineData);
+
+        const usersQuery = query(collection(db, "users"));
+        const usersSnapshot = await getDocs(usersQuery);
+        const usersData = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
+        setAllUsers(usersData);
+
       } catch (error) {
-        console.error("Error fetching fines: ", error);
+        console.error("Error fetching data: ", error);
       } finally {
         setLoading(false);
       }
     };
 
   useEffect(() => {
-    fetchFines();
+    fetchFinesAndUsers();
   }, []);
   
   const handleUserSearch = async () => {
       if(!searchNic) return;
       setIsSearching(true);
       setFoundUser(null);
-      try {
-          const q = query(collection(db, "users"), where("nic", "==", searchNic));
-          const querySnapshot = await getDocs(q);
-          if(!querySnapshot.empty){
-              const user = querySnapshot.docs[0].data() as User;
-              setFoundUser(user);
-          } else {
-              toast({ title: "User not found", variant: "destructive" });
-          }
-      } catch (e) {
-          toast({ title: "Search failed", variant: "destructive" });
-      } finally {
-          setIsSearching(false);
+      
+      // Perform client-side search
+      const lowercasedQuery = searchNic.toLowerCase();
+      const user = allUsers.find(u => u.nic?.toLowerCase().includes(lowercasedQuery));
+
+      if(user) {
+          setFoundUser(user);
+      } else {
+          toast({ title: "User not found", variant: "destructive" });
       }
+      
+      setIsSearching(false);
   }
   
   const handleAddFine = async (e: FormEvent<HTMLFormElement>) => {
@@ -80,7 +85,7 @@ export default function WorkerFinePaymentDashboard() {
               status: 'Pending'
           });
           toast({ title: "Fine Added Successfully" });
-          fetchFines(); // Refresh the list
+          fetchFinesAndUsers(); // Refresh the list
           setFoundUser(null);
           setSearchNic("");
           (e.target as HTMLFormElement).reset();

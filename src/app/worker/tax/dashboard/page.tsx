@@ -25,61 +25,57 @@ export default function WorkerTaxDashboard() {
   const [taxRecords, setTaxRecords] = useState<TaxRecord[]>([]);
   const [loadingRecords, setLoadingRecords] = useState(true);
   const [searchNic, setSearchNic] = useState("");
+  const [allUsers, setAllUsers] = useState<User[]>([]);
   const [foundUser, setFoundUser] = useState<User | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const { toast } = useToast();
   
-  const fetchSubmissions = async () => {
+  const fetchAllData = async () => {
       setLoading(true);
-      try {
-        const q = query(collection(db, "applications"), where("service", "==", SERVICE_NAME));
-        const querySnapshot = await getDocs(q);
-        const apps = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
-        setApplications(apps);
-      } catch (error) {
-        console.error("Error fetching applications: ", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-  const fetchTaxRecords = async () => {
       setLoadingRecords(true);
       try {
-          const q = query(collection(db, "taxRecords"));
-          const querySnapshot = await getDocs(q);
-          const records = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TaxRecord));
-          setTaxRecords(records);
+        const appQuery = query(collection(db, "applications"), where("service", "==", SERVICE_NAME));
+        const appSnapshot = await getDocs(appQuery);
+        const apps = appSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
+        setApplications(apps);
+        setLoading(false);
+
+        const recordsQuery = query(collection(db, "taxRecords"));
+        const recordsSnapshot = await getDocs(recordsQuery);
+        const records = recordsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TaxRecord));
+        setTaxRecords(records);
+        setLoadingRecords(false);
+
+        const usersQuery = query(collection(db, "users"));
+        const usersSnapshot = await getDocs(usersQuery);
+        const usersData = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
+        setAllUsers(usersData);
+
       } catch (e) {
-          console.error("Error fetching tax records", e);
-      } finally {
+          console.error("Error fetching data", e);
+          setLoading(false);
           setLoadingRecords(false);
       }
   }
 
   useEffect(() => {
-    fetchSubmissions();
-    fetchTaxRecords();
+    fetchAllData();
   }, []);
   
   const handleUserSearch = async () => {
       if(!searchNic) return;
       setIsSearching(true);
       setFoundUser(null);
-      try {
-          const q = query(collection(db, "users"), where("nic", "==", searchNic));
-          const querySnapshot = await getDocs(q);
-          if(!querySnapshot.empty){
-              const user = querySnapshot.docs[0].data() as User;
-              setFoundUser(user);
-          } else {
-              toast({ title: "User not found", variant: "destructive" });
-          }
-      } catch (e) {
-          toast({ title: "Search failed", variant: "destructive" });
-      } finally {
-          setIsSearching(false);
+      
+      const lowercasedQuery = searchNic.toLowerCase();
+      const user = allUsers.find(u => u.nic?.toLowerCase().includes(lowercasedQuery));
+      
+      if(user) {
+          setFoundUser(user);
+      } else {
+          toast({ title: "User not found", variant: "destructive" });
       }
+      setIsSearching(false);
   }
   
   const handleAddTaxRecord = async (e: FormEvent<HTMLFormElement>) => {
@@ -99,7 +95,7 @@ export default function WorkerTaxDashboard() {
               status: 'Due'
           });
           toast({ title: "Tax Record Added Successfully" });
-          fetchTaxRecords(); // Refresh the list
+          fetchAllData(); // Refresh all lists
           setFoundUser(null);
           setSearchNic("");
           (e.target as HTMLFormElement).reset();
