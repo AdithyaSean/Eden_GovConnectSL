@@ -84,7 +84,7 @@ export default function WorkerApplicationDetailsPage({ params }: { params: Promi
     setIsStatusUpdateDialogOpen(true);
   }
 
-  const handleStatusUpdate = async () => {
+  const handleConfirmStatusUpdate = async () => {
     if(!application || !targetStatus || !applicant) return;
 
     // --- Special logic for vehicle services ---
@@ -337,7 +337,7 @@ export default function WorkerApplicationDetailsPage({ params }: { params: Promi
             <DialogClose asChild>
               <Button type="button" variant="outline">Cancel</Button>
             </DialogClose>
-            <Button type="button" onClick={handleStatusUpdate}>Confirm Update</Button>
+            <Button type="button" onClick={handleConfirmStatusUpdate}>Confirm Update</Button>
           </DialogFooter>
         </DialogContent>
     </Dialog>
