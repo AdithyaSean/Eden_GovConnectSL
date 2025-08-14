@@ -84,7 +84,7 @@ export default function WorkerSupportDashboard() {
       if (activeTicket.userId) {
           await createNotification(
               activeTicket.userId,
-              `Reply for ticket: ${activeTicket.subject}`,
+              `Reply for ticket: ${activeTicket.subject.substring(0, 20)}...`,
               `A support agent has replied to your ticket.`,
               `/support`
           );
@@ -215,7 +215,6 @@ export default function WorkerSupportDashboard() {
     </AdminLayout>
   );
 }
-
     
 
     
