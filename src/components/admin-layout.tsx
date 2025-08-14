@@ -81,8 +81,9 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
 
 
   const getWorkerNavItems = () => {
-    if (worker?.role) {
-      const navItem = allWorkerNavItems.find(item => item.role === worker.role);
+    const role = worker?.role || localStorage.getItem('workerRole');
+    if (role) {
+      const navItem = allWorkerNavItems.find(item => item.role === role);
       return navItem ? [
           {...navItem, title: "Dashboard", href: navItem.href}
       ] : [];
@@ -94,8 +95,9 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
   
   const getDashboardHref = () => {
     if (!workerMode) return "/admin/dashboard";
-    if (worker?.role) {
-        const item = allWorkerNavItems.find(i => i.role === worker.role);
+    const role = worker?.role || localStorage.getItem('workerRole');
+    if (role) {
+        const item = allWorkerNavItems.find(i => i.role === role);
         return item ? item.href : '/admin/login';
     }
     return '/admin/login';
@@ -103,7 +105,8 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
 
   const getProfileHref = () => {
       if (!workerMode) return "/admin/profile";
-      if(worker?.id) return `/worker/profile/${worker.id}`;
+      const workerId = worker?.id || localStorage.getItem('workerId');
+      if(workerId) return `/worker/profile/${workerId}`;
       return '/admin/login';
   }
 
