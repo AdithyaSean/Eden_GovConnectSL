@@ -120,35 +120,7 @@ export function LandRegistryService({ service }) {
   return (
     <>
     <div className="space-y-8">
-        <Tabs defaultValue="register" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="search">Search Records</TabsTrigger>
-            <TabsTrigger value="register">New Registration</TabsTrigger>
-          </TabsList>
-          <TabsContent value="search">
-            <Card>
-              <CardHeader>
-                <CardTitle>Search for Land Records</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                     <div className="space-y-2">
-                        <Label htmlFor="deedNumber">Deed Number</Label>
-                        <Input id="deedNumber" placeholder="e.g., 1234/56" />
-                    </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="ownerName">Owner's Name</Label>
-                        <Input id="ownerName" placeholder="Full name of the owner" />
-                    </div>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button>Search Records</Button>
-              </CardFooter>
-            </Card>
-          </TabsContent>
-          <TabsContent value="register">
-            <form onSubmit={handleSubmit}>
+       <form onSubmit={handleSubmit}>
                  <div className="space-y-8">
                     <Card>
                         <CardHeader>
@@ -235,8 +207,6 @@ export function LandRegistryService({ service }) {
                     </div>
                 </div>
             </form>
-          </TabsContent>
-        </Tabs>
          <Card>
             <CardHeader>
                 <CardTitle>Contact Regional Offices</CardTitle>
