@@ -4,7 +4,7 @@
 import { AdminLayout } from "@/components/admin-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
@@ -159,51 +159,56 @@ export default function WorkerSupportDashboard() {
                 </CardContent>
             </Card>
 
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 space-y-8">
                 {activeTicket ? (
-                     <Card>
-                        <CardHeader>
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <CardTitle className="text-xl">{activeTicket.subject}</CardTitle>
-                                    <CardDescription>From: {activeTicket.name} ({activeTicket.email})</CardDescription>
-                                </div>
-                                 <Badge variant={activeTicket.status === 'Open' ? 'destructive' : 'secondary'}>{activeTicket.status}</Badge>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                           <div>
-                            <Label className="font-semibold">Conversation History</Label>
-                            <div className="mt-2 p-4 bg-muted rounded-md max-h-80 overflow-y-auto text-sm space-y-4">
-                                {(activeTicket.messages || []).map((msg, index) => (
-                                    <div key={index} className={cn("p-3 rounded-lg", msg.author === 'Citizen' ? 'bg-primary/10' : 'bg-secondary')}>
-                                        <p className="font-semibold">{msg.author} <span className="text-xs text-muted-foreground ml-2">{formatDate(msg.timestamp)}</span></p>
-                                        <p className="text-sm text-foreground whitespace-pre-wrap">{msg.content}</p>
+                     <>
+                        <Card>
+                            <CardHeader>
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <CardTitle className="text-xl">{activeTicket.subject}</CardTitle>
+                                        <CardDescription>From: {activeTicket.name} ({activeTicket.email})</CardDescription>
                                     </div>
-                                ))}
-                            </div>
-                           </div>
-                           <div>
-                            <Label htmlFor="reply" className="font-semibold">Your Reply</Label>
-                            <Textarea 
-                                id="reply"
-                                className="mt-2" 
-                                placeholder="Type your response to the citizen here..." 
-                                value={replyMessage}
-                                onChange={(e) => setReplyMessage(e.target.value)}
-                                disabled={isSubmitting}
-                            />
-                           </div>
-                           <div className="flex justify-end gap-2">
-                               <Button variant="outline" onClick={() => handleReplySubmit('In Progress')} disabled={isSubmitting || !replyMessage.trim()}>
+                                    <Badge variant={activeTicket.status === 'Open' ? 'destructive' : 'secondary'}>{activeTicket.status}</Badge>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="mt-2 p-4 bg-muted rounded-md max-h-80 overflow-y-auto text-sm space-y-4">
+                                    {(activeTicket.messages || []).map((msg, index) => (
+                                        <div key={index} className={cn("p-3 rounded-lg", msg.author === 'Citizen' ? 'bg-primary/10' : 'bg-secondary')}>
+                                            <p className="font-semibold">{msg.author} <span className="text-xs text-muted-foreground ml-2">{formatDate(msg.timestamp)}</span></p>
+                                            <p className="text-sm text-foreground whitespace-pre-wrap">{msg.content}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+                         <Card>
+                            <CardHeader>
+                                <CardTitle>Reply to Citizen</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <Label htmlFor="reply" className="sr-only">Your Reply</Label>
+                                <Textarea 
+                                    id="reply"
+                                    className="mt-2" 
+                                    placeholder="Type your response to the citizen here..." 
+                                    value={replyMessage}
+                                    onChange={(e) => setReplyMessage(e.target.value)}
+                                    disabled={isSubmitting}
+                                    rows={5}
+                                />
+                            </CardContent>
+                            <CardFooter className="flex justify-end gap-2">
+                                <Button variant="outline" onClick={() => handleReplySubmit('In Progress')} disabled={isSubmitting || !replyMessage.trim()}>
                                    {isSubmitting ? "Sending..." : "Send & Keep Open"}
                                 </Button>
                                <Button onClick={() => handleReplySubmit('Closed')} disabled={isSubmitting || !replyMessage.trim()}>
                                    {isSubmitting ? "Sending..." : "Send & Close Ticket"}
                                 </Button>
-                           </div>
-                        </CardContent>
-                     </Card>
+                            </CardFooter>
+                         </Card>
+                     </>
                 ) : (
                     <div className="flex items-center justify-center h-full min-h-[400px] bg-muted rounded-lg">
                         <p className="text-muted-foreground">Select a ticket from the queue to view details</p>
