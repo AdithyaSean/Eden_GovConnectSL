@@ -20,17 +20,6 @@ type UploadedFilesState = {
   [key: string]: string;
 };
 
-const vaccinationRecords = [
-    { name: "COVID-19 (Dose 1)", date: "2021-06-15", provider: "National Hospital" },
-    { name: "COVID-19 (Dose 2)", date: "2021-08-20", provider: "National Hospital" },
-    { name: "Tetanus Toxoid", date: "2018-03-10", provider: "Local Clinic" },
-];
-
-const medicalReports = [
-    { name: "Full Blood Count Report", date: "2023-11-05", id: "REP-001" },
-    { name: "X-Ray Chest Report", date: "2022-09-21", id: "REP-002" },
-]
-
 const timeSlots = ["09:00 AM", "10:00 AM", "11:00 AM", "01:00 PM", "02:00 PM", "03:00 PM"];
 
 export function HealthServicesService({ service }) {
@@ -134,35 +123,6 @@ export function HealthServicesService({ service }) {
 
   return (
     <div className="space-y-8">
-        <Card>
-            <CardHeader>
-                <CardTitle>My Vaccination Records</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Vaccine Name</TableHead>
-                            <TableHead>Date Administered</TableHead>
-                            <TableHead>Provider</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {vaccinationRecords.map((record) => (
-                            <TableRow key={record.name}>
-                                <TableCell className="font-medium">{record.name}</TableCell>
-                                <TableCell>{record.date}</TableCell>
-                                <TableCell>{record.provider}</TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </CardContent>
-             <CardFooter>
-                <Button variant="outline">Download Full Report</Button>
-             </CardFooter>
-        </Card>
-        
         <form onSubmit={handleAppointmentSubmit}>
             <Card>
                 <CardHeader>
@@ -228,7 +188,7 @@ export function HealthServicesService({ service }) {
         <form onSubmit={handleIdCardSubmit}>
             <Card>
                 <CardHeader>
-                    <CardTitle>Apply for National Medical ID Card</CardTitle>
+                    <CardTitle>Medical Records & History</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <FileUpload
@@ -250,36 +210,6 @@ export function HealthServicesService({ service }) {
             </Card>
         </form>
 
-        <Card>
-            <CardHeader>
-                <CardTitle>Download Medical Reports</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Report Name</TableHead>
-                            <TableHead>Date Issued</TableHead>
-                            <TableHead className="text-right">Action</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {medicalReports.map((report) => (
-                            <TableRow key={report.id}>
-                                <TableCell className="font-medium">{report.name}</TableCell>
-                                <TableCell>{report.date}</TableCell>
-                                <TableCell className="text-right">
-                                    <Button variant="ghost" size="icon">
-                                        <Download className="h-4 w-4" />
-                                    </Button>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
-        
         <Card>
             <CardHeader>
                 <CardTitle>Emergency Contacts</CardTitle>
