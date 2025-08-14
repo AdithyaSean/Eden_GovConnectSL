@@ -71,7 +71,9 @@ export default function AdminLoginPage() {
 
         await signInWithEmailAndPassword(auth, email, password);
 
-        if (userData.role.startsWith("worker_")) {
+        if (userData.role === "Super Admin") {
+            router.push("/admin/dashboard");
+        } else if (userData.role.startsWith("worker_")) {
             localStorage.setItem("workerId", userData.id);
             localStorage.setItem("workerRole", userData.role);
             let dashboardPath = userData.role.replace('worker_', '');
@@ -79,11 +81,9 @@ export default function AdminLoginPage() {
             if(dashboardPath === 'registeredvehicles') dashboardPath = 'registered-vehicles';
             
             router.push(`/worker/${dashboardPath}/dashboard`);
-
-        } else if (userData.role === "Super Admin" && email.endsWith('@gov.lk')) {
-            router.push("/admin/dashboard");
         } else {
             toast({ title: "Access Denied", description: "This login is for authorized workers and admins only.", variant: "destructive" });
+            // Consider signing out the user if they are not an admin/worker
         }
 
     } catch (error: any) {
