@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import type React from "react";
@@ -22,7 +21,6 @@ const adminNavItems = [
   { title: "Applications", href: "/admin/applications", icon: FileText },
   { title: "Users", href: "/admin/users", icon: Users },
   { title: "Analytics", href: "/admin/analytics", icon: BarChart3 },
-  { title: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
 interface AdminLayoutProps {
@@ -103,7 +101,7 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
             <LogoComponent />
           </div>
           <div className="flex-1">
-            <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
+             <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
               {!workerMode && adminNavItems.map((item) => (
                 <Link
                   key={item.href}
@@ -131,7 +129,7 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="flex flex-col p-0">
-              <nav className="grid gap-4 text-base font-medium">
+               <nav className="grid gap-4 text-base font-medium">
                 <div className="flex items-center gap-2 font-semibold mb-4 h-14 border-b px-6">
                     <LogoComponent />
                 </div>
