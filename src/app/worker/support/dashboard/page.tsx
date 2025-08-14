@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Textarea } from "@/components/ui/textarea";
 import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
-import { collection, getDocs, query, where, Timestamp, doc, updateDoc, orderBy, addDoc, arrayUnion } from "firebase/firestore";
+import { collection, getDocs, query, where, Timestamp, doc, updateDoc, orderBy, addDoc, arrayUnion, serverTimestamp } from "firebase/firestore";
 import type { SupportTicket, SupportMessage } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
@@ -32,6 +32,7 @@ export default function WorkerSupportDashboard() {
       const allTickets = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SupportTicket));
       
       const filteredAndSortedTickets = allTickets
+        .filter(t => t.status !== 'Closed')
         .sort((a, b) => (b.submittedAt as Timestamp).toMillis() - (a.submittedAt as Timestamp).toMillis());
 
       setTickets(filteredAndSortedTickets);
@@ -131,13 +132,13 @@ export default function WorkerSupportDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             <Card className="lg:col-span-1">
                 <CardHeader>
-                    <CardTitle>Ticket Queue ({tickets.filter(t => t.status !== 'Closed').length})</CardTitle>
+                    <CardTitle>Ticket Queue ({tickets.length})</CardTitle>
                     <CardDescription>Open tickets from citizens.</CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-2 p-2">
                     {loading ? <Skeleton className="h-20" /> :
-                     tickets.filter(t => t.status !== 'Closed').length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">No open tickets.</p> :
-                     tickets.filter(t => t.status !== 'Closed').map(ticket => (
+                     tickets.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">No open tickets.</p> :
+                     tickets.map(ticket => (
                         <button 
                             key={ticket.id} 
                             onClick={() => setActiveTicket(ticket)} 
@@ -214,5 +215,7 @@ export default function WorkerSupportDashboard() {
     </AdminLayout>
   );
 }
+
+    
 
     
