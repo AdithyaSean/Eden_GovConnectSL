@@ -80,19 +80,9 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
     };
     
     fetchWorkerData();
-  }, [workerMode]);
+  }, [workerMode, pathname]);
 
-  const getWorkerNavItems = () => {
-    if (workerRole) {
-      const navItem = allWorkerNavItems.find(item => item.role === workerRole);
-      return navItem ? [
-          {...navItem, title: "Dashboard", href: navItem.href}
-      ] : [];
-    }
-    return [];
-  };
-
-  const navItems = workerMode ? getWorkerNavItems() : adminNavItems;
+  const navItems = workerMode ? [] : adminNavItems;
   
   const getDashboardHref = () => {
     if (!workerMode) return "/admin/dashboard";
