@@ -60,7 +60,7 @@ export default function SupportPage() {
         const ticketRef = doc(db, "supportTickets", activeTicket.id);
         const newMessage: SupportMessage = {
             content: userReply,
-            author: "Citizen",
+            author: "Support",
             timestamp: Timestamp.now()
         };
         
@@ -104,7 +104,7 @@ export default function SupportPage() {
     
     const handleNewTicketSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (!user) return toast({ title: "Please log in.", variant: "destructive"});
+        if (!user) return toast({ title: "Please log in.", variant: "destructive" });
         
         const formData = new FormData(e.target as HTMLFormElement);
         const { subject, message } = Object.fromEntries(formData.entries()) as { subject: string, message: string };
@@ -120,26 +120,35 @@ export default function SupportPage() {
             timestamp: Timestamp.now()
         };
 
+        const newTicketData = {
+            subject,
+            messages: [firstMessage],
+            status: 'Open',
+            submittedAt: serverTimestamp(),
+            userNic: user.nic,
+            userId: user.id,
+            name: user.name,
+            email: user.email,
+        };
+
         try {
-             const newTicketRef = await addDoc(collection(db, "supportTickets"), {
-                subject,
-                messages: [firstMessage],
-                status: 'Open',
-                submittedAt: serverTimestamp(),
-                userNic: user.nic,
-                userId: user.id,
-                name: user.name,
-                email: user.email,
-            });
-            toast({ title: "Support Ticket Created", description: "Our team will get back to you shortly."});
-            const newTicketSnap = await getDoc(newTicketRef);
-            if(newTicketSnap.exists()){
-                const newTicket = { id: newTicketSnap.id, ...newTicketSnap.data() } as SupportTicket;
-                setActiveTicket(newTicket);
-                setTickets(prev => [newTicket, ...prev]);
-            }
-            (e.target as HTMLFormElement).reset();
+             const newTicketRef = await addDoc(collection(db, "supportTickets"), newTicketData);
+             
+             toast({ title: "Support Ticket Created", description: "Our team will get back to you shortly."});
+
+             // Optimistically update the UI with local data
+             const optimisticTicket: SupportTicket = {
+                 ...newTicketData,
+                 id: newTicketRef.id,
+                 submittedAt: Timestamp.now(), // Use local timestamp for immediate display
+             };
+             
+             setTickets(prev => [optimisticTicket, ...prev]);
+             setActiveTicket(optimisticTicket);
+             (e.target as HTMLFormElement).reset();
+
         } catch(err){
+            console.error("Error creating ticket:", err);
             toast({ title: "Failed to create ticket", variant: "destructive" });
         } finally {
             setIsSubmitting(false);
@@ -275,5 +284,3 @@ export default function SupportPage() {
     </DashboardLayout>
   );
 }
-
-    
