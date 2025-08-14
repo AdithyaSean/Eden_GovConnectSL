@@ -9,7 +9,7 @@ import { MissingDocumentsService } from "@/components/services/missing-documents
 import { RenewDrivingLicenseService } from "@/components/services/renew-driving-license-service";
 import { NationalIdService } from "@/components/services/national-id-service";
 import { LandRegistryService } from "@/components/services/land-registry-service";
-import { ExamResultsService } from "@/components/services/exam-results-service";
+import { ExamRecorrectionAppealService } from "@/components/services/exam-recorrection-appeal-service";
 import { PensionDepartmentService } from "@/components/services/pension-department-service";
 import { TaxPaymentsService } from "@/components/services/tax-payments-service";
 import { HealthServicesService } from "@/components/services/health-services-service";
@@ -27,7 +27,7 @@ const serviceComponentMap = {
   "passport-services": PassportRenewalService,
   "national-id-services": NationalIdService,
   "land-registry": LandRegistryService,
-  "exam-results": ExamResultsService,
+  "exam-recorrection-appeal": ExamRecorrectionAppealService,
   "pension-department": PensionDepartmentService,
   "tax-payments-ird": TaxPaymentsService,
   "health-services": HealthServicesService,

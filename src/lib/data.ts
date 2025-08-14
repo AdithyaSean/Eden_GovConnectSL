@@ -1,6 +1,6 @@
 
 import type { NavItem, Service } from "./types";
-import { Home, Briefcase, Users, MoreHorizontal, Landmark, FileQuestion, Car, Fingerprint, GraduationCap, FileText, HeartPulse, CreditCard, LifeBuoy, Zap, BookUser, ReceiptText, Calendar } from 'lucide-react';
+import { Home, Briefcase, Users, MoreHorizontal, Landmark, FileQuestion, Car, Fingerprint, GraduationCap, FileText, HeartPulse, CreditCard, LifeBuoy, Zap, BookUser, ReceiptText, Calendar, FilePenLine } from 'lucide-react';
 
 export const navItems: NavItem[] = [
   {
@@ -172,30 +172,30 @@ export const services: Service[] = [
     }
   },
   {
-    title: "Exam Results",
-    slug: "exam-results",
-    description: "Check national examination results for GCE O/L and A/L.",
+    title: "Exam Re-correction Appeal",
+    slug: "exam-recorrection-appeal",
+    description: "Appeal for a re-correction of your exam results.",
     status: "Not Applied",
     statusVariant: "default",
-    icon: "GraduationCap",
-    actions: [{ label: "Check Results", variant: "default" }],
+    icon: "FilePenLine",
+    actions: [{ label: "Submit Appeal", variant: "default" }],
     content: {
-        longDescription: "The Department of Examinations, Sri Lanka, is responsible for conducting major national examinations, including the G.C.E. Ordinary Level (O/L) and Advanced Level (A/L). This service allows students to check their results online.",
+        longDescription: "This service allows candidates who are not satisfied with their G.C.E. O/L or A/L results to apply for a re-correction of their answer scripts. Applications must be submitted within the specified period.",
         sections: [
             {
-                title: "How to Check Results",
-                content: "When results are released, they can be accessed through the official department website. You will need your examination index number to view your results.",
+                title: "How to Apply for Re-correction",
+                content: "If you believe there has been an error in the marking of your exam papers, you can submit an appeal for re-correction through this portal.",
                 list: [
-                    "Visit the official website of the Department of Examinations (doenets.lk).",
-                    "Navigate to the 'School Exams' or 'Results' section.",
-                    "Select the relevant examination (e.g., G.C.E. A/L).",
-                    "Enter your index number in the provided field.",
-                    "Your results will be displayed on the screen."
+                    "Select the examination type (G.C.E. O/L or A/L).",
+                    "Enter your index number and the year of the examination.",
+                    "Specify the subject(s) you wish to have re-corrected.",
+                    "Provide a valid reason for your appeal.",
+                    "Pay the re-correction fee online to complete the submission."
                 ]
             },
             {
-                title: "Re-scrutiny of Results",
-                content: "If you are not satisfied with your results, you can apply for re-scrutiny. The application process and deadlines are announced on the website shortly after the results are released."
+                title: "Important Notice",
+                content: "Please note that the re-correction process may result in your marks increasing, decreasing, or remaining unchanged. The decision of the Department of Examinations will be final."
             }
         ]
     }
