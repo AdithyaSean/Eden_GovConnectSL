@@ -14,11 +14,19 @@ import { collection, query, where, getDocs, Timestamp, doc, updateDoc } from "fi
 import type { Application } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
-import { Star, MoreHorizontal } from "lucide-react";
+import { Star, MoreHorizontal, AlertTriangle } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Rating } from "@/components/rating";
+import Link from "next/link";
 
+
+const serviceFees = {
+    "Passport Services": 3500.00,
+    "Driving Licence Services": 2500.00,
+    "Land Registry": 1000.00,
+    "Missing Documents": 1500.00 // Example fee
+};
 
 export default function AppointmentsPage() {
   const [applications, setApplications] = useState<Application[]>([]);
@@ -57,15 +65,18 @@ export default function AppointmentsPage() {
     fetchApplications();
   }, [user]);
 
-  const { upcomingAppointments, pastAppointments, cancelledAppointments } = useMemo(() => {
+  const { pendingPaymentAppointments, upcomingAppointments, pastAppointments, cancelledAppointments } = useMemo(() => {
     const now = new Date();
+    const pendingPayment: Application[] = [];
     const upcoming: Application[] = [];
     const past: Application[] = [];
     const cancelled: Application[] = [];
 
     applications.forEach(app => {
         const appDate = (app.details.appointmentDate as Timestamp).toDate();
-        if (app.status === 'Rejected' || app.workerComment?.toLowerCase().includes('cancelled by citizen')) {
+        if (app.status === 'Pending Payment') {
+            pendingPayment.push(app);
+        } else if (app.status === 'Rejected' || app.workerComment?.toLowerCase().includes('cancelled by citizen')) {
             cancelled.push(app);
         } else if (appDate > now && (app.status === 'Pending' || app.status === 'In Progress' || app.status === 'Approved')) {
             upcoming.push(app);
@@ -73,7 +84,7 @@ export default function AppointmentsPage() {
             past.push(app);
         }
     });
-    return { upcomingAppointments: upcoming, pastAppointments: past, cancelledAppointments: cancelled };
+    return { pendingPaymentAppointments: pendingPayment, upcomingAppointments: upcoming, pastAppointments: past, cancelledAppointments: cancelled };
   }, [applications]);
 
 
@@ -132,6 +143,16 @@ export default function AppointmentsPage() {
     if (typeof date === 'string') return new Date(date).toLocaleString();
     return 'Invalid Date';
   };
+  
+  const getPaymentAmount = (service: string, details?: any) => {
+      if (service === 'Passport Services') {
+          return details?.serviceType === 'new' ? 5000.00 : 3500.00;
+      }
+      if (service === 'Driving Licence Services') {
+          return details?.serviceType === 'new' ? 3500.00 : 2500.00;
+      }
+      return serviceFees[service] || 0.00;
+  }
 
   return (
     <>
@@ -141,6 +162,46 @@ export default function AppointmentsPage() {
             <h1 className="text-3xl font-bold tracking-tight">Appointments</h1>
           </div>
           
+          {pendingPaymentAppointments.length > 0 && (
+            <Card className="border-yellow-500">
+              <CardHeader>
+                <div className="flex items-center gap-4">
+                  <AlertTriangle className="h-6 w-6 text-yellow-500" />
+                  <div>
+                    <CardTitle>Appointments Pending Payment</CardTitle>
+                    <CardDescription>These appointments require payment to be confirmed.</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Service</TableHead>
+                      <TableHead>Date & Time</TableHead>
+                      <TableHead className="text-right">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                     {pendingPaymentAppointments.map(app => (
+                        <TableRow key={app.id}>
+                          <TableCell className="font-medium">{app.service}</TableCell>
+                          <TableCell>{formatDate(app.details.appointmentDate)}</TableCell>
+                          <TableCell className="text-right">
+                              <Button asChild size="sm">
+                                  <Link href={`/payment?service=${encodeURIComponent(app.service)}&amount=${getPaymentAmount(app.service, app.details)}&ref=${app.id}`}>
+                                      Pay Now
+                                  </Link>
+                              </Button>
+                          </TableCell>
+                        </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardHeader>
               <CardTitle>Upcoming Appointments</CardTitle>
@@ -366,5 +427,3 @@ export default function AppointmentsPage() {
     </>
   );
 }
-
-    
