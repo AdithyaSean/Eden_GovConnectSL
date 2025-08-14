@@ -65,8 +65,6 @@ export function NationalIdService({ service }) {
             return { "BirthCertificate": "Birth Certificate", "CertifiedPhoto": "Certified Photo", "GramaNiladhariCertificate": "Grama Niladhari Certificate" };
         case 'update-id':
             return { "CertifiedPhoto": "Certified Photo", "GramaNiladhariCertificate": "Grama Niladhari Certificate", "ProofOfChange": "Proof of Change (e.g., Marriage Cert.)" };
-        case 'lost-id':
-            return { "PoliceReport": "Police Report (for Lost ID)", "CertifiedPhoto": "Certified Photo" };
         default:
             return {};
     }
@@ -189,10 +187,6 @@ export function NationalIdService({ service }) {
                                 <div className="flex items-center space-x-2">
                                     <RadioGroupItem value="update-id" id="r-update-id" />
                                     <Label htmlFor="r-update-id">Update Details on Existing ID</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="lost-id" id="r-lost-id" />
-                                    <Label htmlFor="r-lost-id">Apply for Lost ID</Label>
                                 </div>
                             </RadioGroup>
                         </CardContent>
