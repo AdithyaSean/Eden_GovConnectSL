@@ -11,10 +11,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bell, Settings, Search, LifeBuoy, ArrowRight, UserSquare, Car, BookUser } from "lucide-react";
+import { Bell, Settings, Search, LifeBuoy, ArrowRight, UserSquare, Car, BookUser, AlertTriangle, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState, useMemo, useRef, useCallback } from "react";
-import { collection, query, where, getDocs, getCountFromServer } from "firebase/firestore";
+import { collection, query, where, getDocs, getCountFromServer, Timestamp, doc, updateDoc, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
@@ -22,6 +22,8 @@ import Link from "next/link";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext, type CarouselApi } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import Image from 'next/image';
+import type { Application } from "@/lib/types";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function DashboardPage() {
   const [stats, setStats] = useState({ documents: 0, activeServices: 0, notifications: 0 });
@@ -29,6 +31,8 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const { user } = useAuth();
   const [api, setApi] = useState<CarouselApi>();
+  const [upcomingAppointments, setUpcomingAppointments] = useState<Application[]>([]);
+  const [showReminder, setShowReminder] = useState(true);
 
   const carouselSlides = [
     { src: '/images/cmb2.jpg', alt: 'Lotus Tower in Colombo', hint: 'colombo architecture', titleLine1: 'Driving Digital Change', titleLine2: 'Shaping Sri Lanka’s Future' },
@@ -56,15 +60,18 @@ export default function DashboardPage() {
         const activeServicesQuery = query(userAppsQuery, where("status", "in", ["Pending", "In Progress", "In Review"]));
         const documentsQuery = query(userAppsQuery, where("status", "in", ["Approved", "Completed"]));
         const notificationsQuery = query(collection(db, "notifications"), where("userId", "==", user.id), where("read", "==", false));
+        const allAppsQuery = query(collection(db, "applications"), where("userId", "==", user.id));
 
         const [
             activeServicesSnapshot,
             documentsSnapshot,
-            notificationsSnapshot
+            notificationsSnapshot,
+            allAppsSnapshot
         ] = await Promise.all([
             getCountFromServer(activeServicesQuery),
             getCountFromServer(documentsQuery),
             getCountFromServer(notificationsQuery),
+            getDocs(allAppsQuery)
         ]);
 
         setStats({
@@ -72,6 +79,38 @@ export default function DashboardPage() {
           activeServices: activeServicesSnapshot.data().count,
           notifications: notificationsSnapshot.data().count,
         });
+
+        // Appointment Reminders Logic
+        const now = new Date();
+        const twentyFourHoursFromNow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+        const userApps = allAppsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
+        
+        const upcoming = userApps.filter(app => {
+          if (!app.details?.appointmentDate) return false;
+          const appDate = (app.details.appointmentDate as Timestamp).toDate();
+          return appDate > now && appDate <= twentyFourHoursFromNow;
+        });
+
+        setUpcomingAppointments(upcoming);
+        setShowReminder(upcoming.length > 0);
+        
+        // Send notifications for reminders
+        for (const app of upcoming) {
+          if (!app.details.reminderSent) {
+            await addDoc(collection(db, "notifications"), {
+              userId: user.id,
+              title: "Appointment Reminder",
+              description: `You have an upcoming appointment for '${app.service}' tomorrow.`,
+              href: `/appointments`,
+              icon: "CalendarCheck",
+              read: false,
+              createdAt: serverTimestamp()
+            });
+            // Mark reminder as sent
+            await updateDoc(doc(db, "applications", app.id), { "details.reminderSent": true });
+          }
+        }
+
 
       } catch (error) {
         console.error("Error fetching dashboard data: ", error);
@@ -91,6 +130,13 @@ export default function DashboardPage() {
     );
   }, [searchQuery]);
 
+ const formatDate = (date: Timestamp | string | undefined) => {
+    if (!date) return 'N/A';
+    if (date instanceof Timestamp) return date.toDate().toLocaleString();
+    if (typeof date === 'string') return new Date(date).toLocaleString();
+    return 'Invalid Date';
+  };
+
 
   return (
     <DashboardLayout>
@@ -98,6 +144,31 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         </div>
+
+        {showReminder && upcomingAppointments.length > 0 && (
+          <Alert variant="default" className="border-yellow-500 bg-yellow-50 text-yellow-900">
+             <AlertTriangle className="h-4 w-4 !text-yellow-600" />
+            <div className="flex justify-between items-start">
+              <div>
+                <AlertTitle className="font-bold">Upcoming Appointment Reminder</AlertTitle>
+                <AlertDescription>
+                  You have the following appointments within the next 24 hours:
+                  <ul className="list-disc pl-5 mt-2">
+                    {upcomingAppointments.map(app => (
+                        <li key={app.id}>
+                            <strong>{app.service}:</strong> {formatDate(app.details.appointmentDate)}
+                        </li>
+                    ))}
+                  </ul>
+                </AlertDescription>
+              </div>
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setShowReminder(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </Alert>
+        )}
+
         {/* Carousel */}
         <div className="relative">
           <Carousel setApi={setApi} plugins={[autoplayPlugin.current]} opts={{ loop: true }}>
