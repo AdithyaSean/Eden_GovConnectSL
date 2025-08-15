@@ -1,3 +1,4 @@
+
 // This test file is temporarily skipped due to a persistent and complex
 // issue with Jest's handling of ES Modules (`lucide-react`).
 // We are prioritizing broader test coverage over fixing this single,

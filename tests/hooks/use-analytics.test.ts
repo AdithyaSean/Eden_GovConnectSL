@@ -1,3 +1,4 @@
+
 import { renderHook, waitFor } from '@testing-library/react';
 import { useAnalytics } from '@/hooks/use-analytics';
 import { getDocs, Timestamp } from 'firebase/firestore';
@@ -29,6 +30,7 @@ const mockApplications: Application[] = [
     { id: 'app8', user: 'User H', service: 'Test', status: 'Pending', submitted: Timestamp.fromDate(new Date('2023-10-26T08:45:00Z')) },
 ];
 
+
 describe('useAnalytics Hook', () => {
     beforeEach(() => {
         // Clear mocks before each test
@@ -36,7 +38,6 @@ describe('useAnalytics Hook', () => {
     });
 
     it('should return initial loading state and default data', () => {
-        // This test checks the synchronous initial state before useEffect runs
         (getDocs as jest.Mock).mockImplementation(() => new Promise(() => {})); // Prevent promise from resolving
         const { result } = renderHook(() => useAnalytics());
 
