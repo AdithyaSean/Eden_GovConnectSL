@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Download, File, User, X, ArrowLeft } from "lucide-react";
+import { Check, Download, File, User, X, ArrowLeft, QrCode } from "lucide-react";
 import { useEffect, useState, use } from "react";
 import { db } from "@/lib/firebase";
 import {
@@ -44,6 +44,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Label } from "@/components/ui/label";
+import Image from "next/image";
 
 export default function WorkerApplicationDetailsPage({
   params,
@@ -358,6 +359,16 @@ export default function WorkerApplicationDetailsPage({
                   )}
                 </CardContent>
               </Card>
+               {application.details?.qrCodeUrl && (
+                <Card>
+                    <CardHeader>
+                         <CardTitle className="flex items-center gap-2"><QrCode/> Appointment QR Code</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex justify-center">
+                        <Image src={application.details.qrCodeUrl} alt="Appointment QR Code" width={200} height={200} />
+                    </CardContent>
+                </Card>
+            )}
             </div>
             <div className="md:col-span-2 space-y-8">
               <Card>

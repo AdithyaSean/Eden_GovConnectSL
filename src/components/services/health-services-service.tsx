@@ -73,7 +73,7 @@ export function HealthServicesService({ service }) {
         finalAppointmentDate.setHours(numericHours, parseInt(minutes, 10), 0, 0);
         
         try {
-             await addDoc(collection(db, "applications"), {
+            const docRef = await addDoc(collection(db, "applications"), {
                 service: "Medical Appointment Request",
                 userId: user.id,
                 user: user.name,
@@ -85,6 +85,14 @@ export function HealthServicesService({ service }) {
                 },
                 documents: uploadedFiles,
             });
+            
+             // Generate QR code URL
+            const receiptUrl = `${window.location.origin}/receipt/${docRef.id}`;
+            const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(receiptUrl)}`;
+            
+            // Add QR code to application details
+            appointmentDetails.qrCodeUrl = qrCodeUrl;
+
             toast({ title: "Appointment Requested", description: "Your request has been sent. You will be notified upon confirmation." });
             router.push('/my-applications');
         } catch(error) {

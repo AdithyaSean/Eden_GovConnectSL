@@ -11,7 +11,7 @@ import { Calendar } from '../ui/calendar';
 import { useState, FormEvent, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { addDoc, collection, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, Timestamp, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -118,7 +118,7 @@ export function NationalIdService({ service }) {
     appointmentDateTime.setHours(numericHours, parseInt(minutes, 10), 0, 0);
 
     try {
-        await addDoc(collection(db, "applications"), {
+        const docRef = await addDoc(collection(db, "applications"), {
             service: service.title,
             userId: user.id,
             user: user.name,
@@ -130,6 +130,12 @@ export function NationalIdService({ service }) {
                 appointmentDate: Timestamp.fromDate(appointmentDateTime)
             }
         });
+        
+        // Generate QR code and update the document
+        const receiptUrl = `${window.location.origin}/receipt/${docRef.id}`;
+        const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(receiptUrl)}`;
+        await updateDoc(docRef, { "details.qrCodeUrl": qrCodeUrl });
+
         toast({
             title: "Application Submitted",
             description: "Your National ID application has been received.",

@@ -10,7 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/use-auth';
 import { db } from '@/lib/firebase';
-import type { Payment, User } from '@/lib/types';
+import type { Payment, User, Application } from '@/lib/types';
 import { doc, getDoc, Timestamp } from 'firebase/firestore';
 import { Printer, Download } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
@@ -19,12 +19,21 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
 
-async function getPaymentData(paymentId: string): Promise<Payment | null> {
+async function getPaymentData(paymentId: string): Promise<{payment: Payment, application: Application | null} | null> {
     const docRef = doc(db, 'payments', paymentId);
     const docSnap = await getDoc(docRef);
 
     if(docSnap.exists()){
-        return { id: docSnap.id, ...docSnap.data() } as Payment;
+        const payment = { id: docSnap.id, ...docSnap.data() } as Payment;
+        let application: Application | null = null;
+        if (payment.applicationRef) {
+            const appDocRef = doc(db, 'applications', payment.applicationRef);
+            const appDocSnap = await getDoc(appDocRef);
+            if (appDocSnap.exists()) {
+                application = { id: appDocSnap.id, ...appDocSnap.data() } as Application;
+            }
+        }
+        return { payment, application };
     }
     return null;
 }
@@ -33,14 +42,18 @@ export default function ReceiptPage({ params }: { params: { id: string } }) {
     const { id } = params;
     const { user, loading: authLoading } = useAuth();
     const [payment, setPayment] = useState<Payment | null>(null);
+    const [application, setApplication] = useState<Application | null>(null);
     const [loading, setLoading] = useState(true);
     const receiptRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const fetchPayment = async () => {
             setLoading(true);
-            const paymentData = await getPaymentData(id);
-            setPayment(paymentData);
+            const data = await getPaymentData(id);
+            if (data) {
+                setPayment(data.payment);
+                setApplication(data.application);
+            }
             setLoading(false);
         }
         fetchPayment();
@@ -153,7 +166,9 @@ export default function ReceiptPage({ params }: { params: { id: string } }) {
                             
                             <div className="grid grid-cols-2 items-center">
                                 <div className="flex justify-center">
-                                    <img src={`https://placehold.co/120x120.png`} alt="QR Code" width={120} height={120} data-ai-hint="qr code" />
+                                   {application?.details?.qrCodeUrl && (
+                                     <img src={application.details.qrCodeUrl} alt="QR Code" width={120} height={120} />
+                                   )}
                                 </div>
                                 <div className="text-right">
                                     <p className="text-muted-foreground">Total</p>

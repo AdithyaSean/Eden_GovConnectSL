@@ -8,13 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Download, File, User, X, ArrowLeft } from "lucide-react";
+import { Check, Download, File, User, X, ArrowLeft, QrCode } from "lucide-react";
 import { useEffect, useState, use } from "react";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, updateDoc, Timestamp, collection, addDoc, serverTimestamp } from "firebase/firestore";
 import type { Application, User as AppUser } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
+import Image from "next/image";
 
 
 export default function ApplicationDetailsPage({ params }: { params: { id: string } }) {
@@ -195,6 +196,16 @@ export default function ApplicationDetailsPage({ params }: { params: { id: strin
                     )}
                 </CardContent>
             </Card>
+            {application.details?.qrCodeUrl && (
+                <Card>
+                    <CardHeader>
+                         <CardTitle className="flex items-center gap-2"><QrCode/> Appointment QR Code</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex justify-center">
+                        <Image src={application.details.qrCodeUrl} alt="Appointment QR Code" width={200} height={200} />
+                    </CardContent>
+                </Card>
+            )}
           </div>
           <div className="md:col-span-2 space-y-8">
             <Card>

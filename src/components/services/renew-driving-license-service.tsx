@@ -13,7 +13,7 @@ import { Textarea } from '../ui/textarea';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { addDoc, collection, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, Timestamp, updateDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import {
   AlertDialog,
@@ -157,6 +157,13 @@ export function RenewDrivingLicenseService({ service }) {
                 documents: uploadedFiles,
                 details: { ...formValues, appointmentDate: Timestamp.fromDate(appointmentDateTime), serviceType }
             });
+
+             // Generate QR code and update the document
+            const receiptUrl = `${window.location.origin}/receipt/${docRef.id}`;
+            const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(receiptUrl)}`;
+            await updateDoc(docRef, { "details.qrCodeUrl": qrCodeUrl });
+
+
             setNewApplicationId(docRef.id);
             toast({
                 title: "Application Saved Successfully",

@@ -10,7 +10,7 @@ import { Label } from '../ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { FormEvent, useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { addDoc, collection, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, Timestamp, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
@@ -160,6 +160,13 @@ export function PassportRenewalService({ service }) {
             documents: uploadedFiles,
             details: { ...formValues, appointmentDate: Timestamp.fromDate(appointmentDateTime), serviceType }
         });
+
+        // Generate QR code and update the document
+        const receiptUrl = `${window.location.origin}/receipt/${docRef.id}`;
+        const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(receiptUrl)}`;
+        await updateDoc(docRef, { "details.qrCodeUrl": qrCodeUrl });
+
+
         setNewApplicationId(docRef.id);
         setShowPaymentDialog(true);
     } catch (error) {
