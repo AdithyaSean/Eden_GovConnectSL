@@ -13,6 +13,7 @@ describe('sendEmail Server Action', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.resetModules(); // This is crucial to reload modules with new process.env values
     
     // Setup the mock implementation for createTransport and sendMail
     (nodemailer.createTransport as jest.Mock).mockReturnValue({
@@ -39,7 +40,10 @@ describe('sendEmail Server Action', () => {
     
     mockSendMail.mockResolvedValueOnce({ messageId: '123' });
 
-    const result = await sendEmail({
+    // Dynamically import the module to pick up the new process.env values
+    const { sendEmail: sendEmailWithGmail } = await import('@/lib/actions/send-email');
+
+    const result = await sendEmailWithGmail({
       to: 'recipient@example.com',
       subject: 'Test Subject',
       html: '<p>Test HTML</p>',
@@ -62,10 +66,6 @@ describe('sendEmail Server Action', () => {
       subject: 'Test Subject',
       html: '<p>Test HTML</p>',
     });
-
-    // Clean up env vars
-    delete process.env.EMAIL_USER;
-    delete process.env.EMAIL_PASS;
   });
 
   it('should fall back to Ethereal and send an email successfully if credentials are not set', async () => {
@@ -74,8 +74,11 @@ describe('sendEmail Server Action', () => {
     delete process.env.EMAIL_PASS;
     
     mockSendMail.mockResolvedValueOnce({ messageId: '456' });
+    
+    // Dynamically import the module to pick up the cleared process.env values
+    const { sendEmail: sendEmailWithEthereal } = await import('@/lib/actions/send-email');
 
-    const result = await sendEmail({
+    const result = await sendEmailWithEthereal({
       to: 'recipient@example.com',
       subject: 'Ethereal Test',
       html: '<p>Ethereal HTML</p>',
@@ -101,8 +104,10 @@ describe('sendEmail Server Action', () => {
     
     const testError = new Error('Failed to send');
     mockSendMail.mockRejectedValueOnce(testError);
+    
+    const { sendEmail: sendEmailWithError } = await import('@/lib/actions/send-email');
 
-    const result = await sendEmail({
+    const result = await sendEmailWithError({
       to: 'recipient@example.com',
       subject: 'Failure Test',
       html: '<p>This should not send</p>',
@@ -110,10 +115,6 @@ describe('sendEmail Server Action', () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toContain('Error sending email');
-
-    // Clean up env vars
-    delete process.env.EMAIL_USER;
-    delete process.env.EMAIL_PASS;
   });
 
 });
