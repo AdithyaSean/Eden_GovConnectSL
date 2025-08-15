@@ -45,7 +45,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Label } from "@/components/ui/label";
 import Image from "next/image";
-import { sendEmail } from "@/lib/email";
+import { sendEmail } from "@/lib/actions/send-email";
 
 
 export default function WorkerApplicationDetailsPage({

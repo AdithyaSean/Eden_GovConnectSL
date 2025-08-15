@@ -29,7 +29,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { doc, updateDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
-import { sendEmail } from "@/lib/email";
+import { sendEmail } from "@/lib/actions/send-email";
+
 
 export default function PaymentPage() {
   const searchParams = useSearchParams();

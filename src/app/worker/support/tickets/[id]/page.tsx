@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { sendEmail } from "@/lib/email";
+import { sendEmail } from "@/lib/actions/send-email";
 
 
 export default function SupportTicketPage({ params }: { params: { id: string } }) {
@@ -34,7 +34,7 @@ export default function SupportTicketPage({ params }: { params: { id: string } }
     try {
       const ticketDoc = await getDoc(doc(db, "supportTickets", id));
       if(ticketDoc.exists()) {
-          setTicket({ id: ticketDoc.id, ...doc.data() } as SupportTicket);
+          setTicket({ id: ticketDoc.id, ...ticketDoc.data() } as SupportTicket);
       } else {
           notFound();
       }
