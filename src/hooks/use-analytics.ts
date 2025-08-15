@@ -126,9 +126,9 @@ export function useAnalytics() {
         const ratedApps = applications.filter(app => typeof app.appointmentRating === 'number');
         const totalRating = ratedApps.reduce((acc, app) => acc + (app.appointmentRating || 0), 0);
         const avgAppointmentRating = ratedApps.length > 0 ? (totalRating / ratedApps.length) : 0;
-        const recentFeedback = ratedApps
+        const recentFeedback = applications
             .filter(app => app.appointmentFeedback)
-            .sort((a, b) => (b.submitted as Timestamp).toMillis() - (a.submitted as Timestamp).toMillis())
+            .sort((a, b) => ((b.details?.appointmentDate || b.submitted) as Timestamp).toMillis() - ((a.details?.appointmentDate || a.submitted) as Timestamp).toMillis())
             .slice(0, 5);
 
 

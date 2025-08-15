@@ -318,6 +318,11 @@ export default function AppointmentsPage() {
                           <Button variant="ghost" size="icon" onClick={() => setSelectedAppForDetails(app)}>
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
+                           {app.appointmentRating ? (
+                                <Rating rating={app.appointmentRating} />
+                            ) : (
+                                <Button variant="outline" size="sm" onClick={() => setSelectedAppForRating(app)}>Rate Now</Button>
+                            )}
                         </TableCell>
                       </TableRow>
                   ))}
