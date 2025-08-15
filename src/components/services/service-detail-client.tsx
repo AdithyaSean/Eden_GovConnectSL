@@ -79,7 +79,6 @@ export function ServiceDetailClient({ service }: { service: Service }) {
                   <p className="text-lg text-muted-foreground">{service.content.longDescription}</p>
                 </div>
             </div>
-             <Badge variant={service.status === 'Active' ? 'default' : service.status === 'Renewal Due' ? 'destructive' : 'secondary'} className="text-base px-4 py-2 capitalize whitespace-nowrap">{service.status}</Badge>
         </header>
 
         <ServiceComponent service={service} />
