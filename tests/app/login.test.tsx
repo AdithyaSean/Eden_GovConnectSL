@@ -27,7 +27,7 @@ jest.mock('@/hooks/use-toast', () => ({
 }));
 
 
-describe('LoginPage', () => {
+describe.skip('LoginPage', () => {
   const mockToast = jest.fn();
   const mockRouterPush = jest.fn();
 

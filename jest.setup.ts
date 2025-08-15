@@ -61,3 +61,20 @@ jest.mock('@/hooks/use-auth', () => ({
         refetch: jest.fn(),
     }),
 }));
+
+// Mock the useAnalytics hook
+jest.mock('@/hooks/use-analytics', () => ({
+  useAnalytics: () => ({
+    analyticsData: {
+      avgProcessingTime: 7,
+      avgAppointmentRating: 4.5,
+      noShowRate: 15,
+      peakHour: "2 PM (SLST)",
+      peakHoursData: [],
+      processingTimeData: [],
+      recentFeedback: [],
+    },
+    allApplications: [],
+    loading: false,
+  }),
+}));
