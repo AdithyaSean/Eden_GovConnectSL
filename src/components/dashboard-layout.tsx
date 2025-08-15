@@ -94,7 +94,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                         href="/dashboard"
                         className="flex items-center gap-2 text-lg font-semibold"
                     >
-                        <div className="relative h-8 w-24">
+                        <div className="relative h-10 w-32">
                            <Image src="/images/GovSL Logo.svg" alt="GovConnectSL Logo" fill className="object-contain" />
                         </div>
                     </Link>
@@ -119,7 +119,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               </SheetContent>
             </Sheet>
             <Link href="/dashboard" className="hidden md:flex items-center gap-2 font-bold text-lg">
-                <div className="relative h-10 w-32">
+                <div className="relative h-12 w-40">
                     <Image src="/images/GovSL Logo.svg" alt="GovConnectSL Logo" fill className="object-contain" />
                 </div>
             </Link>
