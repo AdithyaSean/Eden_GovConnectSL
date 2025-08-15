@@ -17,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Line, AreaChart, Area, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Clock, Hourglass, Star, UserX } from "lucide-react";
 import { useAnalytics } from "@/hooks/use-analytics";
 import { Rating } from "@/components/rating";
@@ -90,11 +90,17 @@ export default function AdminAnalyticsPage() {
                 <CardContent>
                     <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={analyticsData.peakHoursData}>
-                            <CartesianGrid strokeDasharray="3 3" />
+                            <defs>
+                                <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="hsl(var(--chart-bar-from))" stopOpacity={0.8}/>
+                                    <stop offset="95%" stopColor="hsl(var(--chart-bar-to))" stopOpacity={0.8}/>
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
                             <XAxis dataKey="hour" fontSize={12} tickLine={false} axisLine={false} />
                             <YAxis fontSize={12} tickLine={false} axisLine={false} allowDecimals={false}/>
-                            <Tooltip content={<CustomTooltip />} />
-                            <Bar dataKey="applications" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Applications"/>
+                            <Tooltip content={<CustomTooltip />} cursor={{fill: 'hsla(var(--muted), 0.5)'}}/>
+                            <Bar dataKey="applications" fill="url(#barGradient)" radius={0} name="Applications"/>
                         </BarChart>
                     </ResponsiveContainer>
                 </CardContent>
@@ -106,13 +112,19 @@ export default function AdminAnalyticsPage() {
                 </CardHeader>
                 <CardContent>
                     <ResponsiveContainer width="100%" height={300}>
-                        <LineChart data={analyticsData.processingTimeData}>
-                            <CartesianGrid strokeDasharray="3 3" />
+                        <AreaChart data={analyticsData.processingTimeData}>
+                             <defs>
+                                <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="hsl(var(--chart-area-from))" stopOpacity={0.4}/>
+                                    <stop offset="95%" stopColor="hsl(var(--chart-area-to))" stopOpacity={0.1}/>
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
                             <XAxis dataKey="month" fontSize={12} tickLine={false} axisLine={false} />
                             <YAxis fontSize={12} tickLine={false} axisLine={false} />
-                            <Tooltip content={<CustomTooltip />} />
-                            <Line type="monotone" dataKey="time" stroke="hsl(var(--primary))" strokeWidth={2} name="Avg Days"/>
-                        </LineChart>
+                            <Tooltip content={<CustomTooltip />} cursor={{stroke: 'hsl(var(--chart-line))', strokeWidth: 1, fill: 'hsla(var(--muted), 0.5)'}}/>
+                            <Area type="monotone" dataKey="time" stroke="hsl(var(--chart-line))" strokeWidth={2} fill="url(#areaGradient)" name="Avg Days"/>
+                        </AreaChart>
                     </ResponsiveContainer>
                 </CardContent>
             </Card>

@@ -24,6 +24,13 @@
     --input: 220 13% 91%;
     --ring: 45 100% 45%;
     --radius: 0.8rem;
+
+    /* Chart colors */
+    --chart-bar-from: 140 80% 40%;
+    --chart-bar-to: 140 80% 60%;
+    --chart-line: 140 80% 50%;
+    --chart-area-from: 140 80% 50%;
+    --chart-area-to: 140 80% 80%;
   }
 
   .dark {
@@ -46,6 +53,13 @@
     --border: 220 10% 25%;
     --input: 220 10% 25%;
     --ring: 45 100% 45%;
+
+    /* Chart colors */
+    --chart-bar-from: 140 80% 40%;
+    --chart-bar-to: 140 80% 60%;
+    --chart-line: 140 80% 50%;
+    --chart-area-from: 140 80% 50%;
+    --chart-area-to: 140 80% 80%;
   }
 }
 
