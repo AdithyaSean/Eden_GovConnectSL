@@ -94,20 +94,20 @@ export default function ApplicationsPage() {
   const getStatusClass = (status: Application['status']) => {
     switch (status) {
         case 'Approved':
-            return 'bg-green-100 text-green-800 border-green-200';
+            return 'bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-sm';
         case 'Completed':
-            return 'bg-blue-100 text-blue-800 border-blue-200';
+            return 'bg-blue-500 text-white border-0';
         case 'In Progress':
-            return 'bg-orange-100 text-orange-800 border-orange-200';
+            return 'bg-orange-500 text-white border-0';
         case 'In Review':
-            return 'bg-sky-100 text-sky-800 border-sky-200';
+            return 'bg-sky-500 text-white border-0';
         case 'Pending Payment':
-            return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+            return 'bg-yellow-400 text-yellow-900 border-0';
         case 'Rejected':
-            return 'bg-red-100 text-red-800 border-red-200';
+            return 'bg-red-600 text-white border-0';
         case 'Pending':
         default:
-            return 'bg-gray-100 text-gray-800 border-gray-200';
+            return 'bg-gray-200 text-gray-800';
     }
   }
 
@@ -182,7 +182,6 @@ export default function ApplicationsPage() {
                       <TableCell>{formatDate(app.submitted)}</TableCell>
                       <TableCell>
                          <Badge 
-                            variant="outline"
                             className={cn("capitalize", getStatusClass(app.status))}
                           >
                           {app.status}
