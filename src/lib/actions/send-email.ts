@@ -14,25 +14,41 @@ async function getTransporter() {
     return transporter;
   }
 
-  try {
-    // Generate a test account on Ethereal
-    let testAccount = await nodemailer.createTestAccount();
-    console.log('Ethereal test account created:', testAccount.user);
+  // Ensure environment variables are set
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.error('Email credentials (EMAIL_USER, EMAIL_PASS) are not set in your .env file.');
+    // In development, you might want to fall back to Ethereal or throw an error.
+    // For this example, we'll try to create a test account if credentials are missing.
+    try {
+        let testAccount = await nodemailer.createTestAccount();
+        console.log('Falling back to Ethereal test account:', testAccount.user);
 
-    transporter = nodemailer.createTransport({
-      host: 'smtp.ethereal.email',
-      port: 587,
-      secure: false, // true for 465, false for other ports
-      auth: {
-        user: testAccount.user, // generated ethereal user
-        pass: testAccount.pass, // generated ethereal password
-      },
-    });
-    return transporter;
-  } catch (error) {
-    console.error('Could not create email test account', error);
-    return null;
+        transporter = nodemailer.createTransport({
+          host: 'smtp.ethereal.email',
+          port: 587,
+          secure: false, // true for 465, false for other ports
+          auth: {
+            user: testAccount.user, // generated ethereal user
+            pass: testAccount.pass, // generated ethereal password
+          },
+        });
+        return transporter;
+    } catch (error) {
+        console.error('Could not create email test account', error);
+        return null;
+    }
   }
+
+  // Use Gmail transporter
+  transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS, // Use the App Password here
+    },
+  });
+
+  return transporter;
 }
 
 export async function sendEmail({
@@ -47,12 +63,11 @@ export async function sendEmail({
   const mailer = await getTransporter();
   if (!mailer) {
     console.error('Email transporter is not available. Email not sent.');
-    // In a real app, you might want to throw an error or handle this case more robustly.
     return { success: false, error: 'Email transporter not configured.' };
   }
 
   const mailOptions = {
-    from: '"GovConnect SL" <noreply@govconnect.lk>',
+    from: `"GovConnect SL" <${process.env.EMAIL_USER || 'noreply@govconnect.lk'}>`,
     to,
     subject,
     html,
@@ -61,8 +76,13 @@ export async function sendEmail({
   try {
     let info = await mailer.sendMail(mailOptions);
     console.log('Message sent: %s', info.messageId);
-    // You can get the preview URL from this command
-    console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+
+    // If using Ethereal, log the preview URL
+    const previewUrl = nodemailer.getTestMessageUrl(info);
+    if (previewUrl) {
+      console.log('Preview URL: %s', previewUrl);
+    }
+    
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error('Error sending email: ', error);
