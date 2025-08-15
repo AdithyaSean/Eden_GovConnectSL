@@ -119,7 +119,7 @@ export default function DashboardPage() {
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <div className="absolute bottom-8 right-8 flex gap-2">
+            <div className="absolute bottom-8 right-16 flex gap-0.05">
               <CarouselPrevious onClick={scrollPrev} />
               <CarouselNext onClick={scrollNext} />
             </div>
