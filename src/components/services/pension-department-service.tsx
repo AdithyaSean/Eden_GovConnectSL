@@ -57,7 +57,15 @@ export function PensionDepartmentService({ service }) {
   }, [user]);
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormValues(prev => ({...prev, [e.target.name]: e.target.value}));
+    const { name, value } = e.target;
+    if (name === "accountNumber") {
+        // Allow only numbers for account number
+        if (/^\d*$/.test(value)) {
+            setFormValues(prev => ({...prev, [name]: value}));
+        }
+    } else {
+        setFormValues(prev => ({...prev, [name]: value}));
+    }
   }
 
   const handleUploadComplete = (docName: string, base64: string) => {
@@ -235,7 +243,7 @@ export function PensionDepartmentService({ service }) {
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="accountNumber">Account Number</Label>
-                                <Input id="accountNumber" name="accountNumber" value={formValues.accountNumber} onChange={handleFormChange}/>
+                                <Input id="accountNumber" name="accountNumber" type="text" pattern="\d*" value={formValues.accountNumber} onChange={handleFormChange}/>
                             </div>
                         </CardContent>
                     </Card>

@@ -19,6 +19,13 @@ export function ExamRecorrectionAppealService({ service }) {
   const { user } = useAuth();
   const router = useRouter();
   
+  const handleNumericInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (!/^\d*$/.test(value)) {
+      e.target.value = value.replace(/\D/g, '');
+    }
+  };
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!user) {
@@ -79,11 +86,11 @@ export function ExamRecorrectionAppealService({ service }) {
                     </div>
                      <div className="space-y-2">
                         <Label htmlFor="indexNumber">Index Number</Label>
-                        <Input id="indexNumber" name="indexNumber" placeholder="e.g., 1234567" />
+                        <Input id="indexNumber" name="indexNumber" placeholder="e.g., 1234567" type="number" onChange={handleNumericInput} />
                     </div>
                      <div className="space-y-2">
                         <Label htmlFor="year">Year</Label>
-                        <Input id="year" name="year" type="number" placeholder="e.g., 2023" />
+                        <Input id="year" name="year" type="number" placeholder="e.g., 2023" onChange={handleNumericInput} />
                     </div>
                 </div>
                  <div className="space-y-2">

@@ -99,6 +99,37 @@ export function PassportRenewalService({ service }) {
     setFormValues(prev => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
+  const handleNicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.toUpperCase();
+    // Allows 9 digits and V/X, or 12 digits
+    if (/^(\d{0,9}[VX]?)?$/.test(value) || /^(\d{0,12})?$/.test(value)) {
+        if(value.length === 10 && !/[VX]$/.test(value)) {
+            // It might be a 12 digit one starting
+        } else if (value.length > 10 && value.length < 12) {
+            value = value.substring(0,10);
+        }
+    } else {
+        value = formValues.nicNumber;
+    }
+    setFormValues(prev => ({...prev, nicNumber: value}));
+  }
+
+  const handlePassportNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.toUpperCase();
+     // Allows N followed by up to 7 digits
+    if (/^N\d{0,7}$/.test(value) || value === 'N') {
+      setFormValues(prev => ({ ...prev, oldPassport: value }));
+    }
+  }
+
+  const handleContactNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Allows numbers and + symbol
+    if (/^[\d+ ]*$/.test(value)) {
+      setFormValues(prev => ({ ...prev, contactNumber: value }));
+    }
+  }
+
   const validateStep = () => {
     if(currentStep === 2) {
         if(!formValues.fullName || !formValues.nicNumber || !formValues.contactNumber || !formValues.email) return false;
@@ -233,13 +264,13 @@ export function PassportRenewalService({ service }) {
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="nicNumber">NIC Number</Label>
-                            <Input id="nicNumber" name="nicNumber" placeholder="e.g., 199012345V" required value={formValues.nicNumber} onChange={handleFormChange} />
+                            <Input id="nicNumber" name="nicNumber" placeholder="e.g., 199012345V or 199012345678" required value={formValues.nicNumber} onChange={handleNicChange} maxLength={12} />
                         </div>
                         {serviceType === 'renewal' && (
                             <>
                                 <div className="space-y-2">
                                     <Label htmlFor="oldPassport">Old Passport Number</Label>
-                                    <Input id="oldPassport" name="oldPassport" placeholder="e.g., N1234567" required value={formValues.oldPassport} onChange={handleFormChange} />
+                                    <Input id="oldPassport" name="oldPassport" placeholder="e.g., N1234567" required value={formValues.oldPassport} onChange={handlePassportNumberChange} maxLength={8} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="expiryDate">Date of Expiry</Label>
@@ -249,7 +280,7 @@ export function PassportRenewalService({ service }) {
                         )}
                         <div className="space-y-2">
                             <Label htmlFor="contactNumber">Contact Number</Label>
-                            <Input id="contactNumber" name="contactNumber" type="tel" placeholder="+94 77 123 4567" required value={formValues.contactNumber} onChange={handleFormChange} />
+                            <Input id="contactNumber" name="contactNumber" type="tel" placeholder="+94 77 123 4567" required value={formValues.contactNumber} onChange={handleContactNumberChange} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="email">Email Address</Label>
