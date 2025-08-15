@@ -29,6 +29,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import Image from "next/image";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -143,7 +144,15 @@ export default function AdminLoginPage() {
         <Card className="mx-auto max-w-sm w-full">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
-              <Shield className="h-12 w-12 text-primary" />
+              <div className="relative w-48 h-24">
+                <Image
+                  src="/images/GovSL Logo.svg"
+                  alt="GovConnect SL Logo"
+                  fill
+                  className="object-contain"
+                  data-ai-hint="logo"
+                />
+              </div>
             </div>
             <CardTitle className="text-2xl">Admin & Worker Login</CardTitle>
             <CardDescription>

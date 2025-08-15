@@ -21,6 +21,7 @@ import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState("");
@@ -150,7 +151,15 @@ export default function SignupPage() {
       <Card className="mx-auto max-w-sm w-full">
          <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
-               <UserSquare className="h-12 w-12 text-primary" />
+              <div className="relative w-48 h-24">
+                <Image
+                  src="/images/GovSL Logo.svg"
+                  alt="GovConnect SL Logo"
+                  fill
+                  className="object-contain"
+                  data-ai-hint="logo"
+                />
+              </div>
             </div>
           <CardTitle className="text-2xl">Create Citizen Account</CardTitle>
           <CardDescription>

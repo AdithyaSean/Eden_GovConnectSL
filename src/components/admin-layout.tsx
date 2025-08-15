@@ -9,12 +9,13 @@ import { Bell, Home, Users, Settings, LogOut, Shield, FileText, PenSquare, Build
 import { Button } from "./ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "./ui/sheet";
 import { useEffect, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { User } from "@/lib/types";
 import { SriLankaTime } from "./sri-lanka-time";
+import Image from "next/image";
 
 const adminNavItems = [
   { title: "Dashboard", href: "/admin/dashboard", icon: Home },
@@ -75,23 +76,15 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
   }
 
   const profileHref = getProfileHref();
-  const logoText = workerMode ? "Worker Portal" : "Admin Panel";
-  const LogoIcon = workerMode ? PenSquare : Shield;
-  
   const fallbackInitial = worker ? worker.name?.charAt(0).toUpperCase() : (workerMode ? 'W' : 'A');
 
   const LogoComponent = ({ role }: { role: string }) => {
-    if (workerMode) {
-      return (
-         <div className="flex items-center gap-2 font-semibold">
-            <LogoIcon className="h-6 w-6 text-primary" />
-            <span>{logoText}</span>
-        </div>
-      );
-    }
+    const logoText = workerMode ? "Worker Portal" : "Admin Panel";
     return (
-      <Link href="/admin/dashboard" className="flex items-center gap-2 font-semibold">
-        <LogoIcon className="h-6 w-6 text-primary" />
+      <Link href={workerMode ? '#' : '/admin/dashboard'} className="flex items-center gap-3 font-semibold text-foreground">
+        <div className="relative h-8 w-8">
+            <Image src="/images/GovSL Logo.svg" alt="GovConnectSL Logo" fill className="object-contain" />
+        </div>
         <span>{logoText}</span>
       </Link>
     );
@@ -133,10 +126,11 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="flex flex-col p-0">
-               <nav className="grid gap-4 text-base font-medium">
-                <div className="flex items-center gap-2 font-semibold mb-4 h-14 border-b px-6">
+               <SheetHeader className="h-14 flex flex-row items-center border-b px-6">
+                    <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                     <LogoComponent role={workerRole} />
-                </div>
+                </SheetHeader>
+               <nav className="grid gap-4 text-base font-medium p-4">
                 {!workerMode && adminNavItems.map((item) => (
                   <Link
                     key={item.href}

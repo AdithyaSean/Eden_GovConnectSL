@@ -125,7 +125,15 @@ export default function PrintableApplicationPage({ params }: { params: { id: str
                 <div ref={printRef} className="bg-card p-8">
                     <CardHeader className="text-center p-0 mb-8">
                          <div className="flex justify-center mb-4">
-                             <Image src="https://placehold.co/150x50" alt="GovConnect SL Logo" width={150} height={50} data-ai-hint="logo" />
+                            <div className="relative w-48 h-24">
+                                <Image
+                                src="/images/GovSL Logo.svg"
+                                alt="GovConnect SL Logo"
+                                fill
+                                className="object-contain"
+                                data-ai-hint="logo"
+                                />
+                            </div>
                         </div>
                         <CardTitle className="text-3xl">Appointment Confirmation</CardTitle>
                         <CardDescription>Please bring this document to your appointment.</CardDescription>

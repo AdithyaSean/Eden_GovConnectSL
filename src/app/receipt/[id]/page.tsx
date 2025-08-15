@@ -17,6 +17,7 @@ import { useEffect, useState, useRef } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import Image from 'next/image';
 
 
 async function getPaymentData(paymentId: string): Promise<{payment: Payment, application: Application | null} | null> {
@@ -121,7 +122,15 @@ export default function ReceiptPage({ params }: { params: { id: string } }) {
                     <div ref={receiptRef} className="bg-card">
                         <CardHeader className="text-center bg-muted/30 p-8">
                             <div className="flex justify-center mb-4">
-                                 <img src="https://placehold.co/150x50" alt="GovConnect SL Logo" width={150} height={50} data-ai-hint="logo" />
+                                <div className="relative w-48 h-24">
+                                    <Image
+                                    src="/images/GovSL Logo.svg"
+                                    alt="GovConnect SL Logo"
+                                    fill
+                                    className="object-contain"
+                                    data-ai-hint="logo"
+                                    />
+                                </div>
                             </div>
                             <CardTitle className="text-3xl">Official Receipt</CardTitle>
                             <CardDescription>Thank you for your payment.</CardDescription>
