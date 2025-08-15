@@ -1,6 +1,9 @@
 import { sendEmail } from '@/lib/actions/send-email';
 import nodemailer from 'nodemailer';
 
+// Un-mock the sendEmail action for this specific test file
+jest.unmock('@/lib/actions/send-email');
+
 // Mock the entire nodemailer library
 jest.mock('nodemailer');
 
