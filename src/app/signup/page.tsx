@@ -184,12 +184,12 @@ export default function SignupPage() {
               
               {password.length > 0 && (
                 <div className="space-y-3">
-                    <Progress value={passwordStrength} className="h-2" />
+                    <Progress value={passwordStrength} className="h-2 [&>div]:bg-green-500" />
                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
                         {passwordRequirements.map((req, index) => (
                           <div key={index} className="flex items-center gap-2 text-sm">
-                            {req.met ? <Check className="h-4 w-4 text-green-500" /> : <X className="h-4 w-4 text-red-500" />}
-                            <span className={cn(req.met ? "text-muted-foreground" : "text-destructive-foreground/80")}>
+                            {req.met ? <Check className="h-4 w-4 text-green-500" /> : <X className="h-4 w-4 text-muted-foreground" />}
+                            <span className={cn(req.met ? "text-muted-foreground" : "text-foreground")}>
                                 {req.text}
                             </span>
                           </div>
