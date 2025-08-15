@@ -1,6 +1,10 @@
 'use server';
 
 import nodemailer from 'nodemailer';
+import { config } from 'dotenv';
+
+// Explicitly load environment variables from .env file
+config();
 
 // This is a basic setup for sending emails.
 // In a real production app, you would use environment variables for credentials and a robust email service.
