@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useEffect, useState, FormEvent } from "react";
+import { useEffect, useState, FormEvent, useMemo } from "react";
 import { db } from "@/lib/firebase";
 import { collection, getDocs, query, where, Timestamp, addDoc, serverTimestamp } from "firebase/firestore";
 import type { Application, User, TaxRecord } from "@/lib/types";
@@ -16,8 +16,12 @@ import { ArrowRight, Search, UserCheck, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 const SERVICE_NAME = "Tax Document Submission";
+const appStatuses = ['All', 'Pending', 'Approved', 'Rejected', 'In Progress', 'Completed', 'In Review'];
+const recordStatuses = ['All', 'Due', 'Paid'];
 
 export default function WorkerTaxDashboard() {
   const [applications, setApplications] = useState<Application[]>([]);
@@ -25,29 +29,37 @@ export default function WorkerTaxDashboard() {
   const [taxRecords, setTaxRecords] = useState<TaxRecord[]>([]);
   const [loadingRecords, setLoadingRecords] = useState(true);
   const [searchNic, setSearchNic] = useState("");
+  const [searchNicToAdd, setSearchNicToAdd] = useState("");
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [foundUser, setFoundUser] = useState<User | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const { toast } = useToast();
   
+  const [appStatusFilter, setAppStatusFilter] = useState("All");
+  const [recordStatusFilter, setRecordStatusFilter] = useState("All");
+
   const fetchAllData = async () => {
       setLoading(true);
       setLoadingRecords(true);
       try {
         const appQuery = query(collection(db, "applications"), where("service", "==", SERVICE_NAME));
-        const appSnapshot = await getDocs(appQuery);
+        const recordsQuery = query(collection(db, "taxRecords"));
+        const usersQuery = query(collection(db, "users"));
+
+        const [appSnapshot, recordsSnapshot, usersSnapshot] = await Promise.all([
+            getDocs(appQuery),
+            getDocs(recordsQuery),
+            getDocs(usersQuery)
+        ]);
+
         const apps = appSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
         setApplications(apps);
         setLoading(false);
 
-        const recordsQuery = query(collection(db, "taxRecords"));
-        const recordsSnapshot = await getDocs(recordsQuery);
         const records = recordsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TaxRecord));
         setTaxRecords(records);
         setLoadingRecords(false);
 
-        const usersQuery = query(collection(db, "users"));
-        const usersSnapshot = await getDocs(usersQuery);
         const usersData = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
         setAllUsers(usersData);
 
@@ -62,12 +74,64 @@ export default function WorkerTaxDashboard() {
     fetchAllData();
   }, []);
   
+  const usersById = useMemo(() => {
+    return allUsers.reduce((acc, user) => {
+        acc[user.id] = user;
+        return acc;
+    }, {} as {[key: string]: User});
+  }, [allUsers]);
+
+  const filteredAndSortedApplications = useMemo(() => {
+    return applications
+      .filter(app => {
+        const lowercasedQuery = searchNic.toLowerCase();
+        const user = app.userId ? usersById[app.userId] : null;
+
+        const matchesSearch = searchNic === "" || (user && user.nic.toLowerCase().includes(lowercasedQuery));
+        const matchesStatus = appStatusFilter === 'All' || app.status === appStatusFilter;
+
+        return matchesSearch && matchesStatus;
+      })
+      .sort((a, b) => {
+        const isCompletedA = a.status === 'Completed' || a.status === 'Rejected';
+        const isCompletedB = b.status === 'Completed' || b.status === 'Rejected';
+
+        if (isCompletedA && !isCompletedB) return 1;
+        if (!isCompletedA && isCompletedB) return -1;
+
+        const dateA = a.submitted instanceof Timestamp ? a.submitted.toMillis() : new Date(a.submitted).getTime();
+        const dateB = b.submitted instanceof Timestamp ? b.submitted.toMillis() : new Date(b.submitted).getTime();
+
+        return dateB - dateA;
+      });
+  }, [searchNic, appStatusFilter, applications, usersById]);
+
+  const filteredAndSortedRecords = useMemo(() => {
+    return taxRecords.filter(record => {
+        const matchesNic = !searchNic || record.nic.toLowerCase().includes(searchNic.toLowerCase());
+        const matchesStatus = recordStatusFilter === 'All' || record.status === recordStatusFilter;
+        return matchesNic && matchesStatus;
+    }).sort((a,b) => {
+        const isCompletedA = a.status === 'Paid';
+        const isCompletedB = b.status === 'Paid';
+
+        if (isCompletedA && !isCompletedB) return 1;
+        if (!isCompletedA && isCompletedB) return -1;
+        
+        const dateA = new Date(a.dueDate).getTime();
+        const dateB = new Date(b.dueDate).getTime();
+        
+        return dateB - dateA;
+    });
+  }, [taxRecords, searchNic, recordStatusFilter]);
+
+
   const handleUserSearch = async () => {
-      if(!searchNic) return;
+      if(!searchNicToAdd) return;
       setIsSearching(true);
       setFoundUser(null);
       
-      const lowercasedQuery = searchNic.toLowerCase();
+      const lowercasedQuery = searchNicToAdd.toLowerCase();
       const user = allUsers.find(u => u.nic?.toLowerCase().includes(lowercasedQuery));
       
       if(user) {
@@ -95,7 +159,6 @@ export default function WorkerTaxDashboard() {
               status: 'Due'
           });
 
-          // Create notification for the user
            await addDoc(collection(db, "notifications"), {
               userId: foundUser.id,
               title: "New Tax Record Added",
@@ -107,15 +170,36 @@ export default function WorkerTaxDashboard() {
           });
 
           toast({ title: "Tax Record Added Successfully" });
-          fetchAllData(); // Refresh all lists
+          fetchAllData();
           setFoundUser(null);
-          setSearchNic("");
+          setSearchNicToAdd("");
           (e.target as HTMLFormElement).reset();
       } catch (error) {
            toast({ title: "Failed to add record", variant: "destructive" });
       }
   }
   
+  const getAppStatusClass = (status: Application['status']) => {
+    switch (status) {
+        case 'Approved':
+            return 'bg-green-600 text-white border-0 shadow-sm';
+        case 'Completed':
+            return 'bg-blue-500 text-white border-0';
+        case 'In Progress':
+        case 'In Review':
+            return 'bg-orange-500 text-white border-0';
+        case 'Rejected':
+            return 'bg-red-600 text-white border-0';
+        case 'Pending':
+        default:
+            return 'bg-gray-200 text-gray-800';
+    }
+  }
+  
+  const getRecordStatusClass = (status: TaxRecord['status']) => {
+      return status === 'Paid' ? 'bg-green-600 text-white border-0' : 'bg-red-600 text-white border-0';
+  }
+
   const formatDate = (date: Timestamp | string) => {
     if (!date) return 'N/A';
     if (typeof date === 'string') return date;
@@ -135,6 +219,25 @@ export default function WorkerTaxDashboard() {
                   <CardHeader>
                     <CardTitle>Tax Document Submissions</CardTitle>
                     <CardDescription>Review and manage all tax-related document submissions from citizens.</CardDescription>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                        <div className="relative md:col-span-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                            <Input 
+                                placeholder="Search by NIC..." 
+                                className="pl-10"
+                                value={searchNic}
+                                onChange={(e) => setSearchNic(e.target.value)} 
+                            />
+                        </div>
+                        <Select value={appStatusFilter} onValueChange={setAppStatusFilter}>
+                            <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Filter by status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {appStatuses.map(status => <SelectItem key={status} value={status}>{status === 'All' ? 'All Statuses' : status}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
                   </CardHeader>
                   <CardContent>
                     <div className="overflow-x-auto">
@@ -155,21 +258,17 @@ export default function WorkerTaxDashboard() {
                                 <TableCell colSpan={5}><Skeleton className="h-8 w-full" /></TableCell>
                               </TableRow>
                             ))
-                          ) : applications.length === 0 ? (
+                          ) : filteredAndSortedApplications.length === 0 ? (
                               <TableRow>
                                 <TableCell colSpan={5} className="h-24 text-center">No applications found.</TableCell>
                               </TableRow>
-                          ) : applications.map((app) => (
+                          ) : filteredAndSortedApplications.map((app) => (
                             <TableRow key={app.id}>
                               <TableCell className="font-medium">{app.user}</TableCell>
                               <TableCell>{Object.keys(app.documents || {}).length}</TableCell>
                               <TableCell>{formatDate(app.submitted)}</TableCell>
                               <TableCell>
-                                <Badge variant={
-                                  app.status === 'Approved' || app.status === 'Completed' ? 'default'
-                                  : app.status === 'Pending' || app.status === 'In Review' ? 'secondary'
-                                  : 'destructive'
-                                } className={app.status === 'Approved' ? 'bg-green-600' : ''}>
+                                <Badge className={cn("capitalize", getAppStatusClass(app.status))}>
                                   {app.status}
                                 </Badge>
                               </TableCell>
@@ -192,6 +291,16 @@ export default function WorkerTaxDashboard() {
                    <CardHeader>
                        <CardTitle>All Tax Records</CardTitle>
                        <CardDescription>A log of all tax payment records in the system.</CardDescription>
+                        <div className="pt-4">
+                           <Select value={recordStatusFilter} onValueChange={setRecordStatusFilter}>
+                                <SelectTrigger className="w-full md:w-[200px]">
+                                    <SelectValue placeholder="Filter by status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {recordStatuses.map(status => <SelectItem key={status} value={status}>{status === 'All' ? 'All Statuses' : status}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
                    </CardHeader>
                    <CardContent>
                         <Table>
@@ -206,17 +315,16 @@ export default function WorkerTaxDashboard() {
                             </TableHeader>
                             <TableBody>
                                 {loadingRecords ? <TableRow><TableCell colSpan={5}><Skeleton className="h-8"/></TableCell></TableRow>
-                                : taxRecords.map(record => (
+                                : filteredAndSortedRecords.map(record => (
                                     <TableRow key={record.id}>
                                         <TableCell>{record.nic}</TableCell>
                                         <TableCell>{record.year}</TableCell>
                                         <TableCell>{record.type}</TableCell>
                                         <TableCell>LKR {record.amount}</TableCell>
                                         <TableCell>
-                                           <Badge variant={record.status === 'Paid' ? 'default' : 'destructive'}
-                                          className={record.status === 'Paid' ? 'bg-green-600' : ''}>
-                                          {record.status}
-                                        </Badge>
+                                           <Badge className={cn("capitalize", getRecordStatusClass(record.status))}>
+                                              {record.status}
+                                            </Badge>
                                         </TableCell>
                                     </TableRow>
                                 ))}
@@ -235,8 +343,8 @@ export default function WorkerTaxDashboard() {
                         <div className="space-y-2">
                             <Label htmlFor="search-nic-tax">Search Citizen by NIC</Label>
                             <div className="flex gap-2">
-                                <Input id="search-nic-tax" value={searchNic} onChange={e => setSearchNic(e.target.value)} placeholder="Enter NIC..."/>
-                                <Button onClick={handleUserSearch} disabled={isSearching || !searchNic}>
+                                <Input id="search-nic-tax" value={searchNicToAdd} onChange={e => setSearchNicToAdd(e.target.value)} placeholder="Enter NIC..."/>
+                                <Button onClick={handleUserSearch} disabled={isSearching || !searchNicToAdd}>
                                     <Search className="h-4 w-4" />
                                 </Button>
                             </div>
