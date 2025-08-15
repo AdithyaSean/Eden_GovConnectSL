@@ -29,6 +29,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { doc, updateDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
+import Lottie from "lottie-react";
+import successAnimation from "@/lib/success-animation.json";
 
 export default function PaymentPage() {
   const searchParams = useSearchParams();
@@ -91,28 +93,33 @@ export default function PaymentPage() {
       <div className="flex-1 space-y-8 p-4 md:p-8 pt-6">
         <AlertDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
           <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Payment Successful!</AlertDialogTitle>
-              <AlertDialogDescription>
-                Your payment for {service} has been processed successfully. Your
-                application status has been updated.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="sm:justify-between w-full gap-2 sm:gap-0">
-               {newPaymentId && (
-                    <Button variant="outline" asChild>
-                        <Link href={`/receipt/${newPaymentId}`}>View Receipt</Link>
+            <div className="flex flex-col items-center justify-center text-center">
+                <Lottie
+                    animationData={successAnimation}
+                    loop={false}
+                    style={{ height: 150, width: 150 }}
+                />
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Payment Successful!</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Your payment for {service} has been processed successfully. Your
+                    application status has been updated.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter className="sm:justify-center flex-col sm:flex-row w-full gap-2 mt-4">
+                   {newPaymentId && (
+                        <Button variant="outline" asChild className="w-full sm:w-auto">
+                            <Link href={`/receipt/${newPaymentId}`}>View Receipt</Link>
+                        </Button>
+                    )}
+                    <Button variant="secondary" asChild className="w-full sm:w-auto">
+                        <Link href="/my-applications">My Applications</Link>
                     </Button>
-                )}
-              <div className="flex flex-col-reverse sm:flex-row gap-2">
-                  <Button variant="secondary" asChild>
-                    <Link href="/my-applications">My Applications</Link>
-                  </Button>
-                  <AlertDialogAction asChild>
-                    <Link href="/dashboard">Go to Dashboard</Link>
-                  </AlertDialogAction>
-              </div>
-            </AlertDialogFooter>
+                    <AlertDialogAction asChild className="w-full sm:w-auto">
+                        <Link href="/dashboard">Go to Dashboard</Link>
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </div>
           </AlertDialogContent>
         </AlertDialog>
 
