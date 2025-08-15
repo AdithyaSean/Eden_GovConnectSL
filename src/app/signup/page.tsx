@@ -188,8 +188,8 @@ export default function SignupPage() {
                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
                         {passwordRequirements.map((req, index) => (
                           <div key={index} className="flex items-center gap-2 text-sm">
-                            {req.met ? <Check className="h-4 w-4 text-green-500" /> : <X className="h-4 w-4 text-muted-foreground" />}
-                            <span className={cn(req.met ? "text-muted-foreground" : "text-foreground")}>
+                            {req.met ? <Check className="h-4 w-4 text-green-500" /> : <X className="h-4 w-4 text-destructive" />}
+                            <span className="text-muted-foreground">
                                 {req.text}
                             </span>
                           </div>
