@@ -17,6 +17,7 @@ const MessageSchema = z.object({
 const ChatInputSchema = z.object({
   history: z.array(MessageSchema),
   newMessage: z.string(),
+  locale: z.string().optional().default('en'),
 });
 export type ChatInput = z.infer<typeof ChatInputSchema>;
 
@@ -30,9 +31,9 @@ const chatFlow = ai.defineFlow(
     inputSchema: ChatInputSchema,
     outputSchema: ChatOutputSchema,
   },
-  async ({history, newMessage}) => {
+  async ({history, newMessage, locale}) => {
 
-    const systemPrompt = `You are a helpful and friendly AI assistant for GovConnect SL, a platform for Sri Lankan government services. Your goal is to provide clear, concise, and accurate information to citizens. Answer based on the user's query and the conversation history.`;
+    const systemPrompt = `You are a helpful and friendly AI assistant for GovConnect SL, a platform for Sri Lankan government services. Your goal is to provide clear, concise, and accurate information to citizens. Answer based on the user's query and the conversation history. Your response must be in the language specified by the locale: ${locale}.`;
 
     // Log prompt registry version (prototype)
     const __tpl = getPrompt("chat", "en");

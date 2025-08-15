@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "./ui/card";
 import { askGemini } from "@/ai/flows/chat";
+import { useLocale } from 'next-intl';
 
 type Message = {
     role: "user" | "model";
@@ -26,6 +27,7 @@ export function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const locale = useLocale();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -40,6 +42,7 @@ export function ChatInterface() {
         const assistantResponse = await askGemini({
             history: messages,
             newMessage: input,
+            locale: locale,
         });
         const assistantMessage: Message = { role: "model", content: assistantResponse };
         setMessages(prev => [...prev, assistantMessage]);

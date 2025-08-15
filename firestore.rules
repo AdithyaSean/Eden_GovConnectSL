@@ -1,96 +1,76 @@
-// firestore.rules (Draft) — NOT ENFORCED IN PROTOTYPE
-// Mirrors docs/firestore-rules-draft.md. This is a starting point for RBAC and field constraints.
-// NOTE: These rules are design-only during Sprint-1 and may not compile until claims plumbing exists.
 
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Helper functions (draft)
-    function isAuthed() {
-      return request.auth != null;
+  
+    function hasRole(r) {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == r;
+    }
+    
+    function hasRoleAny(roles) {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in roles;
     }
 
     function isOwner(uid) {
-      return isAuthed() && request.auth.uid == uid;
+      return request.auth != null && request.auth.uid == uid;
     }
 
-    // Custom claims expected: roles: ["user","worker","admin"]
-    function hasRole(r) {
-      return isAuthed() && request.auth.token.roles != null && (r in request.auth.token.roles);
+    // Users: Can read their own data. Admins can read/write all.
+    match /users/{userId} {
+      allow read: if isOwner(userId) || hasRole('Super Admin');
+      allow create, update, delete: if hasRole('Super Admin');
     }
-
-    function hasRoleAny(arr) {
-      return isAuthed()
-        && request.auth.token.roles != null
-        && arr.exists(r => r in request.auth.token.roles);
+    
+    // Applications: Users can create their own. Can read/update their own.
+    // Workers and Admins can read/update all.
+    match /applications/{appId} {
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow read, update: if isOwner(resource.data.userId) || hasRoleAny(['worker_transport', 'worker_immigration', 'worker_identity', 'worker_health', 'worker_tax', 'worker_pension', 'worker_landregistry', 'worker_exams', 'worker_finepayment', 'worker_registeredvehicles', 'worker_missingdocuments', 'worker_support', 'Super Admin']);
+      allow delete: if hasRole('Super Admin');
     }
-
-    // users collection
-    match /users/{uid} {
-      allow read: if isAuthed() && (request.auth.uid == uid || hasRole('admin'));
-      allow write: if hasRole('admin');
+    
+    // Payments: Users can create and read their own. Workers/Admins can read all.
+    match /payments/{paymentId} {
+        allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+        allow read: if isOwner(resource.data.userId) || hasRoleAny(['worker_support', 'Super Admin']);
     }
-
-    // applications collection
-    match /applications/{id} {
-      // Read if owner or privileged roles
-      allow read: if (isAuthed() && isOwner(resource.data.userId)) || hasRoleAny(['worker','admin']);
-
-      // Create if authed and creating own record
-      allow create: if isAuthed() && request.resource.data.userId == request.auth.uid;
-
-      // Update if owner or privileged roles
-      allow update: if (isAuthed() && isOwner(resource.data.userId)) || hasRoleAny(['worker','admin']);
-
-      // Delete admin only
-      allow delete: if hasRole('admin');
+    
+    // Notifications: Users can read/update their own (for marking as read).
+    match /notifications/{notificationId} {
+        allow read, update: if isOwner(resource.data.userId);
+        // Create is typically server-side
     }
-
-    // payments collection
-    match /payments/{id} {
-      allow read: if (isAuthed() && isOwner(resource.data.userId)) || hasRoleAny(['worker','admin']);
-      allow create: if isAuthed() && request.resource.data.userId == request.auth.uid;
-      // Updates typically server-only; restrict to admin for draft
-      allow update: if hasRole('admin');
-      allow delete: if hasRole('admin');
+    
+    // Support Tickets: Users can create/read their own. Support workers/Admins can read/write.
+    match /supportTickets/{ticketId} {
+        allow create: if request.auth != null;
+        allow read, update: if isOwner(resource.data.userId) || hasRoleAny(['worker_support', 'Super Admin']);
     }
-
-    // notifications collection
-    match /notifications/{id} {
-      allow read: if (isAuthed() && isOwner(resource.data.userId)) || hasRole('admin');
-      allow write: if hasRole('admin');
+    
+    // Vehicle & Fine data is public for prototype, can be restricted by NIC later
+    match /fines/{fineId} {
+      allow read: if request.auth != null;
     }
-
-    // supportTickets collection
-    match /supportTickets/{id} {
-      allow read, write: if (isAuthed() && isOwner(resource.data.userId)) || hasRoleAny(['worker','admin']);
+    
+    match /vehicles/{vehicleId} {
+      allow read: if request.auth != null;
     }
-
-    // agentRuns collection (draft shape)
-    match /agentRuns/{id} {
-      allow read: if (isAuthed() && isOwner(resource.data.userId)) || hasRoleAny(['worker','admin']);
-      allow write: if hasRoleAny(['worker','admin']); // typically server-only
+    
+    // Agent Runs & Checkpoints are admin/worker read-only for now
+    match /agentRuns/{runId} {
+        allow read: if hasRoleAny(['Super Admin']);
+        // create is server-side
     }
-
-    // auditLogs collection
-    match /auditLogs/{id} {
-      allow read: if hasRoleAny(['worker','admin']) || (isAuthed() && isOwner(resource.data.actorId) && resource.data.actorType == 'user');
-      // append-only via server; restrict to authed in draft
-      allow write: if isAuthed();
+    
+    match /checkpoints/{checkpointId} {
+        allow read, update: if hasRoleAny(['Super Admin']);
+         // create is server-side
     }
-
-    // promptTemplates collection
-    match /promptTemplates/{id} {
-      allow read: if true;
-      allow write: if hasRole('admin');
-    }
-
-    // checkpoints collection
-    match /checkpoints/{id} {
-      allow read: if hasRoleAny(['worker','admin']) || (isAuthed() && isOwner(resource.data.actorUserId));
-      allow update: if hasRoleAny(['worker','admin']); // resolution actions only
-      allow create: if isAuthed(); // typically via server action
+    
+    match /auditLogs/{logId} {
+        allow read: if hasRoleAny(['Super Admin']);
+        // create is server-side
     }
   }
 }
