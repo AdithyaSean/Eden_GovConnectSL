@@ -219,9 +219,6 @@ export default function PaymentsPage() {
                  )}
               </div>
             </CardContent>
-             <CardFooter className="flex justify-end">
-                <Button variant="outline">Raise a Payment Issue</Button>
-             </CardFooter>
         </Card>
       </div>
     </DashboardLayout>
