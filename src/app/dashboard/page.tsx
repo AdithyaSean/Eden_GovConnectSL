@@ -24,6 +24,7 @@ import Autoplay from "embla-carousel-autoplay";
 import Image from 'next/image';
 import type { Application } from "@/lib/types";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { StatCard } from "@/components/stat-card";
 
 export default function DashboardPage() {
   const [stats, setStats] = useState({ documents: 0, activeServices: 0, notifications: 0 });
@@ -198,46 +199,30 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  My Digital Documents
-                </CardTitle>
-                 <UserSquare className="h-5 w-5 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                {loading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{stats.documents}</div>}
-                <p className="text-xs text-muted-foreground">
-                  Available for use
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Active Services
-                </CardTitle>
-                <BookUser className="h-5 w-5 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                {loading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{stats.activeServices}</div>}
-                 <p className="text-xs text-muted-foreground">
-                  Currently in-progress
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Notifications</CardTitle>
-                <Bell className="h-5 w-5 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                {loading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{stats.notifications}</div>}
-                <p className="text-xs text-muted-foreground">
-                  Unread messages
-                </p>
-              </CardContent>
-            </Card>
+             <StatCard
+                title="My Digital Documents"
+                value={stats.documents}
+                description="Available for use"
+                icon={UserSquare}
+                gradient="bg-gradient-to-br from-blue-500 to-purple-600"
+                loading={loading}
+            />
+            <StatCard
+                title="Active Services"
+                value={stats.activeServices}
+                description="Currently in-progress"
+                icon={BookUser}
+                gradient="bg-gradient-to-br from-orange-500 to-yellow-500"
+                loading={loading}
+            />
+             <StatCard
+                title="Notifications"
+                value={stats.notifications}
+                description="Unread messages"
+                icon={Bell}
+                gradient="bg-gradient-to-br from-green-500 to-emerald-600"
+                loading={loading}
+            />
         </div>
 
         <div className="space-y-6">
