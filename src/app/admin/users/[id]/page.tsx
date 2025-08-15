@@ -182,10 +182,16 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
                         <Label htmlFor="name">Name</Label>
                         <Input id="name" defaultValue={user.name} className="col-span-2" onChange={(e) => setUser({...user, name: e.target.value})} />
                     </div>
-                    <div className="grid grid-cols-3 items-center gap-4">
-                        <Label htmlFor="identifier">{user.role === 'Citizen' ? 'NIC Number' : 'Email'}</Label>
-                        <Input id="identifier" type="text" defaultValue={user.role === 'Citizen' ? user.nic : user.email} className="col-span-2" onChange={(e) => setUser({...user, [user.role === 'Citizen' ? 'nic' : 'email']: e.target.value})}/>
+                     <div className="grid grid-cols-3 items-center gap-4">
+                        <Label htmlFor="email">Email</Label>
+                        <Input id="email" type="email" defaultValue={user.email} className="col-span-2" disabled />
                     </div>
+                    {user.role === 'Citizen' && (
+                        <div className="grid grid-cols-3 items-center gap-4">
+                            <Label htmlFor="nic">NIC Number</Label>
+                            <Input id="nic" type="text" defaultValue={user.nic} className="col-span-2" onChange={(e) => setUser({...user, nic: e.target.value})}/>
+                        </div>
+                    )}
                     <div className="grid grid-cols-3 items-center gap-4">
                         <Label htmlFor="role">Role</Label>
                         <Select defaultValue={user.role} onValueChange={(value) => setUser({...user, role: value})}>
