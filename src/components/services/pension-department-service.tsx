@@ -58,9 +58,13 @@ export function PensionDepartmentService({ service }) {
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    
     if (name === "accountNumber") {
-        // Allow only numbers for account number
         if (/^\d*$/.test(value)) {
+            setFormValues(prev => ({...prev, [name]: value}));
+        }
+    } else if (name === "bankName" || name === "branchName") {
+        if (/^[a-zA-Z\s]*$/.test(value)) {
             setFormValues(prev => ({...prev, [name]: value}));
         }
     } else {
