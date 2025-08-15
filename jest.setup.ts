@@ -27,15 +27,32 @@ jest.mock('@/lib/firebase', () => ({
     }),
     signInWithEmailAndPassword: jest.fn(),
     sendPasswordResetEmail: jest.fn(),
+    createUserWithEmailAndPassword: jest.fn(() => Promise.resolve({ user: { uid: 'test-uid' } })),
+    sendEmailVerification: jest.fn(() => Promise.resolve()),
   },
-  db: {},
+  db: {
+      collection: jest.fn(),
+      doc: jest.fn(),
+      getDoc: jest.fn(),
+      getDocs: jest.fn(),
+      query: jest.fn(),
+      where: jest.fn(),
+      addDoc: jest.fn(),
+      serverTimestamp: jest.fn(),
+      updateDoc: jest.fn(),
+      setDoc: jest.fn(),
+      limit: jest.fn(),
+      orderBy: jest.fn(),
+  },
+  storage: {},
 }));
 
 // Mock the useAuth hook
 jest.mock('@/hooks/use-auth', () => ({
     useAuth: () => ({
         user: { 
-            id: 'test-user-id', 
+            id: 'test-user-id',
+            uid: 'test-user-uid',
             name: 'Test User', 
             nic: '123456789V', 
             email: 'test@example.com' 
@@ -43,4 +60,9 @@ jest.mock('@/hooks/use-auth', () => ({
         loading: false,
         refetch: jest.fn(),
     }),
+}));
+
+// Mock the sendEmail server action
+jest.mock('@/lib/actions/send-email', () => ({
+    sendEmail: jest.fn(),
 }));
