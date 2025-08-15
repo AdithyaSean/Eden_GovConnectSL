@@ -45,6 +45,8 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Label } from "@/components/ui/label";
 import Image from "next/image";
+import { sendEmail } from "@/lib/email";
+
 
 export default function WorkerApplicationDetailsPage({
   params,
@@ -66,22 +68,33 @@ export default function WorkerApplicationDetailsPage({
     userId: string,
     title: string,
     description: string,
-    href: string
+    href: string,
+    recipientEmail?: string
   ) => {
     try {
-      await addDoc(collection(db, "notifications"), {
-        userId,
-        title,
-        description,
-        href,
-        icon: "CheckCircle",
-        read: false,
-        createdAt: serverTimestamp(),
-      });
+        await addDoc(collection(db, "notifications"), {
+            userId,
+            title,
+            description,
+            href,
+            icon: "CheckCircle",
+            read: false,
+            createdAt: serverTimestamp()
+        });
+
+        // Also send an email
+        if(recipientEmail) {
+            await sendEmail({
+                to: recipientEmail,
+                subject: `[GovConnect SL] ${title}`,
+                html: `<p>${description}</p><p>View more details by logging into your account.</p>`
+            });
+        }
     } catch (error) {
-      console.error("Error creating notification:", error);
+        console.error("Error creating notification:", error);
     }
-  };
+  }
+
 
   useEffect(() => {
     const fetchApplication = async () => {
@@ -185,14 +198,15 @@ export default function WorkerApplicationDetailsPage({
       description: `Application has been marked as ${status}.`,
     });
 
-    if (application.userId) {
+    if (application.userId && applicant?.email) {
       await createNotification(
         application.userId,
         `Application ${status}`,
         `Your application for '${
           application.service
         }' has been ${status.toLowerCase()}.`,
-        "/my-applications"
+        "/my-applications",
+        applicant.email
       );
     }
   };
@@ -207,19 +221,20 @@ export default function WorkerApplicationDetailsPage({
       description: `Application has been marked as Rejected.`,
     });
 
-    if (application.userId) {
+    if (application.userId && applicant?.email) {
       await createNotification(
         application.userId,
         `Application Rejected`,
         `Your application for '${application.service}' has been rejected. Comment: ${rejectionComment || 'No comment provided.'}`,
-        "/my-applications"
+        "/my-applications",
+        applicant.email
       );
     }
     setRejectionComment("");
     setIsRejectDialogOpen(false);
   }
 
-  const formatDate = (date: Timestamp | string | undefined) => {
+  const formatDate = (date: Timestamp | string | undefined | Date) => {
     if (!date) return "N/A";
     if (typeof date === "string") return new Date(date).toLocaleString();
     if (date instanceof Timestamp) return date.toDate().toLocaleString();

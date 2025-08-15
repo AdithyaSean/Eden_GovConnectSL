@@ -29,6 +29,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { doc, updateDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
+import { sendEmail } from "@/lib/email";
 
 export default function PaymentPage() {
   const searchParams = useSearchParams();
@@ -67,15 +68,25 @@ export default function PaymentPage() {
         setNewPaymentId(paymentDocRef.id);
 
         // 3. Create a notification
+         const notifDescription = `Your payment of LKR ${amount} for '${service}' was successful.`;
          await addDoc(collection(db, "notifications"), {
             userId: user.id,
             title: "Payment Successful",
-            description: `Your payment of LKR ${amount} for '${service}' was successful.`,
+            description: notifDescription,
             href: `/receipt/${paymentDocRef.id}`,
             icon: "CheckCircle",
             read: false,
             createdAt: serverTimestamp()
         });
+        
+        // 4. Send email notification
+        if(user.email){
+             await sendEmail({
+                to: user.email,
+                subject: "[GovConnect SL] Payment Successful",
+                html: `<p>${notifDescription}</p><p>You can view your receipt by logging into your account.</p>`
+            });
+        }
 
         setShowSuccessDialog(true);
     } catch(error) {
