@@ -86,9 +86,14 @@ export default function AdminLoginPage() {
 
     } catch (error: any) {
         console.error("Login error: ", error);
-        if (error.code === 'auth/invalid-credential') {
-          toast({ title: "Login Failed", description: "Invalid email or password. Please try again.", variant: "destructive" });
-        } else {
+        if (error.code === 'auth/wrong-password') {
+          toast({ title: "Login Failed", description: "The password you entered is incorrect. Please try again.", variant: "destructive" });
+        } else if (error.code === 'auth/user-not-found') {
+            toast({ title: "Login Failed", description: "No user found with this email address.", variant: "destructive" });
+        } else if (error.code === 'auth/invalid-credential') {
+            toast({ title: "Login Failed", description: "Invalid email or password. Please try again.", variant: "destructive" });
+        }
+         else {
           toast({ title: "An Error Occurred", description: "Something went wrong. Please try again.", variant: "destructive" });
         }
     } finally {

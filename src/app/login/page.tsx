@@ -81,7 +81,13 @@ export default function LoginPage() {
 
     } catch (error: any) {
         console.error("Login failed: ", error);
-        if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
+        if (error.code === 'auth/wrong-password') {
+            toast({
+                title: "Login Failed",
+                description: "The password you entered is incorrect. Please try again.",
+                variant: "destructive"
+            });
+        } else if (error.code === 'auth/invalid-credential') {
             toast({
                 title: "Login Failed",
                 description: "Invalid credentials. Please check your NIC and password.",
