@@ -6,9 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { useState } from 'react';
+import { useState, FormEvent } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useRouter } from 'next/navigation';
 
 const sampleResults = {
     "GCE A/L": [
@@ -30,6 +34,8 @@ export function ExamResultsService({ service }) {
   const [examType, setExamType] = useState('');
   const [results, setResults] = useState([]);
   const { toast } = useToast();
+  const { user } = useAuth();
+  const router = useRouter();
   
   const handleViewResults = () => {
     if(examType) {
@@ -44,11 +50,32 @@ export function ExamResultsService({ service }) {
     });
   };
 
-  const handleAppeal = () => {
-    toast({
-        title: "Appeal Submitted",
-        description: "Your appeal request has been submitted.",
-    });
+  const handleAppeal = async () => {
+    if (!user) {
+        toast({ title: "Please log in to submit.", variant: "destructive" });
+        return;
+    }
+    
+    try {
+        await addDoc(collection(db, "applications"), {
+            service: "Exam Re-correction Appeal",
+            userId: user.id,
+            user: user.name,
+            status: "Pending",
+            submitted: serverTimestamp(),
+            details: {
+                examType: examType,
+            }
+        });
+        toast({
+            title: "Appeal Submitted",
+            description: "Your appeal request has been submitted.",
+        });
+        router.push('/my-applications');
+    } catch(error) {
+        console.error("Error submitting appeal: ", error);
+        toast({ title: "Submission Failed", description: "An error occurred. Please try again.", variant: "destructive"});
+    }
   };
 
   return (
@@ -117,3 +144,5 @@ export function ExamResultsService({ service }) {
     </div>
   );
 }
+
+    

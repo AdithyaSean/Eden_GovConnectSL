@@ -1,0 +1,178 @@
+@startuml user-flow
+skinparam backgroundColor #F2F4F7
+skinparam defaultTextColor #30475E
+skinparam activityBackgroundColor #FFFFFF
+skinparam activityBorderColor #30475E
+skinparam activityStartColor #D4AF37
+skinparam activityEndColor #22C55E
+skinparam activityDiamondBackgroundColor #FFFFFF
+skinparam activityDiamondBorderColor #30475E
+skinparam activityArrowColor #30475E
+skinparam noteBorderColor #D4AF37
+skinparam noteBackgroundColor #FEF9E7
+
+title govconnect - User Flow Diagram
+
+start
+
+:User visits e-Citizen Platform;
+
+if (User authenticated?) then (no)
+  :Navigate to Login Page;
+  :Enter NIC and Password;
+  if (2FA Required?) then (yes)
+    :Enter SMS/Email Code;
+  endif
+  :Authentication Complete;
+else (yes)
+endif
+
+:Display Dashboard;
+note right
+  **Dashboard Features:**
+  - Service cards with status
+  - Quick search bar
+  - Notifications
+  - Language switcher
+  - AI Assistant
+end note
+
+:User selects service or uses search;
+
+if (Service Type?) then (National ID)
+  :Navigate to National ID Service;
+  if (Service Action?) then (New Application)
+    :Select "Apply for New ID";
+    :Fill personal information;
+    :Upload Birth Certificate;
+    :Upload Certified Photo;
+    :Upload Grama Niladhari Certificate;
+    :Book biometrics appointment;
+    :Submit application;
+  elseif (Update Details) then
+    :Select "Update ID Details";
+    :Upload required documents;
+    :Submit update request;
+  elseif (Lost ID) then
+    :Select "Duplicate of Lost ID";
+    :Upload Police Report;
+    :Upload Certified Photo;
+    :Submit application;
+  endif
+
+elseif (Driving License) then
+  :Navigate to Driving License Service;
+  :Check current license status;
+  :Fill renewal form;
+  :Upload old license copy;
+  :Upload medical certificate;
+  :Schedule DMT appointment;
+  :Process payment (LKR 2,500);
+  :Submit renewal application;
+
+elseif (Missing Documents) then
+  :Navigate to Missing Documents;
+  :Select document type;
+  if (Document Type?) then (NIC)
+    :Show required: Police Report, Birth Certificate, Photo;
+  elseif (Passport) then
+    :Show required: Police Report, NIC Copy, Birth Certificate;
+  elseif (Driving License) then
+    :Show required: Police Report, NIC Copy, Medical Certificate;
+  endif
+  :Upload required documents;
+  :Submit replacement request;
+
+elseif (Tax Payments) then
+  :Navigate to Tax Services;
+  :View tax payment history;
+  if (Action?) then (Pay Due Tax)
+    :Select pending payment;
+    :Redirect to payment gateway;
+    :Complete payment;
+  elseif (Upload Documents) then
+    :Upload salary slips;
+    :Upload income proof;
+    :Submit documents;
+  elseif (Download Certificates) then
+    :Download tax clearance;
+    :Download income statement;
+  endif
+
+elseif (Health Services) then
+  :Navigate to Health Services;
+  if (Action?) then (View Records)
+    :Display vaccination records;
+    :Show medical history;
+  elseif (Book Appointment) then
+    :Select hospital/clinic;
+    :Choose available slot;
+    :Confirm appointment;
+  endif
+
+elseif (Pension Department) then
+  :Navigate to Pension Services;
+  :Check application status;
+  :Fill pension application form;
+  :Upload service certificate;
+  :Upload retirement letter;
+  :Upload bank details;
+  :Submit pension application;
+
+elseif (Land Registry) then
+  :Navigate to Land Registry;
+  :Search property records;
+  :View ownership details;
+  :Request certified copies;
+
+elseif (Exam Results) then
+  :Navigate to Exam Results;
+  :Enter examination index number;
+  :Select exam type (O/L or A/L);
+  :View results;
+endif
+
+if (Payment Required?) then (yes)
+  :Navigate to Payment Page;
+  if (Payment Method?) then (Card)
+    :Enter card details;
+    :Process secure payment;
+  elseif (Mobile Payment) then
+    :Select eZ Cash/mCash;
+    :Complete mobile payment;
+  elseif (Bank Transfer) then
+    :Generate payment reference;
+    :Complete bank transfer;
+  endif
+  :Payment confirmation;
+else (no)
+endif
+
+:Application submitted successfully;
+:Generate reference number;
+:Send confirmation notification;
+
+if (Track Application?) then (yes)
+  :Navigate to "My Applications";
+  :View application status;
+  :Receive status updates;
+else (no)
+endif
+
+if (Need Support?) then (yes)
+  :Access AI Assistant or Support;
+  if (Support Type?) then (AI Chat)
+    :Chat with AI Assistant;
+    :Get instant help;
+  elseif (Human Support) then
+    :Contact support team;
+    :Get professional assistance;
+  endif
+else (no)
+endif
+
+:Return to Dashboard;
+
+stop
+
+@enduml

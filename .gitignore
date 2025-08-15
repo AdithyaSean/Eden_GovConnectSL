@@ -37,9 +37,17 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-.genkit/*
-.env*
 
 # firebase
 firebase-debug.log
+<<<<<<< HEAD
 firestore-debug.log
+
+# latex
+*.aux
+*.log
+*.out
+*.toc
+=======
+firestore-debug.log
+>>>>>>> origin/experiment-v2

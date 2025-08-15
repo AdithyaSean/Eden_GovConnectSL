@@ -10,6 +10,8 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { getPrompt } from '@/lib/prompts/registry';
+import { logger } from '@/lib/debug/logger';
 
 const SummarizeServiceInfoInputSchema = z.object({
   serviceName: z.string().describe('The name of the service to summarize.'),
@@ -45,6 +47,10 @@ const summarizeServiceInfoFlow = ai.defineFlow(
     outputSchema: SummarizeServiceInfoOutputSchema,
   },
   async input => {
+    const __tpl = getPrompt("summarizeServiceInfo", "en");
+    if (__tpl) {
+      logger.info("PromptRegistry", { key: __tpl.key, version: __tpl.version, locale: __tpl.locale });
+    }
     const {output} = await prompt(input);
     return output!;
   }
