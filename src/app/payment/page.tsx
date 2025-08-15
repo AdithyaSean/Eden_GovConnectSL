@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useSearchParams } from "next/navigation";
@@ -22,7 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useEffect, useState } from "react";
+import { useEffect, useState, ChangeEvent } from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
 import { doc, updateDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
@@ -41,6 +42,11 @@ export default function PaymentPage() {
   const [newPaymentId, setNewPaymentId] = useState<string | null>(null);
   const [successAnimation, setSuccessAnimation] = useState<any>(null);
   const { user } = useAuth();
+  const [cardState, setCardState] = useState({
+      number: '',
+      expiry: '',
+      cvc: ''
+  });
 
   // Load Lottie animation from public folder
   useEffect(() => {
@@ -102,6 +108,30 @@ export default function PaymentPage() {
       setIsProcessing(false);
     }
   };
+
+  const handleCardNumberChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, ''); // Remove all non-digit characters
+    const formattedValue = value.replace(/(.{4})/g, '$1 ').trim(); // Add space every 4 digits
+    if (value.length <= 16) {
+        setCardState(prev => ({...prev, number: formattedValue}));
+    }
+  };
+
+  const handleExpiryChange = (e: ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 2) {
+      value = value.substring(0, 2) + '/' + value.substring(2, 4);
+    }
+    setCardState(prev => ({...prev, expiry: value}));
+  };
+
+  const handleCvcChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, '');
+    if (value.length <= 3) {
+      setCardState(prev => ({...prev, cvc: value}));
+    }
+  };
+
 
   return (
     <DashboardLayout>
@@ -192,16 +222,37 @@ export default function PaymentPage() {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="cardNumber">Card Number</Label>
-                    <Input id="cardNumber" placeholder="0000 0000 0000 0000" required />
+                    <Input 
+                      id="cardNumber" 
+                      placeholder="0000 0000 0000 0000" 
+                      required 
+                      value={cardState.number}
+                      onChange={handleCardNumberChange}
+                      maxLength={19}
+                    />
                   </div>
                   <div className="grid grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="expiry">Expiry</Label>
-                      <Input id="expiry" placeholder="MM/YY" required />
+                      <Input 
+                        id="expiry" 
+                        placeholder="MM/YY" 
+                        required 
+                        value={cardState.expiry}
+                        onChange={handleExpiryChange}
+                        maxLength={5}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="cvc">CVC</Label>
-                      <Input id="cvc" placeholder="123" required />
+                      <Input 
+                        id="cvc" 
+                        placeholder="123" 
+                        required 
+                        value={cardState.cvc}
+                        onChange={handleCvcChange}
+                        maxLength={3}
+                      />
                     </div>
                   </div>
                 </CardContent>
