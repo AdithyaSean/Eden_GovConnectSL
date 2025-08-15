@@ -13,8 +13,8 @@ const mockSendMail = jest.fn();
 describe.skip('sendEmail Server Action', () => {
 
   beforeEach(() => {
-    jest.clearAllMocks();
     jest.resetModules(); // This is crucial to reload modules with new process.env values
+    jest.clearAllMocks();
     
     // Setup the mock implementation for createTransport and sendMail
     (nodemailer.createTransport as jest.Mock).mockReturnValue({
@@ -31,7 +31,6 @@ describe.skip('sendEmail Server Action', () => {
 
     // Mock getTestMessageUrl to prevent errors
     (nodemailer.getTestMessageUrl as jest.Mock).mockReturnValue('http://ethereal.preview/url');
-
   });
 
   it('should send an email successfully using Gmail credentials', async () => {
