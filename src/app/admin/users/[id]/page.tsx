@@ -198,20 +198,9 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
                         </Select>
                     </div>
                 </CardContent>
-                 <CardFooter>
+                 <CardFooter className="justify-between">
                     <Button onClick={handleSaveChanges}>Save Changes</Button>
-                 </CardFooter>
-            </Card>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle>Account Actions</CardTitle>
-                    <CardDescription>Perform administrative actions on this user account.</CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-wrap gap-4">
-                    <Button variant="outline" onClick={() => handleAction('Active')} disabled={user.status === 'Active'}><UserCheck className="mr-2"/>Activate Account</Button>
-                    <Button variant="outline" onClick={() => handleAction('Suspended')} disabled={user.status === 'Suspended'}><ShieldAlert className="mr-2"/>Suspend Account</Button>
-                     <AlertDialog>
+                    <AlertDialog>
                       <AlertDialogTrigger asChild>
                          <Button variant="outline"><KeyRound className="mr-2"/>Change Password</Button>
                       </AlertDialogTrigger>
@@ -227,6 +216,17 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
+                 </CardFooter>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Account Actions</CardTitle>
+                    <CardDescription>Perform administrative actions on this user account.</CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-wrap gap-4">
+                    <Button variant="outline" onClick={() => handleAction('Active')} disabled={user.status === 'Active'}><UserCheck className="mr-2"/>Activate Account</Button>
+                    <Button variant="outline" onClick={() => handleAction('Suspended')} disabled={user.status === 'Suspended'}><ShieldAlert className="mr-2"/>Suspend Account</Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button variant="destructive" disabled={user.status === 'Deleted'}><UserX className="mr-2"/>Delete User Account</Button>
