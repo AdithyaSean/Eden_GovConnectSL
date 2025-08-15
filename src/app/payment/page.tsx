@@ -12,11 +12,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CreditCard, QrCode, Smartphone, University } from "lucide-react";
-import Image from "next/image";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -126,6 +123,7 @@ export default function PaymentPage() {
               Complete your payment for the selected government service.
             </CardDescription>
           </CardHeader>
+           <form onSubmit={handlePayment}>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
               <div className="space-y-4">
@@ -160,106 +158,35 @@ export default function PaymentPage() {
               </div>
             </div>
 
-            <Tabs defaultValue="card" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
-                <TabsTrigger value="card"><CreditCard className="mr-2" /> Card</TabsTrigger>
-                <TabsTrigger value="mobile"><Smartphone className="mr-2" /> Mobile</TabsTrigger>
-                <TabsTrigger value="bank"><University className="mr-2" /> Bank</TabsTrigger>
-                <TabsTrigger value="qr"><QrCode className="mr-2" /> QR</TabsTrigger>
-              </TabsList>
-              
-              <form onSubmit={handlePayment}>
-                <TabsContent value="card">
-                  <Card className="border-t-0 rounded-t-none">
-                    <CardHeader>
-                      <CardTitle>Credit/Debit Card</CardTitle>
-                      <CardDescription>Enter your card details below. All transactions are secure and encrypted.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="cardNumber">Card Number</Label>
-                        <Input id="cardNumber" placeholder="0000 0000 0000 0000" required />
-                      </div>
-                      <div className="grid grid-cols-3 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="expiry">Expiry</Label>
-                          <Input id="expiry" placeholder="MM/YY" required />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="cvc">CVC</Label>
-                          <Input id="cvc" placeholder="123" required />
-                        </div>
-                      </div>
-                    </CardContent>
-                    <CardFooter>
-                      <Button type="submit" className="w-full" size="lg" disabled={isProcessing}>
-                        {isProcessing ? "Processing..." : `Pay LKR ${amount}`}
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                </TabsContent>
-
-                 <TabsContent value="mobile">
-                   <Card className="border-t-0 rounded-t-none">
-                    <CardHeader>
-                      <CardTitle>Mobile Payment</CardTitle>
-                      <CardDescription>Pay with eZ Cash or mCash.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                       <div className="flex gap-4">
-                           <Button variant="outline" className="flex-1 h-16"><Image src="https://placehold.co/100x40" width={100} height={40} alt="eZ Cash" data-ai-hint="logo payment" /></Button>
-                           <Button variant="outline" className="flex-1 h-16"><Image src="https://placehold.co/100x40" width={100} height={40} alt="mCash" data-ai-hint="logo payment" /></Button>
-                       </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="mobileNumber">Mobile Number</Label>
-                            <Input id="mobileNumber" placeholder="07XXXXXXXX" required />
-                        </div>
-                    </CardContent>
-                    <CardFooter>
-                       <Button type="submit" className="w-full" size="lg" disabled={isProcessing}>
-                         {isProcessing ? "Processing..." : `Pay LKR ${amount}`}
-                       </Button>
-                    </CardFooter>
-                  </Card>
-                </TabsContent>
-
-                 <TabsContent value="bank">
-                   <Card className="border-t-0 rounded-t-none">
-                    <CardHeader>
-                      <CardTitle>Online Banking</CardTitle>
-                      <CardDescription>Select your bank to proceed with the payment.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                        <Button variant="outline" className="h-20">Bank of Ceylon</Button>
-                        <Button variant="outline" className="h-20">People's Bank</Button>
-                        <Button variant="outline" className="h-20">Sampath Bank</Button>
-                        <Button variant="outline" className="h-20">Commercial Bank</Button>
-                        <Button variant="outline" className="h-20">HNB</Button>
-                        <Button variant="outline" className="h-20">NDB Bank</Button>
-                    </CardContent>
-                    <CardFooter>
-                       <Button type="submit" className="w-full" size="lg" disabled={isProcessing}>
-                         {isProcessing ? "Processing..." : "Proceed to Bank"}
-                       </Button>
-                    </CardFooter>
-                  </Card>
-                </TabsContent>
-
-                 <TabsContent value="qr">
-                   <Card className="border-t-0 rounded-t-none">
-                     <CardHeader>
-                        <CardTitle>LankaQR Payment</CardTitle>
-                        <CardDescription>Scan the QR code with your mobile banking app to complete the payment.</CardDescription>
-                     </CardHeader>
-                     <CardContent className="flex flex-col items-center justify-center space-y-4">
-                         <Image src="https://placehold.co/250x250.png" width={250} height={250} alt="LankaQR" data-ai-hint="qr code" />
-                         <p className="text-muted-foreground text-sm">Waiting for payment confirmation...</p>
-                     </CardContent>
-                   </Card>
-                </TabsContent>
-              </form>
-            </Tabs>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Credit/Debit Card</CardTitle>
+                    <CardDescription>Enter your card details below. All transactions are secure and encrypted.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                    <Label htmlFor="cardNumber">Card Number</Label>
+                    <Input id="cardNumber" placeholder="0000 0000 0000 0000" required />
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="expiry">Expiry</Label>
+                        <Input id="expiry" placeholder="MM/YY" required />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="cvc">CVC</Label>
+                        <Input id="cvc" placeholder="123" required />
+                    </div>
+                    </div>
+                </CardContent>
+                <CardFooter>
+                    <Button type="submit" className="w-full" size="lg" disabled={isProcessing}>
+                    {isProcessing ? "Processing..." : `Pay LKR ${amount}`}
+                    </Button>
+                </CardFooter>
+            </Card>
           </CardContent>
+           </form>
         </Card>
       </div>
     </DashboardLayout>
