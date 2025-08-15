@@ -82,15 +82,11 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
 
   const LogoComponent = ({ role }: { role: string }) => {
     if (workerMode) {
-      let dashboardPath = role.replace('worker_', '');
-      if(dashboardPath === 'finepayment') dashboardPath = 'fine-payment';
-      if(dashboardPath === 'registeredvehicles') dashboardPath = 'registered-vehicles';
-      
       return (
-         <Link href={`/worker/${dashboardPath}/dashboard`} className="flex items-center gap-2 font-semibold">
+         <div className="flex items-center gap-2 font-semibold">
             <LogoIcon className="h-6 w-6 text-primary" />
             <span>{logoText}</span>
-        </Link>
+        </div>
       );
     }
     return (
