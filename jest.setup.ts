@@ -61,8 +61,3 @@ jest.mock('@/hooks/use-auth', () => ({
         refetch: jest.fn(),
     }),
 }));
-
-// Mock the sendEmail server action
-jest.mock('@/lib/actions/send-email', () => ({
-    sendEmail: jest.fn(() => Promise.resolve({ success: true, messageId: 'mock-message-id' })),
-}));
