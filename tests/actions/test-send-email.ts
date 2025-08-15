@@ -7,14 +7,14 @@ import { sendEmail } from '../../src/lib/actions/send-email';
 async function runTest() {
   console.log("Running email sending test...");
 
-  if (!process.env.EMAIL_USER) {
-      console.error("\n❌ Test FAILED. EMAIL_USER environment variable is not set.");
-      console.log("   Please create a .env file in the root directory and add your email credentials.");
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.error("\n❌ Test FAILED. EMAIL_USER and/or EMAIL_PASS environment variables are not set.");
+      console.log("   Please ensure your .env file is correctly set up in the root directory.");
       return;
   }
 
   const result = await sendEmail({
-    to: "test.recipient@example.com",
+    to: "adithaysean@gmail.com",
     subject: `GovConnect SL Email Test from ${process.env.EMAIL_USER}`,
     html: `
       <h1>Test Email</h1>
@@ -26,7 +26,7 @@ async function runTest() {
   if (result.success) {
     console.log("\n✅ Test PASSED. Email sent successfully.");
     console.log("   Message ID:", result.messageId);
-    console.log("   Check the inbox of 'test.recipient@example.com' (or your own email if you changed it).");
+    console.log("   Check the inbox of 'adithaysean@gmail.com'.");
   } else {
     console.error("\n❌ Test FAILED.", result.error);
   }
