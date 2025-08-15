@@ -64,7 +64,7 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
   const handleSaveChanges = async () => {
     if(user) {
       // Create a copy of the user object to avoid directly mutating state
-      const userToUpdate = { ...user };
+      const userToUpdate: Partial<User> = { ...user };
       // Remove id from the object to be saved, as it's the doc key.
       delete userToUpdate.id;
 
@@ -180,21 +180,21 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
                 <CardContent className="space-y-4">
                      <div className="grid grid-cols-3 items-center gap-4">
                         <Label htmlFor="name">Name</Label>
-                        <Input id="name" defaultValue={user.name} className="col-span-2" onChange={(e) => setUser({...user, name: e.target.value})} />
+                        <Input id="name" value={user.name} className="col-span-2" onChange={(e) => setUser({...user, name: e.target.value})} />
                     </div>
                      <div className="grid grid-cols-3 items-center gap-4">
                         <Label htmlFor="email">Email</Label>
-                        <Input id="email" type="email" defaultValue={user.email} className="col-span-2" disabled />
+                        <Input id="email" type="email" value={user.email} className="col-span-2" onChange={(e) => setUser({...user, email: e.target.value})} />
                     </div>
                     {user.role === 'Citizen' && (
                         <div className="grid grid-cols-3 items-center gap-4">
                             <Label htmlFor="nic">NIC Number</Label>
-                            <Input id="nic" type="text" defaultValue={user.nic} className="col-span-2" onChange={(e) => setUser({...user, nic: e.target.value})}/>
+                            <Input id="nic" type="text" value={user.nic} className="col-span-2" onChange={(e) => setUser({...user, nic: e.target.value})}/>
                         </div>
                     )}
                     <div className="grid grid-cols-3 items-center gap-4">
                         <Label htmlFor="role">Role</Label>
-                        <Select defaultValue={user.role} onValueChange={(value) => setUser({...user, role: value})}>
+                        <Select value={user.role} onValueChange={(value) => setUser({...user, role: value})}>
                             <SelectTrigger className="col-span-2">
                                 <SelectValue placeholder="Select a role" />
                             </SelectTrigger>
@@ -257,4 +257,5 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
       </div>
     </AdminLayout>
   );
-}
+
+    
