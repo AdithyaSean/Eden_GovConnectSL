@@ -15,6 +15,18 @@ async function getTransporter() {
 
   // Use Ethereal for testing
   try {
+    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+         console.log('Using Gmail account for sending email...');
+         transporter = nodemailer.createTransport({
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true, // true for 465, false for other ports
+            auth: {
+              user: process.env.EMAIL_USER,
+              pass: process.env.EMAIL_PASS,
+            },
+         });
+    } else {
       let testAccount = await nodemailer.createTestAccount();
       console.log('Using Ethereal test account:', testAccount.user);
 
@@ -27,9 +39,10 @@ async function getTransporter() {
           pass: testAccount.pass,
         },
       });
+    }
       return transporter;
   } catch (error) {
-      console.error('Could not create email test account', error);
+      console.error('Could not create email transporter', error);
       return null;
   }
 }
@@ -50,7 +63,7 @@ export async function sendEmail({
   }
 
   const mailOptions = {
-    from: `"GovConnect SL" <noreply@govconnect.lk>`,
+    from: `"GovConnect SL" <${process.env.EMAIL_USER || 'noreply@govconnect.lk'}>`,
     to,
     subject,
     html,

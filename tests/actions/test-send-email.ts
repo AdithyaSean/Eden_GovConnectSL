@@ -8,25 +8,26 @@ async function runTest() {
   console.log("Running email sending test...");
 
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      console.error("\n❌ Test FAILED. EMAIL_USER and/or EMAIL_PASS environment variables are not set.");
-      console.log("   Please ensure your .env file is correctly set up in the root directory.");
-      return;
+      console.warn("\n⚠️  EMAIL_USER and/or EMAIL_PASS not set in .env file. Falling back to Ethereal test account.");
   }
 
   const result = await sendEmail({
-    to: "adithaysean@gmail.com",
-    subject: `GovConnect SL Email Test from ${process.env.EMAIL_USER}`,
+    to: "test-recipient@example.com",
+    subject: `GovConnect SL Email Test`,
     html: `
       <h1>Test Email</h1>
-      <p>This is a test email sent from the test script using your configured Gmail account.</p>
+      <p>This is a test email sent from the test script.</p>
       <p>If you see this, the nodemailer configuration and sendEmail action are working correctly.</p>
     `,
   });
 
   if (result.success) {
     console.log("\n✅ Test PASSED. Email sent successfully.");
-    console.log("   Message ID:", result.messageId);
-    console.log("   Check the inbox of 'adithaysean@gmail.com'.");
+    if (result.previewUrl) {
+        console.log("   Preview URL:", result.previewUrl);
+    } else {
+        console.log("   Check the inbox of 'adithaysean@gmail.com'.");
+    }
   } else {
     console.error("\n❌ Test FAILED.", result.error);
   }
