@@ -2,14 +2,16 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { ServiceCard } from '@/components/service-card';
 import '@testing-library/jest-dom';
+import type { Service } from '@/lib/types';
 
-const mockService = {
+
+const mockService: Service = {
     title: "Test Service",
     slug: "test-service",
     description: "A test service.",
-    status: "Active" as const,
-    statusVariant: "success" as const,
-    icon: "Home" as const,
+    status: "Active",
+    statusVariant: "success",
+    icon: "Home",
     actions: [],
     content: {
         longDescription: "A longer description for the test service.",

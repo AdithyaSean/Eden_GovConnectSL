@@ -25,6 +25,7 @@ describe('AdminAnalyticsPage', () => {
     beforeEach(() => {
         (useAnalytics as jest.Mock).mockReturnValue({
             analyticsData: mockAnalyticsData,
+            allApplications: [],
             loading: false,
         });
     });
@@ -61,6 +62,7 @@ describe('AdminAnalyticsPage', () => {
                 processingTimeData: [],
                 recentFeedback: [],
             },
+            allApplications: [],
             loading: true,
         });
         render(<AdminAnalyticsPage />);
