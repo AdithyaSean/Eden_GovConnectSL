@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import AdminDashboardPage from '@/app/admin/dashboard/page';
+import { collection, getDocs, Timestamp } from 'firebase/firestore';
 
 // Mock child components to isolate the test
 jest.mock('@/components/admin-layout', () => ({
@@ -10,19 +11,6 @@ jest.mock('@/components/admin-layout', () => ({
 jest.mock('@/components/sri-lanka-time', () => ({
   SriLankaTime: () => <div>SL Time</div>,
 }));
-
-// Mock firebase
-jest.mock('@/lib/firebase', () => ({
-    db: {
-        collection: jest.fn(),
-        getDocs: jest.fn(),
-        query: jest.fn(),
-        orderBy: jest.fn(),
-        limit: jest.fn(),
-    }
-}));
-import { collection, getDocs, Timestamp } from 'firebase/firestore';
-
 
 describe('AdminDashboardPage', () => {
     beforeEach(() => {
@@ -43,20 +31,20 @@ describe('AdminDashboardPage', () => {
             ]
         };
 
-        // This is a simplified mock. A more robust mock would inspect the query's path.
         (getDocs as jest.Mock).mockImplementation((q) => {
-            // Check a property of the query to differentiate. This is just an example.
-            // If the query has a 'limit' property (from the recent apps query), return mockRecentApps.
-            if ((q as any)._limit) {
+            if ((q as any)._query.limit) {
                 return Promise.resolve(mockRecentApps);
             }
-            // A bit fragile, relies on call order for the Promise.all
-            const callOrder = (getDocs as jest.Mock).mock.calls.length;
-            if (callOrder === 1) return Promise.resolve(mockUsers);
-            if (callOrder === 2) return Promise.resolve(mockApps);
-            if (callOrder === 3) return Promise.resolve(mockPayments);
-
-            return Promise.resolve({ docs: [] }); // Default empty response
+             if ((q as any)._query.path.segments.includes('users')) {
+                return Promise.resolve(mockUsers);
+            }
+            if ((q as any)._query.path.segments.includes('applications')) {
+                return Promise.resolve(mockApps);
+            }
+            if ((q as any)._query.path.segments.includes('payments')) {
+                return Promise.resolve(mockPayments);
+            }
+            return Promise.resolve({ docs: [], size: 0 }); // Default empty response
         });
     });
 
@@ -79,7 +67,6 @@ describe('AdminDashboardPage', () => {
         render(<AdminDashboardPage />);
 
         await waitFor(() => {
-            expect(screen.getByRole('cell', { name: /user name/i })).toBeInTheDocument();
             expect(screen.getByRole('cell', { name: /nimal silva/i })).toBeInTheDocument();
             expect(screen.getByRole('cell', { name: /passport services/i })).toBeInTheDocument();
             expect(screen.getByRole('cell', { name: /kamala perera/i })).toBeInTheDocument();

@@ -30,11 +30,12 @@ const mockApplications = [
 
 describe('useAnalytics Hook', () => {
     beforeEach(() => {
-        jest.clearAllMocks();
+        // Clear mocks before each test
+        (getDocs as jest.Mock).mockClear();
     });
 
     it('should return initial loading state and default data', () => {
-        (getDocs as jest.Mock).mockImplementation(() => new Promise(() => {})); 
+        (getDocs as jest.Mock).mockImplementation(() => new Promise(() => {})); // Prevent promise from resolving
         const { result } = renderHook(() => useAnalytics());
 
         expect(result.current.loading).toBe(true);
@@ -47,9 +48,9 @@ describe('useAnalytics Hook', () => {
             docs: mockApplications.map(app => ({ id: app.id, data: () => app }))
         });
         const { result } = renderHook(() => useAnalytics());
-        
+
         await waitFor(() => {
-            expect(result.current.loading).toBe(false)
+            expect(result.current.loading).toBe(false);
         });
 
         expect(result.current.allApplications.length).toBe(mockApplications.length);
@@ -66,7 +67,7 @@ describe('useAnalytics Hook', () => {
          const { result } = renderHook(() => useAnalytics());
 
          await waitFor(() => {
-            expect(result.current.loading).toBe(false)
+            expect(result.current.loading).toBe(false);
          });
 
          expect(result.current.allApplications.length).toBe(0);
