@@ -33,11 +33,14 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
   const pathname = usePathname();
   const [worker, setWorker] = useState<User | null>(null);
   const [workerId, setWorkerId] = useState<string | null>(null);
+  const [workerRole, setWorkerRole] = useState<string>("");
   
   useEffect(() => {
     const fetchWorkerData = async () => {
       const idFromStorage = localStorage.getItem("workerId");
+      const roleFromStorage = localStorage.getItem("workerRole") || "";
       setWorkerId(idFromStorage);
+      setWorkerRole(roleFromStorage);
 
       if (workerMode) {
         if (idFromStorage) {
@@ -77,10 +80,9 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
   
   const fallbackInitial = worker ? worker.name?.charAt(0).toUpperCase() : (workerMode ? 'W' : 'A');
 
-  const LogoComponent = () => {
+  const LogoComponent = ({ role }: { role: string }) => {
     if (workerMode) {
-      const workerRole = localStorage.getItem("workerRole") || "";
-      let dashboardPath = workerRole.replace('worker_', '');
+      let dashboardPath = role.replace('worker_', '');
       if(dashboardPath === 'finepayment') dashboardPath = 'fine-payment';
       if(dashboardPath === 'registeredvehicles') dashboardPath = 'registered-vehicles';
       
@@ -104,7 +106,7 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
       <div className="hidden border-r bg-muted/40 md:block">
         <div className="flex h-full max-h-screen flex-col gap-2">
           <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-            <LogoComponent />
+            <LogoComponent role={workerRole} />
           </div>
           <div className="flex-1">
              <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
@@ -137,7 +139,7 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
             <SheetContent side="left" className="flex flex-col p-0">
                <nav className="grid gap-4 text-base font-medium">
                 <div className="flex items-center gap-2 font-semibold mb-4 h-14 border-b px-6">
-                    <LogoComponent />
+                    <LogoComponent role={workerRole} />
                 </div>
                 {!workerMode && adminNavItems.map((item) => (
                   <Link
