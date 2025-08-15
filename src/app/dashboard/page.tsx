@@ -13,19 +13,34 @@ import {
 import { Button } from "@/components/ui/button";
 import { Bell, Settings, Search, LifeBuoy, ArrowRight, UserSquare, Car, BookUser } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { collection, query, where, getDocs, getCountFromServer } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
-
+import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext, type CarouselApi } from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
+import Image from 'next/image';
 
 export default function DashboardPage() {
   const [stats, setStats] = useState({ documents: 0, activeServices: 0, notifications: 0 });
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const { user } = useAuth();
+  const [api, setApi] = useState<CarouselApi>();
+
+  const carouselSlides = [
+    { src: '/images/cmb2.jpg', alt: 'Lotus Tower in Colombo', hint: 'colombo architecture', titleLine1: 'Driving Digital Change', titleLine2: 'Shaping Sri Lanka’s Future' },
+    { src: '/images/cmb10.jpg', alt: 'Colombo Skyscraper 3', hint: 'colombo architecture', titleLine1: 'Connect with Your Government', titleLine2: 'Anywhere, Anytime' },
+    { src: '/images/cmb8.jpg', alt: 'Colombo Skyscraper at night', hint: 'colombo skyline night', titleLine1: 'All Government Services', titleLine2: 'Now At Your Fingertips' },
+    { src: '/images/cmb5.jpg', alt: 'Colombo Skyscraper 3', hint: 'colombo architecture', titleLine1: 'Faster & More Secure', titleLine2: 'Your Safety, Our Priority' },
+  ];
+
+  const autoplayPlugin = useRef(Autoplay({ delay: 6000, stopOnInteraction: true }));
+
+  const scrollPrev = useCallback(() => { api?.scrollPrev() }, [api]);
+  const scrollNext = useCallback(() => { api?.scrollNext() }, [api]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -83,6 +98,34 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         </div>
+        {/* Carousel */}
+        <div className="relative">
+          <Carousel setApi={setApi} plugins={[autoplayPlugin.current]} opts={{ loop: true }}>
+            <CarouselContent>
+              {carouselSlides.map((slide, index) => (
+                <CarouselItem key={index}>
+                  <Card className="overflow-hidden border-0">
+                    <CardContent className="p-0 relative h-[500px]">
+                      <Image src={slide.src} alt={slide.alt} fill className="object-cover" data-ai-hint={slide.hint} priority={index === 0} />
+                      <div className="absolute inset-0 bg-black/50" />
+                      <div className="absolute inset-0 flex flex-col justify-center p-8 md:p-16 text-white">
+                        <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter leading-tight max-w-3xl">
+                          <span className="block mb-4">{slide.titleLine1}</span>
+                          <span className="block">{slide.titleLine2}</span>
+                        </h2>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <div className="absolute bottom-8 right-8 flex gap-2">
+              <CarouselPrevious onClick={scrollPrev} />
+              <CarouselNext onClick={scrollNext} />
+            </div>
+          </Carousel>
+        </div>
+
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
