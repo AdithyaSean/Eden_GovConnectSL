@@ -168,7 +168,7 @@ export default function AdminDashboardPage() {
                              : 'destructive'
                           }
                            className={
-                               app.status === 'Approved' ? 'bg-green-600' : ''
+                               app.status === 'Approved' ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white border-0 shadow-sm' : ''
                            }
                           >{app.status}</Badge>
                       </TableCell>
