@@ -73,8 +73,21 @@ export default function ApplicationDetailsPage({ params }: { params: { id: strin
 
   const handleStatusUpdate = async (status: Application['status']) => {
     if(application) {
-      await updateDoc(doc(db, "applications", application.id), { status });
-      setApplication(prev => prev ? { ...prev, status } : null);
+      let updateData: Partial<Application> & { 'details.qrCodeUrl'?: string } = { status };
+
+      if(status === 'Approved') {
+        const receiptUrl = `${window.location.origin}/receipt/${application.id}`;
+        const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(receiptUrl)}`;
+        updateData['details.qrCodeUrl'] = qrCodeUrl;
+      }
+      
+      await updateDoc(doc(db, "applications", application.id), updateData);
+      setApplication(prev => prev ? { 
+          ...prev, 
+          status, 
+          details: status === 'Approved' ? { ...prev.details, qrCodeUrl: updateData['details.qrCodeUrl'] } : prev.details 
+      } : null);
+
       toast({
           title: "Status Updated",
           description: `Application has been marked as ${status}.`,

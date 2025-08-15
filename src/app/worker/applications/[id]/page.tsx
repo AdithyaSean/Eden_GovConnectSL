@@ -123,6 +123,14 @@ export default function WorkerApplicationDetailsPage({
       return;
     }
     
+     let updateData: Partial<Application> & { 'details.qrCodeUrl'?: string } = { status };
+
+      if(status === 'Approved' && application.details?.appointmentDate) {
+        const receiptUrl = `${window.location.origin}/receipt/${application.id}`;
+        const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(receiptUrl)}`;
+        updateData['details.qrCodeUrl'] = qrCodeUrl;
+      }
+    
     // --- Special logic for vehicle services ---
     if (status === 'Approved' && applicant) {
         if (application.service === 'New Vehicle Registration') {
@@ -166,8 +174,12 @@ export default function WorkerApplicationDetailsPage({
     }
     // --- End special logic ---
 
-    await updateDoc(doc(db, "applications", application.id), { status });
-    setApplication((prev) => (prev ? { ...prev, status } : null));
+    await updateDoc(doc(db, "applications", application.id), updateData);
+    setApplication((prev) => (prev ? { 
+        ...prev, 
+        status,
+        details: status === 'Approved' ? { ...prev.details, qrCodeUrl: updateData['details.qrCodeUrl'] } : prev.details 
+    } : null));
     toast({
       title: "Status Updated",
       description: `Application has been marked as ${status}.`,

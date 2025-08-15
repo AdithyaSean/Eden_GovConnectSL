@@ -118,7 +118,7 @@ export function NationalIdService({ service }) {
     appointmentDateTime.setHours(numericHours, parseInt(minutes, 10), 0, 0);
 
     try {
-        const docRef = await addDoc(collection(db, "applications"), {
+        await addDoc(collection(db, "applications"), {
             service: service.title,
             userId: user.id,
             user: user.name,
@@ -130,11 +130,6 @@ export function NationalIdService({ service }) {
                 appointmentDate: Timestamp.fromDate(appointmentDateTime)
             }
         });
-        
-        // Generate QR code and update the document
-        const receiptUrl = `${window.location.origin}/receipt/${docRef.id}`;
-        const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(receiptUrl)}`;
-        await updateDoc(docRef, { "details.qrCodeUrl": qrCodeUrl });
 
         toast({
             title: "Application Submitted",

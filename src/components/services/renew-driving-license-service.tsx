@@ -158,12 +158,6 @@ export function RenewDrivingLicenseService({ service }) {
                 details: { ...formValues, appointmentDate: Timestamp.fromDate(appointmentDateTime), serviceType }
             });
 
-             // Generate QR code and update the document
-            const receiptUrl = `${window.location.origin}/receipt/${docRef.id}`;
-            const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(receiptUrl)}`;
-            await updateDoc(docRef, { "details.qrCodeUrl": qrCodeUrl });
-
-
             setNewApplicationId(docRef.id);
             toast({
                 title: "Application Saved Successfully",

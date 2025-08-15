@@ -14,11 +14,12 @@ import { collection, query, where, getDocs, Timestamp, doc, updateDoc } from "fi
 import type { Application } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
-import { Star, MoreHorizontal, AlertTriangle } from "lucide-react";
+import { Star, MoreHorizontal, AlertTriangle, QrCode } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Rating } from "@/components/rating";
 import Link from "next/link";
+import Image from "next/image";
 
 
 const serviceFees = {
@@ -33,6 +34,7 @@ export default function AppointmentsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedAppForRating, setSelectedAppForRating] = useState<Application | null>(null);
   const [selectedAppForDetails, setSelectedAppForDetails] = useState<Application | null>(null);
+  const [selectedAppForQr, setSelectedAppForQr] = useState<Application | null>(null);
   const [rating, setRating] = useState(0);
   const [feedback, setFeedback] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -226,6 +228,11 @@ export default function AppointmentsPage() {
                         <TableCell>{formatDate(app.details.appointmentDate)}</TableCell>
                         <TableCell><Badge variant="secondary">{app.status}</Badge></TableCell>
                         <TableCell className="text-right space-x-2">
+                          {app.details.qrCodeUrl && (
+                            <Button variant="outline" size="icon" onClick={() => setSelectedAppForQr(app)} title="View QR Code">
+                                <QrCode className="h-4 w-4" />
+                            </Button>
+                          )}
                           <Button variant="ghost" size="icon" onClick={() => setSelectedAppForDetails(app)}>
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
@@ -420,6 +427,25 @@ export default function AppointmentsPage() {
                             <Button type="button" variant="outline">Close</Button>
                         </DialogClose>
                     </DialogFooter>
+                 </>
+            )}
+        </DialogContent>
+      </Dialog>
+
+       {/* QR Code Dialog */}
+       <Dialog open={!!selectedAppForQr} onOpenChange={(isOpen) => !isOpen && setSelectedAppForQr(null)}>
+        <DialogContent>
+            {selectedAppForQr && (
+                 <>
+                    <DialogHeader>
+                        <DialogTitle>Appointment QR Code</DialogTitle>
+                        <DialogDescription>
+                            Show this QR code at your appointment for quick verification.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex justify-center py-4">
+                        <Image src={selectedAppForQr.details.qrCodeUrl} alt="Appointment QR Code" width={250} height={250} />
+                    </div>
                  </>
             )}
         </DialogContent>
