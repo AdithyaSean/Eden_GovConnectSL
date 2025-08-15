@@ -15,6 +15,11 @@ const config: Config = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
+  // transformIgnorePatterns tells Jest to not transform modules that match the pattern.
+  // By default, it's node_modules. We need to create an exception for lucide-react.
+  transformIgnorePatterns: [
+    '/node_modules/(?!lucide-react)/',
+  ],
   preset: 'ts-jest',
 };
 
