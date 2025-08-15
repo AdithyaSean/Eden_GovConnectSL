@@ -1,6 +1,6 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { useAnalytics } from '@/hooks/use-analytics';
-import { getDocs, collection, Timestamp } from 'firebase/firestore';
+import { getDocs, Timestamp } from 'firebase/firestore';
 import { addDays, subMonths } from 'date-fns';
 
 // Mock Firestore
@@ -30,15 +30,10 @@ const mockApplications = [
 
 describe('useAnalytics Hook', () => {
     beforeEach(() => {
-        (collection as jest.Mock).mockReturnValue({});
-    });
-    
-    afterEach(() => {
         jest.clearAllMocks();
     });
 
     it('should return initial loading state and default data', () => {
-        // Prevent getDocs from resolving to keep loading state
         (getDocs as jest.Mock).mockImplementation(() => new Promise(() => {})); 
         const { result } = renderHook(() => useAnalytics());
 
@@ -53,17 +48,15 @@ describe('useAnalytics Hook', () => {
         });
         const { result } = renderHook(() => useAnalytics());
         
-        await waitFor(() => expect(result.current.loading).toBe(false));
+        await waitFor(() => {
+            expect(result.current.loading).toBe(false)
+        });
 
-        // Check raw data
         expect(result.current.allApplications.length).toBe(mockApplications.length);
-        
-        // Check calculated data
-        expect(result.current.analyticsData.avgProcessingTime).toBeGreaterThan(0); // It's random, so just check if it's calculated
-        // 1 no-show (app5) out of 6 apps with appointments = 16.66... ~ 17
-        expect(result.current.analyticsData.noShowRate).toBe(17); 
-        expect(result.current.analyticsData.avgAppointmentRating).toBe(4.5); // (5 + 4) / 2
-        expect(result.current.analyticsData.peakHour).toBe("2 PM (SLST)"); // from 08:30 UTC
+        expect(result.current.analyticsData.avgProcessingTime).toBeGreaterThan(0);
+        expect(result.current.analyticsData.noShowRate).toBe(17);
+        expect(result.current.analyticsData.avgAppointmentRating).toBe(4.5);
+        expect(result.current.analyticsData.peakHour).toBe("2 PM (SLST)");
         expect(result.current.analyticsData.recentFeedback.length).toBe(2);
         expect(result.current.analyticsData.recentFeedback[0].appointmentFeedback).toBe('Good.');
     });
@@ -72,7 +65,9 @@ describe('useAnalytics Hook', () => {
          (getDocs as jest.Mock).mockResolvedValue({ docs: [] });
          const { result } = renderHook(() => useAnalytics());
 
-         await waitFor(() => expect(result.current.loading).toBe(false));
+         await waitFor(() => {
+            expect(result.current.loading).toBe(false)
+         });
 
          expect(result.current.allApplications.length).toBe(0);
          expect(result.current.analyticsData.avgProcessingTime).toBe(0);
