@@ -16,12 +16,11 @@ const config: Config = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
-  // transformIgnorePatterns tells Jest to not transform modules that match the pattern.
-  // By default, it's node_modules. We need to create an exception for lucide-react.
+  // The default transformIgnorePatterns from Next.js is /node_modules/.
+  // We need to create an exception for lucide-react as it uses ESM.
   transformIgnorePatterns: [
-    '/node_modules/(?!lucide-react)/',
+    '/node_modules/(?!lucide-react)/'
   ],
-  preset: 'ts-jest',
 };
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
