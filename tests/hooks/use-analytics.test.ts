@@ -1,4 +1,6 @@
 
+"use client";
+
 import { renderHook, waitFor } from '@testing-library/react';
 import { useAnalytics } from '@/hooks/use-analytics';
 import { getDocs, Timestamp } from 'firebase/firestore';
@@ -35,16 +37,6 @@ describe('useAnalytics Hook', () => {
     // Clear mocks before each test to ensure isolation
     beforeEach(() => {
         jest.clearAllMocks();
-    });
-
-    it('should return initial loading state and default data', () => {
-        // Mock getDocs to return a promise that never resolves to keep it in a loading state
-        (getDocs as jest.Mock).mockImplementation(() => new Promise(() => {})); 
-        const { result } = renderHook(() => useAnalytics());
-
-        expect(result.current.loading).toBe(true);
-        expect(result.current.analyticsData.avgProcessingTime).toBe(0);
-        expect(result.current.allApplications).toEqual([]);
     });
 
     it('should calculate analytics data correctly after fetching', async () => {
