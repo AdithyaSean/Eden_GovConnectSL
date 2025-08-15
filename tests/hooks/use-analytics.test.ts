@@ -34,8 +34,8 @@ const mockApplications: Application[] = [
 
 
 describe('useAnalytics Hook', () => {
-    // Clear mocks before each test to ensure isolation
     beforeEach(() => {
+        // Clear all mocks before each test to ensure a clean slate
         jest.clearAllMocks();
     });
 
@@ -55,7 +55,7 @@ describe('useAnalytics Hook', () => {
         
         // Check calculated data
         expect(result.current.analyticsData.avgProcessingTime).toBeGreaterThan(0); // It's random, so just check if it's calculated
-        expect(result.current.analyticsData.noShowRate).toBe(17);
+        expect(result.current.analyticsData.noShowRate).toBe(17); // 1 no-show out of 6 with appointments
         expect(result.current.analyticsData.avgAppointmentRating).toBe(4.5);
         expect(result.current.analyticsData.peakHour).toBe("2 PM (SLST)");
         expect(result.current.analyticsData.recentFeedback.length).toBe(2);
