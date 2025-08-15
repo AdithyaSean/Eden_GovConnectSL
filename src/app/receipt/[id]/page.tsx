@@ -122,13 +122,13 @@ export default function ReceiptPage({ params }: { params: { id: string } }) {
                     <div ref={receiptRef} className="bg-card">
                         <CardHeader className="text-center bg-muted/30 p-8">
                             <div className="flex justify-center mb-4">
-                                <div className="relative w-48 h-24">
+                                <div className="relative h-24 w-48">
                                     <Image
-                                    src="/images/GovSL Logo.svg"
-                                    alt="GovConnect SL Logo"
-                                    fill
-                                    className="object-contain"
-                                    data-ai-hint="logo"
+                                        src="/images/GovSL Logo.svg"
+                                        alt="GovConnect SL Logo"
+                                        fill
+                                        className="object-contain"
+                                        data-ai-hint="logo"
                                     />
                                 </div>
                             </div>
