@@ -185,6 +185,10 @@ export default function SignupPage() {
               {password.length > 0 && (
                 <div className="space-y-3">
                     <Progress value={passwordStrength} className="h-2 [&>div]:bg-green-500" />
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Password must contain:
+                    </p>
+
                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
                         {passwordRequirements.map((req, index) => (
                           <div key={index} className="flex items-center gap-2 text-sm">
