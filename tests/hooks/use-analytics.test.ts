@@ -33,8 +33,8 @@ const mockApplications: Application[] = [
 
 describe('useAnalytics Hook', () => {
     beforeEach(() => {
-        // Clear mocks before each test
-        (getDocs as jest.Mock).mockClear();
+        // Clear all mocks before each test to prevent state leakage
+        jest.clearAllMocks();
     });
 
     it('should return initial loading state and default data', () => {
@@ -52,6 +52,7 @@ describe('useAnalytics Hook', () => {
         });
         const { result } = renderHook(() => useAnalytics());
 
+        // Wait for the loading state to become false
         await waitFor(() => {
             expect(result.current.loading).toBe(false);
         });
