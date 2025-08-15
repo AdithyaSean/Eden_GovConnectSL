@@ -61,35 +61,28 @@ export default function UsersPage() {
         toast({ title: "Weak Password", description: "Password must be at least 6 characters long.", variant: "destructive" });
         return;
     }
+    
+    if (!formValues.email || !formValues.email.includes('@')) {
+        toast({ title: "A valid email is required for all users.", variant: "destructive" });
+        return;
+    }
 
-    let authEmail = '';
     let userData: Partial<User> = {
         name: formValues.name,
         role: newUserRole,
         status: "Active",
+        email: formValues.email,
+        nic: newUserRole === 'Citizen' ? formValues.nic : ""
     };
 
-    if (newUserRole === 'Citizen') {
-        if (!formValues.nic) {
-            toast({ title: "NIC is required for Citizens", variant: "destructive" });
-            return;
-        }
-        authEmail = `${formValues.nic}@citizen.gov.lk`;
-        userData.nic = formValues.nic;
-        userData.email = ""; // Citizens don't have a login email
-    } else {
-        if (!formValues.email || !formValues.email.includes('@')) {
-            toast({ title: "A valid email is required for Workers/Admins", variant: "destructive" });
-            return;
-        }
-        authEmail = formValues.email;
-        userData.email = formValues.email;
-        userData.nic = ""; // Workers don't use NIC for login
+    if (newUserRole === 'Citizen' && !formValues.nic) {
+        toast({ title: "NIC is required for Citizens", variant: "destructive" });
+        return;
     }
 
     try {
         // 1. Create user in Firebase Auth
-        const userCredential = await createUserWithEmailAndPassword(auth, authEmail, formValues.password);
+        const userCredential = await createUserWithEmailAndPassword(auth, formValues.email, formValues.password);
         const authUser = userCredential.user;
 
         // 2. Create user profile in Firestore
@@ -97,6 +90,7 @@ export default function UsersPage() {
         await setDoc(userRef, {
             ...userData,
             id: authUser.uid,
+            uid: authUser.uid,
             joined: serverTimestamp(),
             photoURL: ''
         });
@@ -107,7 +101,11 @@ export default function UsersPage() {
         
     } catch(e: any) {
       console.error("Error adding document: ", e);
-      toast({ title: "Failed to create user", description: e.message, variant: "destructive"});
+      if(e.code === 'auth/email-already-in-use') {
+        toast({ title: "Failed to create user", description: "This email is already in use.", variant: "destructive"});
+      } else {
+        toast({ title: "Failed to create user", description: e.message, variant: "destructive"});
+      }
     }
   };
 
@@ -242,17 +240,19 @@ export default function UsersPage() {
                     </SelectContent>
                 </Select>
               </div>
-              {newUserRole === 'Citizen' ? (
+
+               <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="email" className="text-right">Email</Label>
+                  <Input id="email" name="email" type="email" className="col-span-3" required />
+                </div>
+                
+              {newUserRole === 'Citizen' && (
                  <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="nic" className="text-right">NIC</Label>
                   <Input id="nic" name="nic" type="text" className="col-span-3" required />
                 </div>
-              ) : (
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="email" className="text-right">Email</Label>
-                  <Input id="email" name="email" type="email" className="col-span-3" required />
-                </div>
               )}
+              
                <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="password" className="text-right">Password</Label>
                   <div className="relative col-span-3">
@@ -275,3 +275,4 @@ export default function UsersPage() {
     </AdminLayout>
   );
 }
+
