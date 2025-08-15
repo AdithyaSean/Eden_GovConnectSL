@@ -119,7 +119,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               </SheetContent>
             </Sheet>
             <Link href="/dashboard" className="hidden md:flex items-center gap-2 font-bold text-lg">
-                <div className="relative h-12 w-40">
+                <div className="relative h-28 w-48">
                     <Image src="/images/GovSL Logo.svg" alt="GovConnectSL Logo" fill className="object-contain" />
                 </div>
             </Link>

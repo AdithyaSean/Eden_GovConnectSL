@@ -151,7 +151,7 @@ export default function SignupPage() {
       <Card className="mx-auto max-w-sm w-full">
          <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
-              <div className="relative w-48 h-24">
+              <div className="relative w-56 h-28">
                 <Image
                   src="/images/GovSL Logo.svg"
                   alt="GovConnect SL Logo"

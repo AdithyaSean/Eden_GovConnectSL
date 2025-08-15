@@ -81,11 +81,18 @@ export function AdminLayout({ children, workerMode = false }: AdminLayoutProps) 
   const LogoComponent = ({ role }: { role: string }) => {
     const logoText = workerMode ? "Worker Portal" : "Admin Panel";
     return (
-      <Link href={workerMode ? '#' : '/admin/dashboard'} className="flex items-center gap-3 font-semibold text-foreground">
-        <div className="relative h-12 w-40">
-            <Image src="/images/GovSL Logo.svg" alt="GovConnectSL Logo" fill className="object-contain" />
+      <Link
+        href={workerMode ? '#' : '/admin/dashboard'}
+        className="flex flex-col items-center font-semibold text-foreground"
+      >
+        <div className="relative h-28 w-48"> {/* Increased height */}
+          <Image
+            src="/images/GovSL Logo.svg"
+            alt="GovConnectSL Logo"
+            fill
+            className="object-contain"
+          />
         </div>
-        <span>{logoText}</span>
       </Link>
     );
   };
