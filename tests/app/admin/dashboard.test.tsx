@@ -5,14 +5,7 @@ import AdminDashboardPage from '@/app/admin/dashboard/page';
 import { collection, getDocs, Timestamp, query, orderBy, limit } from 'firebase/firestore';
 
 // Mock the entire firebase/firestore module
-jest.mock('firebase/firestore', () => ({
-  ...jest.requireActual('firebase/firestore'),
-  getDocs: jest.fn(),
-  collection: jest.fn(),
-  query: jest.fn(),
-  orderBy: jest.fn(),
-  limit: jest.fn(),
-}));
+jest.mock('firebase/firestore');
 
 // Mock child components to isolate the test
 jest.mock('@/components/admin-layout', () => ({
@@ -29,11 +22,11 @@ describe('AdminDashboardPage', () => {
     beforeEach(() => {
         const mockUsers = { size: 15, docs: [] };
         const mockApps = { size: 25, docs: [] };
-        const mockPayments = { 
+        const mockPayments = {
             docs: [
                 { data: () => ({ amount: '1500.00' }) },
                 { data: () => ({ amount: '2500.00' }) },
-            ] 
+            ]
         };
         const mockRecentApps = {
             docs: [
@@ -44,19 +37,18 @@ describe('AdminDashboardPage', () => {
 
         // Correctly mock the implementation of getDocs
         mockGetDocs.mockImplementation((q) => {
-            // This is a simplified mock. In a real app, you might inspect `q` to return different data for different queries.
-            const collectionPath = q.path;
-            if (collectionPath === 'users') {
+            const path = (q as any)._query.path.segments.join('/');
+            if (path === 'users') {
                  return Promise.resolve(mockUsers);
             }
-            if (collectionPath === 'applications') {
-                // A simple way to differentiate queries for this test
-                if (q.limit === 5) {
+            if (path === 'applications') {
+                // Check if it's the limited query for recent apps
+                if ((q as any)._query.limit) {
                     return Promise.resolve(mockRecentApps);
                 }
                 return Promise.resolve(mockApps);
             }
-            if (collectionPath === 'payments') {
+            if (path === 'payments') {
                 return Promise.resolve(mockPayments);
             }
             return Promise.resolve({ docs: [], size: 0 }); // Default empty response
@@ -77,7 +69,7 @@ describe('AdminDashboardPage', () => {
 
     it('displays the correct stats after fetching data', async () => {
         render(<AdminDashboardPage />);
-        
+
         await waitFor(() => {
             expect(screen.getByText('15')).toBeInTheDocument(); // Total Users
             expect(screen.getByText('25')).toBeInTheDocument(); // Total Applications
