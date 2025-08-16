@@ -2,10 +2,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import AdminDashboardPage from '@/app/admin/dashboard/page';
-import { collection, getDocs, Timestamp, query, orderBy, limit } from 'firebase/firestore';
-
-// Mock the entire firebase/firestore module
-jest.mock('firebase/firestore');
+import { Timestamp } from 'firebase/firestore';
 
 // Mock child components to isolate the test
 jest.mock('@/components/admin-layout', () => ({
@@ -16,49 +13,68 @@ jest.mock('@/components/sri-lanka-time', () => ({
   SriLankaTime: () => <div>SL Time</div>,
 }));
 
-const mockGetDocs = getDocs as jest.Mock;
+// This mock simulates the Firestore database, providing the correct data for each test.
+jest.mock('firebase/firestore', () => {
+    // Helper to create mock document structures that Firestore expects
+    const createMockDocs = (dataArray) => 
+        dataArray.map((data, i) => ({
+            id: `mock-doc-${i}`,
+            data: () => data,
+        }));
+
+    return {
+        // We need to mock all the functions used by the component to build its queries
+        collection: jest.fn((db, path) => ({ path })), // Identify the collection by its path
+        query: jest.fn((collectionRef) => collectionRef),
+        orderBy: jest.fn((queryRef) => queryRef),
+        limit: jest.fn((queryRef) => queryRef),
+
+        // This is the main data-fetching function we need to control
+        getDocs: jest.fn(async (queryRef) => {
+            const path = queryRef.path;
+
+            // Return specific data based on which collection is being queried
+            if (path === 'users') {
+                return { size: 15, docs: [] }; // Correct: Total Users count
+            }
+
+            if (path === 'applications') {
+                return {
+                    size: 25, // Correct: Total Applications count
+                    docs: createMockDocs([ // Correct: Data for the recent applications table
+                        {
+                            user: 'Nimal Silva',
+                            service: 'Passport Services',
+                            status: 'Approved',
+                            submitted: Timestamp.now(),
+                        },
+                        {
+                            user: 'Kamala Perera',
+                            service: 'Driving Licence Services',
+                            status: 'Pending',
+                            submitted: Timestamp.now(),
+                        },
+                    ]),
+                };
+            }
+
+            if (path === 'payments') {
+                // Correct: Data that sums up to the expected total payment amount
+                return {
+                    docs: createMockDocs([{ amount: '1500.00' }, { amount: '2500.00' }]),
+                };
+            }
+
+            // A default empty response for any other queries
+            return { docs: [], size: 0 };
+        }),
+    };
+});
 
 describe('AdminDashboardPage', () => {
-    beforeEach(() => {
-        const mockUsers = { size: 15, docs: [] };
-        const mockApps = { size: 25, docs: [] };
-        const mockPayments = {
-            docs: [
-                { data: () => ({ amount: '1500.00' }) },
-                { data: () => ({ amount: '2500.00' }) },
-            ]
-        };
-        const mockRecentApps = {
-            docs: [
-                { id: 'app1', data: () => ({ user: 'Nimal Silva', service: 'Passport Services', submitted: Timestamp.now(), status: 'Approved' }) },
-                { id: 'app2', data: () => ({ user: 'Kamala Perera', service: 'Driving Licence Services', submitted: Timestamp.now(), status: 'Pending' }) },
-            ]
-        };
-
-        // Correctly mock the implementation of getDocs
-        mockGetDocs.mockImplementation((q) => {
-            const path = (q as any)._query?.path?.segments?.join('/');
-            if (path === 'users') {
-                 return Promise.resolve(mockUsers);
-            }
-            if (path === 'applications') {
-                // Check if it's the limited query for recent apps
-                if ((q as any)._query?.limit) {
-                    return Promise.resolve(mockRecentApps);
-                }
-                return Promise.resolve(mockApps);
-            }
-            if (path === 'payments') {
-                return Promise.resolve(mockPayments);
-            }
-            return Promise.resolve({ docs: [], size: 0 }); // Default empty response
-        });
-    });
-
-     afterEach(() => {
+    afterEach(() => {
         jest.clearAllMocks();
     });
-
 
     it('renders the dashboard title', async () => {
         render(<AdminDashboardPage />);
