@@ -2,9 +2,6 @@
 import { renderHook, act } from '@testing-library/react';
 import { useToast, reducer } from '@/hooks/use-toast';
 
-// Mock setTimeout to control timing in tests
-// jest.useFakeTimers();
-
 describe('useToast Hook and Reducer', () => {
 
   describe('Toast Reducer', () => {

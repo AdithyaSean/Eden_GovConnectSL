@@ -3,8 +3,6 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import SignupPage from '@/app/signup/page';
 import { useToast } from '@/hooks/use-toast';
-import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
-import { getDoc, setDoc } from 'firebase/firestore';
 
 // 1. DECLARE MOCK VARIABLES FIRST
 const createUserWithEmailAndPasswordMock = jest.fn();
