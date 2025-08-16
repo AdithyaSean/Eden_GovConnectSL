@@ -34,6 +34,7 @@ describe('ServiceCard Component', () => {
 
   it('renders the correct icon', () => {
     render(<ServiceCard service={mockService} />);
-    expect(screen.getByText('Icon-Home')).toBeInTheDocument();
+    // The mock in jest.setup.ts creates a div with a specific data-testid
+    expect(screen.getByTestId('icon-Home')).toBeInTheDocument();
   });
 });
