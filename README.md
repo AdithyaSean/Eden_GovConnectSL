@@ -1,9 +1,14 @@
 # GovConnect SL: Sri Lanka e-Citizen Platform
 
-![GovConnect SL Logo](public/images/GovSL%20Logo.svg)
+<div align="center">
+  <img src="/public/images/GovSL%20Logo.svg" alt="GovConnect SL Logo" width="400" />
+</div>
 
-[![Dependencies](https://img.shields.io/david/AdithyaSean/gov-assist.svg?style=for-the-badge)](https://david-dm.org/AdithyaSean/gov-assist)
-[![Coverage Status](https://img.shields.io/badge/coverage-90%25-brightgreen?style=for-the-badge)](https://img.shields.io/badge/coverage-90%25-brightgreen?style=for-the-badge)
+<div align="center">
+  <a href="https://img.shields.io/badge/coverage-75%25-blue?style=for-the-badge">
+    <img src="https://img.shields.io/badge/coverage-75%25-blue?style=for-the-badge" alt="Coverage Status" />
+  </a>
+</div>
 
 GovConnect SL is a modern, unified digital platform designed to streamline access to essential government services for all citizens of Sri Lanka. Our goal is to create a central, user-friendly hub that simplifies interactions with government agencies, reduces bureaucratic hurdles, and makes services more accessible, efficient, and transparent.
 
@@ -73,7 +78,11 @@ To get a local copy up and running, follow these simple steps.
     The application will be available at `http://localhost:9002`.
 
 2.  **Seed the database (Optional but Recommended):**
-    To populate your local Firestore with sample users, applications, and other data, navigate to `http://localhost:9002/seed` in your browser and click the "Reset & Seed Database" button. This will create test accounts with the password `password123`.
+    The seeder utility populates your local Firestore database with sample users (citizens, workers, admins), applications, and other records, allowing you to test the full functionality of the platform immediately.
+
+    To seed the database, navigate to `http://localhost:9002/seed` in your browser and click the "Reset & Seed Database" button.
+    
+    **The password for all seeded user accounts is `password123`.**
 
 3.  **Run Genkit for AI Features:**
     To enable the AI chatbot and other generative features, run the Genkit development server in a separate terminal:
