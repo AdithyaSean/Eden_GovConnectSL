@@ -47,9 +47,9 @@ describe('useAnalytics Hook', () => {
 
         await waitFor(() => {
             expect(result.current.loading).toBe(false);
+            expect(result.current.allApplications.length).toBe(mockApplications.length);
         });
-        
-        expect(result.current.allApplications.length).toBe(mockApplications.length);
+
         // Check calculated data
         expect(result.current.analyticsData.avgProcessingTime).toBeGreaterThan(0); // It's random, so just check if it's calculated
         expect(result.current.analyticsData.noShowRate).toBe(17); // 1 no-show out of 6 with appointments

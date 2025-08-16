@@ -2,14 +2,13 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import AdminDashboardPage from '@/app/admin/dashboard/page';
-import { collection, getDocs, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { collection, getDocs, Timestamp, query, orderBy, limit } from 'firebase/firestore';
 
 // Mock the entire firebase/firestore module
 jest.mock('firebase/firestore', () => ({
-  ...jest.requireActual('firebase/firestore'), // Import and retain default exports
+  ...jest.requireActual('firebase/firestore'),
   getDocs: jest.fn(),
-  collection: jest.fn((db, path) => ({ path })), // Return a simple object with the path
+  collection: jest.fn(),
   query: jest.fn(),
   orderBy: jest.fn(),
   limit: jest.fn(),
@@ -44,23 +43,27 @@ describe('AdminDashboardPage', () => {
         };
 
         // Correctly mock the implementation of getDocs
-        mockGetDocs.mockImplementation((q) => {
-            // Check the collection path to determine which mock data to return
-            if (q.path === 'users') {
+        mockGetDocs.mockImplementation((q: any) => {
+            const path = q.path;
+            if (path === 'users') {
                  return Promise.resolve(mockUsers);
             }
-            if (q.path === 'applications' && q._query?.limit) { // Check if it's the recent apps query
+            if (path === 'applications' && q.limit === 5) {
                 return Promise.resolve(mockRecentApps);
             }
-            if (q.path === 'applications') {
+            if (path === 'applications') {
                 return Promise.resolve(mockApps);
             }
-            if (q.path === 'payments') {
+            if (path === 'payments') {
                 return Promise.resolve(mockPayments);
             }
             return Promise.resolve({ docs: [], size: 0 }); // Default empty response
         });
     });
+     afterEach(() => {
+        jest.clearAllMocks();
+    });
+
 
     it('renders the dashboard title', async () => {
         render(<AdminDashboardPage />);
