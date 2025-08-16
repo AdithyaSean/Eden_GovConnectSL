@@ -11,7 +11,6 @@ jest.mock('@/components/admin-layout', () => ({
 
 // Mock the hook
 jest.mock('@/hooks/use-analytics');
-const useAnalyticsMock = useAnalyticsModule.useAnalytics as jest.Mock;
 
 const mockAnalyticsData = {
     avgProcessingTime: 5,
@@ -26,7 +25,7 @@ const mockAnalyticsData = {
 describe('AdminAnalyticsPage', () => {
     beforeEach(() => {
         // Use jest.spyOn to mock the implementation for this test suite
-       useAnalyticsMock.mockReturnValue({
+       jest.spyOn(useAnalyticsModule, 'useAnalytics').mockReturnValue({
             analyticsData: mockAnalyticsData,
             allApplications: [],
             loading: false,
@@ -59,7 +58,7 @@ describe('AdminAnalyticsPage', () => {
     });
 
     it('shows loading state correctly', () => {
-        useAnalyticsMock.mockReturnValue({
+        jest.spyOn(useAnalyticsModule, 'useAnalytics').mockReturnValue({
             analyticsData: { // Provide default structure even when loading
                 avgProcessingTime: 0,
                 avgAppointmentRating: 0,

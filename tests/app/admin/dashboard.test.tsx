@@ -37,7 +37,7 @@ describe('AdminDashboardPage', () => {
 
         // Correctly mock the implementation of getDocs
         mockGetDocs.mockImplementation((q) => {
-            const path = (q as any)._query.path.segments.join('/');
+            const path = (q as any)._query?.path?.segments?.join('/');
             if (path === 'users') {
                  return Promise.resolve(mockUsers);
             }
