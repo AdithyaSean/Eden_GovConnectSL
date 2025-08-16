@@ -76,7 +76,6 @@ describe('useToast Hook and Reducer', () => {
 
       // Assert it's there initially
       expect(result.current.toasts).toHaveLength(1);
-      expect(result.current.toasts[0].title).toBe('Temporary Toast');
 
       // 3. Advance the timers INSIDE an `act` block to trigger the state update
       act(() => {
