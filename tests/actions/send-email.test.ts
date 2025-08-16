@@ -4,15 +4,14 @@ import nodemailer from 'nodemailer';
 
 // Mock nodemailer
 const mockSendMail = jest.fn();
+const mockCreateTransport = jest.fn(() => ({ sendMail: mockSendMail }));
 
 jest.mock('nodemailer', () => ({
   createTestAccount: jest.fn().mockResolvedValue({
     user: 'test_user',
     pass: 'test_pass',
   }),
-  createTransport: jest.fn(() => ({
-    sendMail: mockSendMail,
-  })),
+  createTransport: mockCreateTransport,
   getTestMessageUrl: jest.fn((info) => `http://ethereal.email/preview/${info.messageId}`),
 }));
 
@@ -22,13 +21,23 @@ jest.mock('dotenv', () => ({
 }));
 
 describe('sendEmail Server Action', () => {
-  
+  const originalEnv = process.env;
+
   beforeEach(() => {
+    jest.resetModules(); // Resets module registry to ensure env changes are picked up
     mockSendMail.mockClear();
-    (nodemailer.createTransport as jest.Mock).mockClear();
+    mockCreateTransport.mockClear();
   });
 
-  it('should send an email successfully using a test account', async () => {
+  afterEach(() => {
+    process.env = originalEnv; // Restore original env vars
+  });
+
+  it('should send an email successfully using a test account when env vars are missing', async () => {
+    // Ensure env variables are not set for this test
+    delete process.env.EMAIL_USER;
+    delete process.env.EMAIL_PASS;
+    
     // Mock sendMail to return a successful response
     mockSendMail.mockResolvedValueOnce({ messageId: 'test-message-id' });
 
@@ -38,8 +47,10 @@ describe('sendEmail Server Action', () => {
       html: '<p>Test HTML</p>',
     });
 
-    // Check if createTransport was called and sendMail was called with the right options
-    expect(nodemailer.createTransport).toHaveBeenCalled();
+    // Check if createTransport was called with Ethereal config
+    expect(mockCreateTransport).toHaveBeenCalledWith(expect.objectContaining({
+        host: 'smtp.ethereal.email'
+    }));
     expect(mockSendMail).toHaveBeenCalledWith({
       from: '"GovConnect SL" <noreply@govconnect.lk>',
       to: 'recipient@example.com',
@@ -47,7 +58,6 @@ describe('sendEmail Server Action', () => {
       html: '<p>Test HTML</p>',
     });
 
-    // Check the result
     expect(result.success).toBe(true);
     expect(result.messageId).toBe('test-message-id');
     expect(result.previewUrl).toContain('test-message-id');
@@ -68,18 +78,21 @@ describe('sendEmail Server Action', () => {
   });
 
    it('should use environment variables for Gmail if available', async () => {
+    // Arrange: Set the environment variables for this test
     process.env.EMAIL_USER = 'test@gmail.com';
     process.env.EMAIL_PASS = 'testpassword';
-
+    
     mockSendMail.mockResolvedValueOnce({ messageId: 'gmail-test-id' });
     
+    // Act
     const result = await sendEmail({
       to: 'recipient@example.com',
       subject: 'Gmail Test',
       html: '<p>Test Gmail</p>',
     });
 
-    expect(nodemailer.createTransport).toHaveBeenCalledWith({
+    // Assert
+    expect(mockCreateTransport).toHaveBeenCalledWith({
       host: 'smtp.gmail.com',
       port: 465,
       secure: true,
@@ -89,10 +102,5 @@ describe('sendEmail Server Action', () => {
       },
     });
     expect(result.success).toBe(true);
-
-    // Clean up env variables
-    delete process.env.EMAIL_USER;
-    delete process.env.EMAIL_PASS;
   });
-
 });

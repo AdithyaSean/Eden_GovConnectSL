@@ -3,24 +3,36 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import LoginPage from '@/app/login/page';
 import { useToast } from '@/hooks/use-toast';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { getDocs } from 'firebase/firestore';
 
-// Mock child components and hooks
+// Mocks
+const getDocsMock = jest.fn();
+const signInWithEmailAndPasswordMock = jest.fn();
+const sendPasswordResetEmailMock = jest.fn();
+
+jest.mock('@/lib/firebase', () => ({
+    auth: {},
+    db: {},
+}));
+jest.mock('firebase/auth', () => ({
+    getAuth: jest.fn(),
+    signInWithEmailAndPassword: signInWithEmailAndPasswordMock,
+    sendPasswordResetEmail: sendPasswordResetEmailMock,
+}));
+jest.mock('firebase/firestore', () => ({
+    getFirestore: jest.fn(),
+    collection: jest.fn(),
+    query: jest.fn(),
+    where: jest.fn(),
+    getDocs: getDocsMock,
+}));
+
 jest.mock('@/hooks/use-toast', () => ({
   useToast: jest.fn(),
 }));
 
-// Mock firebase
-jest.mock('firebase/auth', () => ({
-  getAuth: jest.fn(),
-  signInWithEmailAndPassword: jest.fn(),
-  sendPasswordResetEmail: jest.fn(),
-}));
-
 const useToastMock = useToast as jest.Mock;
-const signInWithEmailAndPasswordMock = signInWithEmailAndPassword as jest.Mock;
-const getDocsMock = getDocs as jest.Mock;
 
 describe('LoginPage', () => {
     let toastMock: jest.Mock;
@@ -30,6 +42,7 @@ describe('LoginPage', () => {
         useToastMock.mockReturnValue({ toast: toastMock });
         signInWithEmailAndPasswordMock.mockClear();
         getDocsMock.mockClear();
+        sendPasswordResetEmailMock.mockClear();
     });
 
     it('renders the login form correctly', () => {
@@ -67,7 +80,6 @@ describe('LoginPage', () => {
 
         await waitFor(() => {
             expect(signInWithEmailAndPasswordMock).toHaveBeenCalledWith(undefined, 'test@example.com', 'password123');
-            // Check for router push, which is mocked globally in jest.setup.ts
             const { useRouter } = require('next/navigation');
             expect(useRouter().push).toHaveBeenCalledWith('/dashboard');
         });
@@ -113,5 +125,4 @@ describe('LoginPage', () => {
             });
         });
     });
-
 });

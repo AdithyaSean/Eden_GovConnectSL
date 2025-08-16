@@ -7,21 +7,33 @@ import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/
 import { getDoc, setDoc } from 'firebase/firestore';
 
 // Mocks
+const getDocMock = jest.fn();
+const setDocMock = jest.fn();
+const createUserWithEmailAndPasswordMock = jest.fn();
+const sendEmailVerificationMock = jest.fn();
+
+jest.mock('@/lib/firebase', () => ({
+    auth: {},
+    db: {},
+}));
+jest.mock('firebase/auth', () => ({
+    getAuth: jest.fn(),
+    createUserWithEmailAndPassword: createUserWithEmailAndPasswordMock,
+    sendEmailVerification: sendEmailVerificationMock,
+}));
+jest.mock('firebase/firestore', () => ({
+    getFirestore: jest.fn(),
+    doc: jest.fn(),
+    getDoc: getDocMock,
+    setDoc: setDocMock,
+    serverTimestamp: jest.fn(),
+}));
+
 jest.mock('@/hooks/use-toast', () => ({
   useToast: jest.fn(),
 }));
 
-jest.mock('firebase/auth', () => ({
-  getAuth: jest.fn(),
-  createUserWithEmailAndPassword: jest.fn(),
-  sendEmailVerification: jest.fn(),
-}));
-
 const useToastMock = useToast as jest.Mock;
-const createUserWithEmailAndPasswordMock = createUserWithEmailAndPassword as jest.Mock;
-const sendEmailVerificationMock = sendEmailVerification as jest.Mock;
-const getDocMock = getDoc as jest.Mock;
-const setDocMock = setDoc as jest.Mock;
 
 describe('Signup Page', () => {
     let toastMock: jest.Mock;

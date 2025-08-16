@@ -79,14 +79,15 @@ describe('useToast Hook and Reducer', () => {
         });
         
         // At this point, the toast is visible
+        expect(result.current.toasts).toHaveLength(1);
         expect(result.current.toasts[0].open).toBe(true);
 
-        // Fast-forward time
+        // Fast-forward time by the remove delay
         act(() => {
             jest.advanceTimersByTime(5000);
         });
         
-        // Now the toast should be removed
+        // Now the toast should be removed from the state
         expect(result.current.toasts).toHaveLength(0);
     });
   });
