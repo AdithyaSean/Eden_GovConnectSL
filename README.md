@@ -4,10 +4,13 @@
   <img src="/public/images/GovSL%20Logo.svg" alt="GovConnect SL Logo" width="400" />
 </div>
 
-<div align="center">
-  <a href="https://img.shields.io/badge/coverage-75%25-blue?style=for-the-badge">
-    <img src="https://img.shields.io/badge/coverage-75%25-blue?style=for-the-badge" alt="Coverage Status" />
-  </a>
+<div align="center" style="display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 1rem;">
+  <img src="https://img.shields.io/badge/coverage-75%25-blue?style=for-the-badge" alt="Coverage Status" />
+  <img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js" />
+  <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" />
+  <img src="https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase" />
 </div>
 
 GovConnect SL is a modern, unified digital platform designed to streamline access to essential government services for all citizens of Sri Lanka. Our goal is to create a central, user-friendly hub that simplifies interactions with government agencies, reduces bureaucratic hurdles, and makes services more accessible, efficient, and transparent.
