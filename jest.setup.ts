@@ -78,19 +78,3 @@ jest.mock('@/hooks/use-analytics', () => ({
     loading: false,
   }),
 }));
-
-// Mock lucide-react library
-jest.mock('lucide-react', () => {
-  const original = jest.requireActual('lucide-react');
-  return {
-    ...original,
-    // Mock every icon to be a simple component that just renders its name
-    // This prevents the SyntaxError from the ESM module
-    __esModule: true,
-    ...new Proxy({}, {
-      get: (target, name) => {
-        return () => `Icon-${String(name)}`;
-      },
-    }),
-  };
-});
