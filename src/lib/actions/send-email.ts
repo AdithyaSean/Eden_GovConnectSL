@@ -1,3 +1,4 @@
+
 'use server';
 
 import nodemailer, { Transporter } from 'nodemailer'; // Import Transporter type
@@ -35,7 +36,7 @@ async function getTransporter() {
         port: 587,
         secure: false, 
         auth: {
-          user: testAccount.user, 
+          user: testAccount.user,
           pass: testAccount.pass,
         },
       });
