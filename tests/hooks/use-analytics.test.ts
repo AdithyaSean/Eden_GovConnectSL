@@ -36,7 +36,7 @@ const mockApplications: Application[] = [
 describe('useAnalytics Hook', () => {
     beforeEach(() => {
         // Clear all mocks before each test to ensure a clean slate
-        jest.clearAllMocks();
+        (getDocs as jest.Mock).mockClear();
     });
 
     it('should calculate analytics data correctly after fetching', async () => {

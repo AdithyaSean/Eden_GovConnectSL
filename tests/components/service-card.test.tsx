@@ -36,7 +36,7 @@ describe('ServiceCard Component', () => {
     // This test checks for the presence of the SVG element.
     // A more specific test would require a way to identify the icon, e.g., by data-testid.
     render(<ServiceCard service={mockService} />);
-    const svgElement = screen.getByRole('link').querySelector('svg');
-    expect(svgElement).toBeInTheDocument();
+    // The mocked icon will just be a string
+    expect(screen.getByText('Icon-Home')).toBeInTheDocument();
   });
 });
