@@ -1,3 +1,4 @@
+
 // Learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom';
 
@@ -78,3 +79,24 @@ jest.mock('@/hooks/use-analytics', () => ({
     loading: false,
   }),
 }));
+
+// Mock lucide-react library
+jest.mock('lucide-react', () => {
+    // A proxy to catch any icon name and return a simple component
+    return new Proxy({}, {
+        get: function(target, name) {
+            // Return a function that returns a simple div. 
+            // This will stand in for any icon component like <Home />, <Star />, etc.
+            return () => {
+                const Component = (props) => {
+                    // Create a test-friendly name, e.g., "Icon-Home"
+                    const testId = `icon-${String(name)}`;
+                    // Use a div instead of a complex SVG to avoid any rendering issues in Jest
+                    return <div data-testid={testId}>{String(name)}</div>;
+                };
+                Component.displayName = `MockedLucideIcon-${String(name)}`;
+                return Component;
+            };
+        }
+    });
+});
