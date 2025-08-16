@@ -39,8 +39,8 @@ To get a local copy up and running, follow these simple steps.
 
 1.  **Clone the repository:**
     ```sh
-    git clone https://your-repository-url.com
-    cd your-repository-directory
+    git clone https://github.com/AdithyaSean/gov-assist.git
+    cd gov-assist
     ```
 
 2.  **Install NPM packages:**
