@@ -72,6 +72,7 @@ describe('useToast Hook and Reducer', () => {
     });
 
     it('should dismiss a toast after a delay', () => {
+        jest.useFakeTimers();
         const { result } = renderHook(() => useToast());
         
         act(() => {
@@ -89,6 +90,7 @@ describe('useToast Hook and Reducer', () => {
         
         // Now the toast should be removed from the state
         expect(result.current.toasts).toHaveLength(0);
+        jest.useRealTimers();
     });
   });
 });

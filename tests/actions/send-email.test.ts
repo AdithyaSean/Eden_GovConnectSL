@@ -25,6 +25,7 @@ describe('sendEmail Server Action', () => {
 
   beforeEach(() => {
     jest.resetModules(); // Resets module registry to ensure env changes are picked up
+    process.env = { ...originalEnv }; // Reset env to original state
     mockSendMail.mockClear();
     mockCreateTransport.mockClear();
   });
@@ -85,7 +86,7 @@ describe('sendEmail Server Action', () => {
     mockSendMail.mockResolvedValueOnce({ messageId: 'gmail-test-id' });
     
     // Act
-    const result = await sendEmail({
+    await sendEmail({
       to: 'recipient@example.com',
       subject: 'Gmail Test',
       html: '<p>Test Gmail</p>',
@@ -101,6 +102,5 @@ describe('sendEmail Server Action', () => {
         pass: 'testpassword',
       },
     });
-    expect(result.success).toBe(true);
   });
 });

@@ -79,7 +79,7 @@ describe('LoginPage', () => {
         fireEvent.click(screen.getByRole('button', { name: /login/i }));
 
         await waitFor(() => {
-            expect(signInWithEmailAndPasswordMock).toHaveBeenCalledWith(undefined, 'test@example.com', 'password123');
+            expect(signInWithEmailAndPasswordMock).toHaveBeenCalledWith(expect.anything(), 'test@example.com', 'password123');
             const { useRouter } = require('next/navigation');
             expect(useRouter().push).toHaveBeenCalledWith('/dashboard');
         });
