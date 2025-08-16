@@ -1,10 +1,27 @@
-import { render, screen, waitFor } from '@testing-library/react';
+
+import { render, screen } from '@testing-library/react';
 import AdminDashboardPage from '@/app/admin/dashboard/page';
 import '@testing-library/jest-dom';
 
+// --- START: MOCK NEXT/NAVIGATION ---
+// Mock the router, pathname, and other navigation hooks
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+    refresh: jest.fn(),
+  }),
+  usePathname: () => '/admin/dashboard', // Provide a mock pathname
+  useSearchParams: () => ({
+    get: jest.fn(),
+  }),
+}));
+
+// --- END: MOCK NEXT/NAVIGATION ---
+
+
 // --- START: MOCK FIREBASE/FIRESTORE ---
 
-// Mock data that matches the expectations of your tests
 const mockApplications = [
   {
     id: '1',
@@ -31,19 +48,16 @@ const mockPayments = [
 jest.mock('firebase/firestore', () => ({
   getFirestore: jest.fn(),
   collection: jest.fn((db, path) => ({
-      path: path // Pass path for getDocs to identify the collection
+      path: path
   })),
-  getDocs: jest.fn((query) => {
+  getDocs: jest.fn(async (query) => {
     const path = query.path;
     if (path === 'users') {
-      return Promise.resolve({
-        size: 15, // As expected in the test
-        docs: [], // No need to mock full docs if only size is needed
-      });
+      return Promise.resolve({ size: 15 });
     }
     if (path === 'applications') {
       return Promise.resolve({
-        size: 25, // As expected in the test
+        size: 25,
         docs: mockApplications.map(app => ({
           id: app.id,
           data: () => app,
@@ -59,10 +73,10 @@ jest.mock('firebase/firestore', () => ({
     }
     return Promise.resolve({ size: 0, docs: [] });
   }),
-  query: jest.fn((collectionRef) => collectionRef), // Just return the ref
-  orderBy: jest.fn((collectionRef) => collectionRef), // Just return the ref
-  limit: jest.fn((collectionRef) => collectionRef), // Just return the ref
-  Timestamp: { // Mock Timestamp to avoid the 'now' error
+  query: jest.fn((collectionRef) => collectionRef),
+  orderBy: jest.fn((collectionRef) => collectionRef),
+  limit: jest.fn((collectionRef) => collectionRef),
+  Timestamp: {
     now: jest.fn(),
     fromDate: (date) => date,
   },
@@ -72,27 +86,24 @@ jest.mock('firebase/firestore', () => ({
 
 
 describe('AdminDashboardPage', () => {
-  it('renders the dashboard title', () => {
+  // Test cases remain the same
+  it('renders the dashboard title', async () => {
     render(<AdminDashboardPage />);
-    expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
+    expect(await screen.findByText('Admin Dashboard')).toBeInTheDocument();
   });
 
   it('displays the correct stats after fetching data', async () => {
     render(<AdminDashboardPage />);
-
-    // Use findByText which automatically waits for the element to appear
     expect(await screen.findByText('15')).toBeInTheDocument(); // Total Users
     expect(await screen.findByText('25')).toBeInTheDocument(); // Total Applications
-    expect(await screen.findByText('LKR 4,000.00')).toBeInTheDocument(); // Total Payments (2500 + 1500)
+    expect(await screen.findByText('LKR 4,000.00')).toBeInTheDocument(); // Total Payments
   });
 
   it('renders the recent applications table with correct data', async () => {
     render(<AdminDashboardPage />);
-
-    // Wait for the table to populate
     expect(await screen.findByRole('cell', { name: /nimal silva/i })).toBeInTheDocument();
     expect(screen.getByRole('cell', { name: /passport services/i })).toBeInTheDocument();
-    expect(screen.getByRole('cell', { name: /kamala perera/i })).toBeInTheDocument();
     expect(screen.getByRole('cell', { name: /id card renewal/i })).toBeInTheDocument();
+    expect(screen.getByRole('cell', { name: /kamala perera/i })).toBeInTheDocument();
   });
 });
