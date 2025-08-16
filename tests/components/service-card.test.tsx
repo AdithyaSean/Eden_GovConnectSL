@@ -33,10 +33,7 @@ describe('ServiceCard Component', () => {
   });
 
   it('renders the correct icon', () => {
-    // This test checks for the presence of the SVG element.
-    // A more specific test would require a way to identify the icon, e.g., by data-testid.
     render(<ServiceCard service={mockService} />);
-    // The mocked icon will just be a string
     expect(screen.getByText('Icon-Home')).toBeInTheDocument();
   });
 });

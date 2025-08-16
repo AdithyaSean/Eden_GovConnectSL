@@ -87,7 +87,7 @@ jest.mock('lucide-react', () => {
     // Mock every icon to be a simple component that just renders its name
     // This prevents the SyntaxError from the ESM module
     __esModule: true,
-    default: new Proxy({}, {
+    ...new Proxy({}, {
       get: (target, name) => {
         return () => `Icon-${String(name)}`;
       },

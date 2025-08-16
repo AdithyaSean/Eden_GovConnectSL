@@ -39,7 +39,6 @@ describe('AdminAnalyticsPage', () => {
     it('displays the correct stat card values', () => {
         render(<AdminAnalyticsPage />);
         expect(screen.getByText('5 Days')).toBeInTheDocument();
-        // The value is split between two elements, so we test for the integer part
         expect(screen.getByText('4.2 / 5')).toBeInTheDocument();
         expect(screen.getByText('12%')).toBeInTheDocument();
         expect(screen.getByText('3 PM (SLST)')).toBeInTheDocument();
