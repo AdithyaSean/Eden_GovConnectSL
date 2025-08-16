@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { sendEmail } from "@/lib/actions/send-email";
 
 
 export default function SupportTicketPage({ params }: { params: { id: string } }) {
@@ -51,7 +52,7 @@ export default function SupportTicketPage({ params }: { params: { id: string } }
     }
   }, [id]);
 
-  const createNotification = async (userId: string, title: string, description: string, href: string) => {
+  const createNotification = async (userId: string, title: string, description: string, href: string, recipientEmail?: string) => {
     try {
         await addDoc(collection(db, "notifications"), {
             userId,
@@ -62,6 +63,15 @@ export default function SupportTicketPage({ params }: { params: { id: string } }
             read: false,
             createdAt: serverTimestamp()
         });
+
+        if (recipientEmail) {
+             await sendEmail({
+                to: recipientEmail,
+                subject: `[GovConnect SL] ${title}`,
+                html: `<p>${description}</p><p>You can view the full conversation by logging into your account.</p>`
+            });
+        }
+
     } catch (error) {
         console.error("Error creating notification:", error);
     }
@@ -85,11 +95,13 @@ export default function SupportTicketPage({ params }: { params: { id: string } }
       });
 
       if (ticket.userId) {
+          const description = `A support agent has replied to your ticket.`;
           await createNotification(
               ticket.userId,
               `Reply for ticket: ${ticket.subject.substring(0, 20)}...`,
-              `A support agent has replied to your ticket.`,
-              `/support`
+              description,
+              `/support`,
+              ticket.email
           );
       }
 

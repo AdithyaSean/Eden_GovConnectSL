@@ -29,7 +29,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { doc, updateDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
-import Lottie from "lottie-react";
+import { sendEmail } from "@/lib/actions/send-email";
 
 export default function PaymentPage() {
   const searchParams = useSearchParams();
@@ -94,40 +94,46 @@ export default function PaymentPage() {
     setIsProcessing(true);
 
     try {
-      // 1. Update application status
-      const appRef = doc(db, "applications", ref);
-      await updateDoc(appRef, { status: "In Progress" });
+        // 1. Update application status (if it's an application payment)
+        const appRef = doc(db, "applications", ref);
+        await updateDoc(appRef, { status: "In Progress" });
 
-      // 2. Create a payment record
-      const paymentDocRef = await addDoc(collection(db, "payments"), {
-        userId: user.id,
-        service: service,
-        amount: amount,
-        date: serverTimestamp(),
-        status: "Success",
-        applicationRef: ref,
-      });
-      setNewPaymentId(paymentDocRef.id);
+        // 2. Create a payment record
+        const paymentDocRef = await addDoc(collection(db, "payments"), {
+            userId: user.id,
+            service: service,
+            amount: amount,
+            date: serverTimestamp(),
+            status: "Success",
+            applicationRef: ref
+        });
+        setNewPaymentId(paymentDocRef.id);
 
-      // 3. Create a notification
-      await addDoc(collection(db, "notifications"), {
-        userId: user.id,
-        title: "Payment Successful",
-        description: `Your payment of LKR ${amount} for '${service}' was successful.`,
-        href: `/receipt/${paymentDocRef.id}`,
-        icon: "CheckCircle",
-        read: false,
-        createdAt: serverTimestamp(),
-      });
+        // 3. Create a notification
+         const notifDescription = `Your payment of LKR ${amount} for '${service}' was successful.`;
+         await addDoc(collection(db, "notifications"), {
+            userId: user.id,
+            title: "Payment Successful",
+            description: notifDescription,
+            href: `/receipt/${paymentDocRef.id}`,
+            icon: "CheckCircle",
+            read: false,
+            createdAt: serverTimestamp()
+        });
+        
+        // 4. Send email notification
+        if(user.email){
+             await sendEmail({
+                to: user.email,
+                subject: "[GovConnect SL] Payment Successful",
+                html: `<p>${notifDescription}</p><p>You can view your receipt by logging into your account.</p>`
+            });
+        }
 
-      setShowSuccessDialog(true);
-    } catch (error) {
-      console.error("Payment processing error:", error);
-      toast({
-        title: "Payment Failed",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
+        setShowSuccessDialog(true);
+    } catch(error) {
+        console.error("Payment processing error:", error);
+        toast({ title: "Payment Failed", description: "Something went wrong. Please try again.", variant: "destructive"});
     } finally {
       setIsProcessing(false);
     }
