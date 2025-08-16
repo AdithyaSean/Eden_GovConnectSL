@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { services } from "@/lib/data";
+import { cn } from "@/lib/utils";
 
 const statuses = ['Pending', 'Approved', 'Rejected', 'In Progress', 'Completed', 'In Review', 'Pending Payment'];
 const serviceNames = ["all", ...services.map(s => s.title)];
@@ -89,6 +90,26 @@ export default function ApplicationsPage() {
     if (typeof date === 'string') return date;
     return date.toDate().toLocaleDateString();
   };
+  
+  const getStatusClass = (status: Application['status']) => {
+    switch (status) {
+        case 'Approved':
+            return 'bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-sm';
+        case 'Completed':
+            return 'bg-blue-500 text-white border-0';
+        case 'In Progress':
+            return 'bg-orange-500 text-white border-0';
+        case 'In Review':
+            return 'bg-sky-500 text-white border-0';
+        case 'Pending Payment':
+            return 'bg-yellow-400 text-yellow-900 border-0';
+        case 'Rejected':
+            return 'bg-red-600 text-white border-0';
+        case 'Pending':
+        default:
+            return 'bg-gray-200 text-gray-800';
+    }
+  }
 
   return (
     <AdminLayout>
@@ -160,15 +181,8 @@ export default function ApplicationsPage() {
                       <TableCell>{app.service}</TableCell>
                       <TableCell>{formatDate(app.submitted)}</TableCell>
                       <TableCell>
-                         <Badge variant={
-                             app.status === 'Approved' || app.status === 'Completed' ? 'default' 
-                             : app.status === 'Pending' ? 'secondary'
-                             : app.status === 'In Progress' || app.status === 'In Review' ? 'outline'
-                             : 'destructive'
-                          }
-                          className={
-                               app.status === 'Approved' || app.status === 'Completed' ? 'bg-green-600' : ''
-                          }
+                         <Badge 
+                            className={cn("capitalize", getStatusClass(app.status))}
                           >
                           {app.status}
                           </Badge>

@@ -17,10 +17,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Line, AreaChart, Area, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Clock, Hourglass, Star, UserX } from "lucide-react";
 import { useAnalytics } from "@/hooks/use-analytics";
 import { Rating } from "@/components/rating";
+import { StatCard } from "@/components/stat-card";
 
 const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -46,48 +47,38 @@ export default function AdminAnalyticsPage() {
         </div>
         
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Avg. Processing Time</CardTitle>
-                    <Hourglass className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{analyticsData.avgProcessingTime} Days</div>
-                    <p className="text-xs text-muted-foreground">From submission to completion</p>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Avg. Appointment Rating</CardTitle>
-                    <Star className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold flex items-center gap-1">
-                        {analyticsData.avgAppointmentRating.toFixed(1)} <span className="text-lg">/ 5</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">Based on citizen feedback</p>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Appointment No-Show Rate</CardTitle>
-                    <UserX className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{analyticsData.noShowRate}%</div>
-                    <p className="text-xs text-muted-foreground">Users who missed scheduled appointments</p>
-                </CardContent>
-            </Card>
-             <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Peak Hour</CardTitle>
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{analyticsData.peakHour}</div>
-                    <p className="text-xs text-muted-foreground">Highest application traffic</p>
-                </CardContent>
-            </Card>
+            <StatCard
+                title="Avg. Processing Time"
+                value={`${analyticsData.avgProcessingTime} Days`}
+                description="From submission to completion"
+                icon={Hourglass}
+                gradient="bg-gradient-to-br from-purple-500 to-violet-600"
+                loading={loading}
+            />
+             <StatCard
+                title="Avg. Appointment Rating"
+                value={`${analyticsData.avgAppointmentRating.toFixed(1)} / 5`}
+                description="Based on citizen feedback"
+                icon={Star}
+                gradient="bg-gradient-to-br from-yellow-400 to-orange-500"
+                loading={loading}
+            />
+            <StatCard
+                title="Appointment No-Show Rate"
+                value={`${analyticsData.noShowRate}%`}
+                description="Users who missed appointments"
+                icon={UserX}
+                gradient="bg-gradient-to-br from-red-500 to-rose-600"
+                loading={loading}
+            />
+            <StatCard
+                title="Peak Hour"
+                value={analyticsData.peakHour}
+                description="Highest application traffic"
+                icon={Clock}
+                gradient="bg-gradient-to-br from-sky-500 to-cyan-500"
+                loading={loading}
+            />
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
@@ -99,11 +90,17 @@ export default function AdminAnalyticsPage() {
                 <CardContent>
                     <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={analyticsData.peakHoursData}>
-                            <CartesianGrid strokeDasharray="3 3" />
+                            <defs>
+                                <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="hsl(var(--chart-bar-from))" stopOpacity={0.8}/>
+                                    <stop offset="95%" stopColor="hsl(var(--chart-bar-to))" stopOpacity={0.8}/>
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
                             <XAxis dataKey="hour" fontSize={12} tickLine={false} axisLine={false} />
                             <YAxis fontSize={12} tickLine={false} axisLine={false} allowDecimals={false}/>
-                            <Tooltip content={<CustomTooltip />} />
-                            <Bar dataKey="applications" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Applications"/>
+                            <Tooltip content={<CustomTooltip />} cursor={{fill: 'hsla(var(--muted), 0.5)'}}/>
+                            <Bar dataKey="applications" fill="url(#barGradient)" radius={0} name="Applications"/>
                         </BarChart>
                     </ResponsiveContainer>
                 </CardContent>
@@ -115,13 +112,19 @@ export default function AdminAnalyticsPage() {
                 </CardHeader>
                 <CardContent>
                     <ResponsiveContainer width="100%" height={300}>
-                        <LineChart data={analyticsData.processingTimeData}>
-                            <CartesianGrid strokeDasharray="3 3" />
+                        <AreaChart data={analyticsData.processingTimeData}>
+                             <defs>
+                                <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="hsl(var(--chart-area-from))" stopOpacity={0.4}/>
+                                    <stop offset="95%" stopColor="hsl(var(--chart-area-to))" stopOpacity={0.1}/>
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
                             <XAxis dataKey="month" fontSize={12} tickLine={false} axisLine={false} />
                             <YAxis fontSize={12} tickLine={false} axisLine={false} />
-                            <Tooltip content={<CustomTooltip />} />
-                            <Line type="monotone" dataKey="time" stroke="hsl(var(--primary))" strokeWidth={2} name="Avg Days"/>
-                        </LineChart>
+                            <Tooltip content={<CustomTooltip />} cursor={{stroke: 'hsl(var(--chart-line))', strokeWidth: 1, fill: 'hsla(var(--muted), 0.5)'}}/>
+                            <Area type="monotone" dataKey="time" stroke="hsl(var(--chart-line))" strokeWidth={2} fill="url(#areaGradient)" name="Avg Days"/>
+                        </AreaChart>
                     </ResponsiveContainer>
                 </CardContent>
             </Card>

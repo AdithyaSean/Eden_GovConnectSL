@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
+import Image from "next/image";
 
 export default function ForgotPasswordPage() {
   const [identifier, setIdentifier] = useState("");
@@ -66,8 +67,16 @@ export default function ForgotPasswordPage() {
     <div className="flex items-center justify-center min-h-screen bg-background">
       <Card className="mx-auto max-w-sm w-full">
         <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
-               <UserSquare className="h-12 w-12 text-primary" />
+            <div className="flex justify-center -mb-5">
+              <div className="relative w-96 h-48">
+                <Image
+                  src="/images/GovSL Logo.svg"
+                  alt="GovConnect SL Logo"
+                  fill
+                  className="object-contain"
+                  data-ai-hint="logo"
+                />
+              </div>
             </div>
           <CardTitle className="text-2xl">Forgot Password</CardTitle>
           <CardDescription>

@@ -26,6 +26,7 @@ import { collection, getDocs, limit, orderBy, query, Timestamp } from "firebase/
 import { db } from "@/lib/firebase";
 import type { Application, Payment, User } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatCard } from "@/components/stat-card";
 
 export default function AdminDashboardPage() {
     const [stats, setStats] = useState({
@@ -88,46 +89,38 @@ export default function AdminDashboardPage() {
           <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
         </div>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              {loading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{stats.totalUsers}</div>}
-              <p className="text-xs text-muted-foreground">Registered on the platform</p>
-            </CardContent>
-          </Card>
-           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Applications</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-               {loading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{stats.totalApplications}</div>}
-              <p className="text-xs text-muted-foreground">Submitted across all services</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Payments</CardTitle>
-              <CircleDollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-               {loading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">LKR {stats.totalPayments.toLocaleString()}</div>}
-              <p className="text-xs text-muted-foreground">Processed through the gateway</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Services Active</CardTitle>
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.activeServices}</div>
-              <p className="text-xs text-muted-foreground">All systems operational</p>
-            </CardContent>
-          </Card>
+           <StatCard
+                title="Total Users"
+                value={stats.totalUsers}
+                description="Registered on the platform"
+                icon={Users}
+                gradient="bg-gradient-to-br from-blue-500 to-purple-600"
+                loading={loading}
+            />
+            <StatCard
+                title="Total Applications"
+                value={stats.totalApplications}
+                description="Submitted across all services"
+                icon={FileText}
+                gradient="bg-gradient-to-br from-orange-500 to-yellow-500"
+                loading={loading}
+            />
+            <StatCard
+                title="Total Payments"
+                value={`LKR ${stats.totalPayments.toLocaleString()}`}
+                description="Processed through the gateway"
+                icon={CircleDollarSign}
+                gradient="bg-gradient-to-br from-green-500 to-emerald-600"
+                loading={loading}
+            />
+            <StatCard
+                title="Services Active"
+                value={stats.activeServices}
+                description="All systems operational"
+                icon={CheckCircle}
+                gradient="bg-gradient-to-br from-slate-600 to-slate-800"
+                loading={loading}
+            />
         </div>
 
         <Card>
@@ -175,7 +168,7 @@ export default function AdminDashboardPage() {
                              : 'destructive'
                           }
                            className={
-                               app.status === 'Approved' ? 'bg-green-600' : ''
+                               app.status === 'Approved' ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white border-0 shadow-sm' : ''
                            }
                           >{app.status}</Badge>
                       </TableCell>

@@ -81,7 +81,10 @@ export interface Application {
     status: 'Pending' | 'Approved' | 'Rejected' | 'In Progress' | 'Completed' | 'In Review' | 'Pending Payment';
     submitted: Timestamp | string;
     documents?: { [key: string]: string };
-    details?: { [key: string]: any };
+    details?: { 
+      reminderSent?: boolean;
+      [key: string]: any 
+    };
     workerComment?: string;
     appointmentRating?: number;
     appointmentFeedback?: string;

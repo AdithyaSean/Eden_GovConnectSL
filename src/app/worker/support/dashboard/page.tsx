@@ -48,8 +48,9 @@ export default function WorkerSupportDashboard() {
     fetchTickets();
   }, []);
 
-  const filteredTickets = useMemo(() => {
-    return tickets.filter(ticket => {
+  const filteredAndSortedTickets = useMemo(() => {
+    return tickets
+    .filter(ticket => {
       const matchesSearch = !searchQuery || ticket.userNic?.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = statusFilter === 'All' || ticket.status === statusFilter;
       const matchesDate = !dateRange || !dateRange.from || !dateRange.to || isWithinInterval(
@@ -57,6 +58,18 @@ export default function WorkerSupportDashboard() {
         { start: dateRange.from, end: dateRange.to }
       );
       return matchesSearch && matchesStatus && matchesDate;
+    })
+    .sort((a, b) => {
+        const isCompletedA = a.status === 'Closed';
+        const isCompletedB = b.status === 'Closed';
+
+        if (isCompletedA && !isCompletedB) return 1;
+        if (!isCompletedA && isCompletedB) return -1;
+
+        const dateA = a.submittedAt instanceof Timestamp ? a.submittedAt.toMillis() : new Date(a.submittedAt).getTime();
+        const dateB = b.submittedAt instanceof Timestamp ? b.submittedAt.toMillis() : new Date(b.submittedAt).getTime();
+
+        return dateB - dateA;
     });
   }, [searchQuery, tickets, statusFilter, dateRange]);
 
@@ -75,7 +88,7 @@ export default function WorkerSupportDashboard() {
         </div>
         <Card>
           <CardHeader>
-            <CardTitle>Ticket Queue ({filteredTickets.length})</CardTitle>
+            <CardTitle>Ticket Queue ({filteredAndSortedTickets.length})</CardTitle>
             <CardDescription>All support tickets from citizens. Use the filters to narrow down your search.</CardDescription>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
                 <div className="relative">
@@ -153,11 +166,11 @@ export default function WorkerSupportDashboard() {
                         <TableCell colSpan={6}><Skeleton className="h-8 w-full" /></TableCell>
                       </TableRow>
                     ))
-                  ) : filteredTickets.length === 0 ? (
+                  ) : filteredAndSortedTickets.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={6} className="h-24 text-center">No tickets found for the current filter.</TableCell>
                       </TableRow>
-                  ) : filteredTickets.map((ticket) => (
+                  ) : filteredAndSortedTickets.map((ticket) => (
                     <TableRow key={ticket.id}>
                       <TableCell className="font-medium">{ticket.name}</TableCell>
                       <TableCell>{ticket.userNic}</TableCell>

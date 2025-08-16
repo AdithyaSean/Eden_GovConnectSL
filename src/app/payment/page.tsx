@@ -23,14 +23,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
 import { doc, updateDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { sendEmail } from "@/lib/actions/send-email";
-
 
 export default function PaymentPage() {
   const searchParams = useSearchParams();
@@ -41,13 +40,55 @@ export default function PaymentPage() {
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [newPaymentId, setNewPaymentId] = useState<string | null>(null);
+  const [successAnimation, setSuccessAnimation] = useState<any>(null);
   const { user } = useAuth();
+  
+  const [cardNumber, setCardNumber] = useState("");
+  const [expiry, setExpiry] = useState("");
+  const [cvc, setCvc] = useState("");
+
+  // Load Lottie animation from public folder
+  useEffect(() => {
+    fetch("/animations/success.json")
+      .then((res) => res.json())
+      .then((data) => setSuccessAnimation(data))
+      .catch((err) => console.error("Failed to load animation:", err));
+  }, []);
+
+  const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+    const formattedValue = value.match(/.{1,4}/g)?.join(' ') || '';
+    if (formattedValue.length <= 19) { // 16 digits + 3 spaces
+      setCardNumber(formattedValue);
+    }
+  };
+
+  const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 2) {
+      value = `${value.slice(0, 2)}/${value.slice(2)}`;
+    }
+    if (value.length <= 5) {
+      setExpiry(value);
+    }
+  };
+
+  const handleCvcChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, '');
+    if (value.length <= 3) {
+      setCvc(value);
+    }
+  };
 
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!ref || !user) {
-        toast({ title: "Error", description: "Application reference or user not found.", variant: "destructive"});
-        return;
+      toast({
+        title: "Error",
+        description: "Application reference or user not found.",
+        variant: "destructive",
+      });
+      return;
     }
 
     setIsProcessing(true);
@@ -94,7 +135,7 @@ export default function PaymentPage() {
         console.error("Payment processing error:", error);
         toast({ title: "Payment Failed", description: "Something went wrong. Please try again.", variant: "destructive"});
     } finally {
-        setIsProcessing(false);
+      setIsProcessing(false);
     }
   };
 
@@ -103,28 +144,35 @@ export default function PaymentPage() {
       <div className="flex-1 space-y-8 p-4 md:p-8 pt-6">
         <AlertDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
           <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Payment Successful!</AlertDialogTitle>
-              <AlertDialogDescription>
-                Your payment for {service} has been processed successfully. Your
-                application status has been updated.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="sm:justify-between w-full gap-2 sm:gap-0">
-               {newPaymentId && (
-                    <Button variant="outline" asChild>
-                        <Link href={`/receipt/${newPaymentId}`}>View Receipt</Link>
-                    </Button>
-                )}
-              <div className="flex flex-col-reverse sm:flex-row gap-2">
-                  <Button variant="secondary" asChild>
-                    <Link href="/my-applications">My Applications</Link>
+            <div className="flex flex-col items-center justify-center text-center">
+              {successAnimation && (
+                <Lottie
+                  animationData={successAnimation}
+                  loop={true}
+                  style={{ height: 150, width: 150 }}
+                />
+              )}
+              <AlertDialogHeader>
+                <AlertDialogTitle>Payment Successful!</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Your payment for {service} has been processed successfully. Your
+                  application status has been updated.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter className="sm:justify-center flex-col sm:flex-row w-full gap-2 mt-4">
+                {newPaymentId && (
+                  <Button variant="outline" asChild className="w-full sm:w-auto">
+                    <Link href={`/receipt/${newPaymentId}`}>View Receipt</Link>
                   </Button>
-                  <AlertDialogAction asChild>
-                    <Link href="/dashboard">Go to Dashboard</Link>
-                  </AlertDialogAction>
-              </div>
-            </AlertDialogFooter>
+                )}
+                <Button variant="secondary" asChild className="w-full sm:w-auto">
+                  <Link href="/my-applications">My Applications</Link>
+                </Button>
+                <AlertDialogAction asChild className="w-full sm:w-auto">
+                  <Link href="/dashboard">Go to Dashboard</Link>
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </div>
           </AlertDialogContent>
         </AlertDialog>
 
@@ -135,70 +183,72 @@ export default function PaymentPage() {
               Complete your payment for the selected government service.
             </CardDescription>
           </CardHeader>
-           <form onSubmit={handlePayment}>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-              <div className="space-y-4">
-                <h3 className="font-semibold text-lg">Payment Details</h3>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Service:</span>
-                  <span className="font-medium text-right">{service}</span>
+          <form onSubmit={handlePayment}>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-lg">Payment Details</h3>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Service:</span>
+                    <span className="font-medium text-right">{service}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Reference No:</span>
+                    <span className="font-medium">{ref}</span>
+                  </div>
+                  <div className="flex justify-between text-2xl font-bold">
+                    <span>Total Amount:</span>
+                    <span>LKR {amount}</span>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Reference No:</span>
-                  <span className="font-medium">{ref}</span>
-                </div>
-                <div className="flex justify-between text-2xl font-bold">
-                  <span>Total Amount:</span>
-                  <span>LKR {amount}</span>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <h3 className="font-semibold text-lg">User Information</h3>
-                 {user && (
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-lg">User Information</h3>
+                  {user && (
                     <>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Name:</span>
-                          <span className="font-medium">{user.name}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">NIC:</span>
-                          <span className="font-medium">{user.nic}</span>
-                        </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Name:</span>
+                        <span className="font-medium">{user.name}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">NIC:</span>
+                        <span className="font-medium">{user.nic}</span>
+                      </div>
                     </>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
 
-            <Card>
+              <Card>
                 <CardHeader>
-                    <CardTitle>Credit/Debit Card</CardTitle>
-                    <CardDescription>Enter your card details below. All transactions are secure and encrypted.</CardDescription>
+                  <CardTitle>Credit/Debit Card</CardTitle>
+                  <CardDescription>
+                    Enter your card details below. All transactions are secure and encrypted.
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="space-y-2">
+                  <div className="space-y-2">
                     <Label htmlFor="cardNumber">Card Number</Label>
-                    <Input id="cardNumber" placeholder="0000 0000 0000 0000" required />
-                    </div>
-                    <div className="grid grid-cols-3 gap-4">
+                    <Input id="cardNumber" placeholder="0000 0000 0000 0000" required value={cardNumber} onChange={handleCardNumberChange} />
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
                     <div className="space-y-2">
-                        <Label htmlFor="expiry">Expiry</Label>
-                        <Input id="expiry" placeholder="MM/YY" required />
+                      <Label htmlFor="expiry">Expiry</Label>
+                      <Input id="expiry" placeholder="MM/YY" required value={expiry} onChange={handleExpiryChange} />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="cvc">CVC</Label>
-                        <Input id="cvc" placeholder="123" required />
+                      <Label htmlFor="cvc">CVC</Label>
+                      <Input id="cvc" placeholder="123" required value={cvc} onChange={handleCvcChange} />
                     </div>
-                    </div>
+                  </div>
                 </CardContent>
                 <CardFooter>
-                    <Button type="submit" className="w-full" size="lg" disabled={isProcessing}>
+                  <Button type="submit" className="w-full" size="lg" disabled={isProcessing}>
                     {isProcessing ? "Processing..." : `Pay LKR ${amount}`}
-                    </Button>
+                  </Button>
                 </CardFooter>
-            </Card>
-          </CardContent>
-           </form>
+              </Card>
+            </CardContent>
+          </form>
         </Card>
       </div>
     </DashboardLayout>

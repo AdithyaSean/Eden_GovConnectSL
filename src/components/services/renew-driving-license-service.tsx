@@ -100,6 +100,29 @@ export function RenewDrivingLicenseService({ service }) {
         setFormValues(prev => ({ ...prev, [name]: value }));
     }
 
+    const handleLicenseNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        let value = e.target.value.toUpperCase();
+        // Allows a B, followed by up to 7 digits
+        if (/^B\d{0,7}$/.test(value) || value === 'B') {
+            setFormValues(prev => ({...prev, licenseNumber: value}));
+        }
+    }
+    
+    const handleNicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        let value = e.target.value.toUpperCase();
+        // Allows 9 digits and V/X, or 12 digits
+        if (/^(\d{0,9}[VX]?)?$/.test(value) || /^(\d{0,12})?$/.test(value)) {
+            if(value.length === 10 && !/[VX]$/.test(value)) {
+                // It might be a 12 digit one starting
+            } else if (value.length > 10 && value.length < 12) {
+                value = value.substring(0,10);
+            }
+        } else {
+            value = formValues.nic;
+        }
+        setFormValues(prev => ({...prev, nic: value}));
+    }
+
     const validateStep = () => {
         if(currentStep === 2){
             if(!formValues.fullName || !formValues.nic || !formValues.address) return false;
@@ -248,13 +271,13 @@ export function RenewDrivingLicenseService({ service }) {
                           </div>
                           <div className="space-y-2">
                               <Label htmlFor="nic">NIC Number</Label>
-                              <Input id="nic" name="nic" placeholder="e.g., 199012345V" required value={formValues.nic} onChange={handleFormChange}/>
+                              <Input id="nic" name="nic" placeholder="e.g., 199012345V" required value={formValues.nic} onChange={handleNicChange} maxLength={12}/>
                           </div>
                            {serviceType === 'renewal' && (
                             <>
                                 <div className="space-y-2">
                                     <Label htmlFor="licenseNumber">Current License Number</Label>
-                                    <Input id="licenseNumber" name="licenseNumber" placeholder="e.g., B1234567" required value={formValues.licenseNumber} onChange={handleFormChange}/>
+                                    <Input id="licenseNumber" name="licenseNumber" placeholder="e.g., B1234567" required value={formValues.licenseNumber} onChange={handleLicenseNumberChange} maxLength={8}/>
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="expiryDate">Expiry Date</Label>

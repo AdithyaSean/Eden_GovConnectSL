@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useEffect, useState, FormEvent } from "react";
+import { useEffect, useState, FormEvent, useMemo } from "react";
 import { db } from "@/lib/firebase";
 import { collection, getDocs, query, where, Timestamp, addDoc, doc, serverTimestamp } from "firebase/firestore";
 import type { Fine, User } from "@/lib/types";
@@ -16,11 +16,17 @@ import { ArrowRight, Search, UserCheck, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+
+const statuses = ['All', 'Pending', 'Paid'];
 
 export default function WorkerFinePaymentDashboard() {
   const [fines, setFines] = useState<Fine[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchNic, setSearchNic] = useState("");
+  const [searchNicToAdd, setSearchNicToAdd] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [foundUser, setFoundUser] = useState<User | null>(null);
   const [isSearching, setIsSearching] = useState(false);
@@ -50,12 +56,31 @@ export default function WorkerFinePaymentDashboard() {
     fetchFinesAndUsers();
   }, []);
   
+  const filteredAndSortedFines = useMemo(() => {
+    return fines.filter(fine => {
+        const matchesNic = !searchNic || fine.nic.toLowerCase().includes(searchNic.toLowerCase());
+        const matchesStatus = statusFilter === 'All' || fine.status === statusFilter;
+        return matchesNic && matchesStatus;
+    }).sort((a,b) => {
+        const isCompletedA = a.status === 'Paid';
+        const isCompletedB = b.status === 'Paid';
+
+        if (isCompletedA && !isCompletedB) return 1;
+        if (!isCompletedA && isCompletedB) return -1;
+        
+        const dateA = new Date(a.issuedDate).getTime();
+        const dateB = new Date(b.issuedDate).getTime();
+        
+        return dateB - dateA;
+    })
+  }, [fines, searchNic, statusFilter]);
+
   const handleUserSearch = async () => {
-      if(!searchNic) return;
+      if(!searchNicToAdd) return;
       setIsSearching(true);
       setFoundUser(null);
       
-      const lowercasedQuery = searchNic.toLowerCase();
+      const lowercasedQuery = searchNicToAdd.toLowerCase();
       const user = allUsers.find(u => u.nic?.toLowerCase().includes(lowercasedQuery));
 
       if(user) {
@@ -98,11 +123,21 @@ export default function WorkerFinePaymentDashboard() {
           toast({ title: "Fine Added Successfully" });
           fetchFinesAndUsers(); // Refresh the list
           setFoundUser(null);
-          setSearchNic("");
+          setSearchNicToAdd("");
           (e.target as HTMLFormElement).reset();
       } catch (error) {
            toast({ title: "Failed to add fine", variant: "destructive" });
       }
+  }
+  
+  const getStatusClass = (status: Fine['status']) => {
+    switch(status){
+        case 'Paid':
+            return 'bg-green-600 text-white border-0 shadow-sm';
+        case 'Pending':
+        default:
+            return 'bg-red-600 text-white border-0';
+    }
   }
 
   return (
@@ -118,6 +153,25 @@ export default function WorkerFinePaymentDashboard() {
                   <CardHeader>
                     <CardTitle>All Recorded Fines</CardTitle>
                     <CardDescription>Review and manage all fines in the system.</CardDescription>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                        <div className="relative md:col-span-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                            <Input 
+                                placeholder="Search by NIC..." 
+                                className="pl-10"
+                                value={searchNic}
+                                onChange={(e) => setSearchNic(e.target.value)} 
+                            />
+                        </div>
+                        <Select value={statusFilter} onValueChange={setStatusFilter}>
+                            <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Filter by status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {statuses.map(status => <SelectItem key={status} value={status}>{status === 'All' ? 'All Statuses' : status}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
                   </CardHeader>
                   <CardContent>
                     <div className="overflow-x-auto">
@@ -138,19 +192,18 @@ export default function WorkerFinePaymentDashboard() {
                                 <TableCell colSpan={5}><Skeleton className="h-8 w-full" /></TableCell>
                               </TableRow>
                             ))
-                          ) : fines.length === 0 ? (
+                          ) : filteredAndSortedFines.length === 0 ? (
                               <TableRow>
                                 <TableCell colSpan={5} className="h-24 text-center">No fines found.</TableCell>
                               </TableRow>
-                          ) : fines.map((fine) => (
+                          ) : filteredAndSortedFines.map((fine) => (
                             <TableRow key={fine.id}>
                               <TableCell className="font-medium">{fine.nic}</TableCell>
                               <TableCell>{fine.type}</TableCell>
                               <TableCell>LKR {fine.amount}</TableCell>
                               <TableCell>{fine.dueDate}</TableCell>
                               <TableCell>
-                                 <Badge variant={fine.status === 'Paid' ? 'default' : 'destructive'}
-                                  className={fine.status === 'Paid' ? 'bg-green-600' : ''}>
+                                 <Badge className={cn("capitalize", getStatusClass(fine.status))}>
                                   {fine.status}
                                 </Badge>
                               </TableCell>
@@ -173,8 +226,8 @@ export default function WorkerFinePaymentDashboard() {
                         <div className="space-y-2">
                             <Label htmlFor="search-nic">Search Citizen by NIC</Label>
                             <div className="flex gap-2">
-                                <Input id="search-nic" value={searchNic} onChange={e => setSearchNic(e.target.value)} placeholder="Enter NIC..."/>
-                                <Button onClick={handleUserSearch} disabled={isSearching || !searchNic}>
+                                <Input id="search-nic" value={searchNicToAdd} onChange={e => setSearchNicToAdd(e.target.value)} placeholder="Enter NIC..."/>
+                                <Button onClick={handleUserSearch} disabled={isSearching || !searchNicToAdd}>
                                     <Search className="h-4 w-4" />
                                 </Button>
                             </div>

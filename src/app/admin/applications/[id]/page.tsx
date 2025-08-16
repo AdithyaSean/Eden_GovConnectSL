@@ -76,7 +76,8 @@ export default function ApplicationDetailsPage({ params }: { params: { id: strin
       let updateData: Partial<Application> & { 'details.qrCodeUrl'?: string } = { status };
 
       if(status === 'Approved') {
-        const printUrl = `${window.location.origin}/print/application/${application.id}`;
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+        const printUrl = `${baseUrl}/print/application/${application.id}`;
         const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(printUrl)}`;
         updateData['details.qrCodeUrl'] = qrCodeUrl;
       }

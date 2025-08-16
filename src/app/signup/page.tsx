@@ -12,13 +12,16 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserSquare, Eye, EyeOff } from "lucide-react";
-import { FormEvent, useState } from "react";
+import { UserSquare, Eye, EyeOff, Check, X } from "lucide-react";
+import { FormEvent, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
+import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState("");
@@ -30,10 +33,36 @@ export default function SignupPage() {
   const router = useRouter();
   const { toast } = useToast();
 
+  const passwordRequirements = useMemo(() => {
+    const hasLowercase = /[a-z]/.test(password);
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    const hasMinLength = password.length >= 8;
+
+    return [
+      { text: "At least one lowercase letter", met: hasLowercase },
+      { text: "At least one uppercase letter", met: hasUppercase },
+      { text: "At least one number", met: hasNumber },
+      { text: "At least one special character", met: hasSpecialChar },
+      { text: "Minimum 8 characters", met: hasMinLength },
+    ];
+  }, [password]);
+
+  const passwordStrength = useMemo(() => {
+    return passwordRequirements.filter(req => req.met).length * 20;
+  }, [passwordRequirements]);
+
+
   const handleSignup = async (e: FormEvent) => {
     e.preventDefault();
     if (!fullName || !nic || !email || !password) {
       toast({ title: "All fields are required.", variant: "destructive" });
+      return;
+    }
+    
+    if (passwordStrength < 100) {
+      toast({ title: "Password does not meet requirements", description: "Please ensure your password meets all the criteria listed.", variant: "destructive" });
       return;
     }
     
@@ -46,11 +75,7 @@ export default function SignupPage() {
         });
         return;
     }
-
-    if (password.length < 6) {
-      toast({ title: "Password must be at least 6 characters long.", variant: "destructive" });
-      return;
-    }
+    
     setLoading(true);
 
     try {
@@ -122,11 +147,19 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
+    <div className="flex items-center justify-center min-h-screen bg-background py-12">
       <Card className="mx-auto max-w-sm w-full">
          <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
-               <UserSquare className="h-12 w-12 text-primary" />
+            <div className="flex justify-center -mb-5">
+              <div className="relative w-96 h-48">
+                <Image
+                  src="/images/GovSL Logo.svg"
+                  alt="GovConnect SL Logo"
+                  fill
+                  className="object-contain"
+                  data-ai-hint="logo"
+                />
+              </div>
             </div>
           <CardTitle className="text-2xl">Create Citizen Account</CardTitle>
           <CardDescription>
@@ -157,6 +190,27 @@ export default function SignupPage() {
                     </button>
                 </div>
               </div>
+              
+              {password.length > 0 && (
+                <div className="space-y-3">
+                    <Progress value={passwordStrength} className="h-2 [&>div]:bg-green-500" />
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Password must contain:
+                    </p>
+
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
+                        {passwordRequirements.map((req, index) => (
+                          <div key={index} className="flex items-center gap-2 text-sm">
+                            {req.met ? <Check className="h-4 w-4 text-green-500" /> : <X className="h-4 w-4 text-destructive" />}
+                            <span className="text-muted-foreground">
+                                {req.text}
+                            </span>
+                          </div>
+                        ))}
+                    </div>
+                </div>
+              )}
+
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? 'Creating Account...' : 'Create an account'}
               </Button>

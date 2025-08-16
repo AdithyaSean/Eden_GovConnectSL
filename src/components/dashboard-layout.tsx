@@ -18,7 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "./ui/sheet";
 import { ScrollArea } from "./ui/scroll-area";
 import { Badge } from "./ui/badge";
 import { useAuth } from "@/hooks/use-auth";
@@ -28,6 +28,7 @@ import { db } from "@/lib/firebase";
 import { collection, query, where, onSnapshot, orderBy, doc, updateDoc, Timestamp } from "firebase/firestore";
 import type { Notification } from "@/lib/types";
 import { SriLankaTime } from "./sri-lanka-time";
+import Image from "next/image";
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -87,15 +88,17 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="flex flex-col p-0">
-                <div className="p-6">
-                  <Link
-                    href="/dashboard"
-                    className="flex items-center gap-2 text-lg font-semibold mb-4"
-                  >
-                    <UserSquare className="h-6 w-6 text-primary" />
-                    <span>GovConnect SL</span>
-                  </Link>
-                </div>
+                <SheetHeader className="p-6">
+                    <SheetTitle className="sr-only">Menu</SheetTitle>
+                    <Link
+                        href="/dashboard"
+                        className="flex items-center gap-2 text-lg font-semibold"
+                    >
+                        <div className="relative h-10 w-32">
+                           <Image src="/images/GovSL Logo.svg" alt="GovConnectSL Logo" fill className="object-contain" />
+                        </div>
+                    </Link>
+                </SheetHeader>
                 <ScrollArea className="flex-grow">
                   <nav className="grid gap-2 text-base font-medium p-4 pt-0">
                     {navItems.map((item) => (
@@ -116,8 +119,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               </SheetContent>
             </Sheet>
             <Link href="/dashboard" className="hidden md:flex items-center gap-2 font-bold text-lg">
-              <UserSquare className="h-7 w-7 text-primary" />
-              <span>GovConnect SL</span>
+                <div className="relative h-28 w-48">
+                    <Image src="/images/GovSL Logo.svg" alt="GovConnectSL Logo" fill className="object-contain" />
+                </div>
             </Link>
           </div>
 
