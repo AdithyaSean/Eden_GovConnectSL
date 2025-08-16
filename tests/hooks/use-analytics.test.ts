@@ -7,10 +7,9 @@ import { getDocs, Timestamp } from 'firebase/firestore';
 import { addDays, subMonths } from 'date-fns';
 import type { Application } from '@/lib/types';
 
-// Mock Firestore
+// Mock Firestore getDocs function
 jest.mock('firebase/firestore', () => ({
     ...jest.requireActual('firebase/firestore'),
-    collection: jest.fn(),
     getDocs: jest.fn(),
 }));
 
@@ -34,11 +33,7 @@ const mockApplications: Application[] = [
 
 
 describe('useAnalytics Hook', () => {
-    beforeEach(() => {
-        // Clear all mocks before each test to ensure a clean slate
-        (getDocs as jest.Mock).mockClear();
-    });
-
+    
     it('should calculate analytics data correctly after fetching', async () => {
          (getDocs as jest.Mock).mockResolvedValue({
             docs: mockApplications.map(app => ({ id: app.id, data: () => app }))
@@ -48,11 +43,9 @@ describe('useAnalytics Hook', () => {
         // Wait for the loading state to become false
         await waitFor(() => {
             expect(result.current.loading).toBe(false);
+            expect(result.current.allApplications.length).toBe(mockApplications.length);
         });
 
-        // Check raw data
-        expect(result.current.allApplications.length).toBe(mockApplications.length);
-        
         // Check calculated data
         expect(result.current.analyticsData.avgProcessingTime).toBeGreaterThan(0); // It's random, so just check if it's calculated
         expect(result.current.analyticsData.noShowRate).toBe(17); // 1 no-show out of 6 with appointments

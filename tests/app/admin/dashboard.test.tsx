@@ -13,6 +13,7 @@ jest.mock('@/components/sri-lanka-time', () => ({
   SriLankaTime: () => <div>SL Time</div>,
 }));
 
+
 describe('AdminDashboardPage', () => {
     beforeEach(() => {
         jest.clearAllMocks();
@@ -32,7 +33,6 @@ describe('AdminDashboardPage', () => {
             ]
         };
 
-        // Correctly mock the implementation of getDocs
         (getDocs as jest.Mock).mockImplementation((q) => {
             const path = (q as any)._query?.path?.segments?.join('/');
             if (path === 'users') {

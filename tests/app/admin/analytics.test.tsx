@@ -2,15 +2,12 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import AdminAnalyticsPage from '@/app/admin/analytics/page';
-import { useAnalytics } from '@/hooks/use-analytics';
+import * as useAnalyticsModule from '@/hooks/use-analytics';
 
 // Mock child components
 jest.mock('@/components/admin-layout', () => ({
   AdminLayout: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
-
-// Mock the hook to provide controlled data
-jest.mock('@/hooks/use-analytics');
 
 const mockAnalyticsData = {
     avgProcessingTime: 5,
@@ -24,11 +21,15 @@ const mockAnalyticsData = {
 
 describe('AdminAnalyticsPage', () => {
     beforeEach(() => {
-        (useAnalytics as jest.Mock).mockReturnValue({
+       jest.spyOn(useAnalyticsModule, 'useAnalytics').mockReturnValue({
             analyticsData: mockAnalyticsData,
             allApplications: [],
             loading: false,
         });
+    });
+
+    afterEach(() => {
+        jest.restoreAllMocks();
     });
 
     it('renders the main heading', () => {
@@ -53,7 +54,7 @@ describe('AdminAnalyticsPage', () => {
     });
 
     it('shows loading state correctly', () => {
-        (useAnalytics as jest.Mock).mockReturnValue({
+        jest.spyOn(useAnalyticsModule, 'useAnalytics').mockReturnValue({
             analyticsData: { // Provide default structure even when loading
                 avgProcessingTime: 0,
                 avgAppointmentRating: 0,
