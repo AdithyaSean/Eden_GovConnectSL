@@ -80,7 +80,11 @@ To get a local copy up and running, follow these simple steps.
     - **Identity Worker:** `worker.identity@gov.lk`
     - **Support Worker:** `worker.support@gov.lk`
 
-3.  **Run Genkit for AI Features:**
+    You can use the following emails to log into citizen accounts
+    - **Citizen 1 NIC:** `110000000v`, **password:** `qweasd`
+    - **Citizen 2 NIC:** `200386200458`, **password:** `Eden1100_`
+
+4.  **Run Genkit for AI Features:**
     To enable the AI chatbot and other generative features, run the Genkit development server in a separate terminal:
     ```sh
     npm run genkit:dev
