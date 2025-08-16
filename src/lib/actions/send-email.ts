@@ -1,12 +1,12 @@
 'use server';
 
-import nodemailer from 'nodemailer';
+import nodemailer, { Transporter } from 'nodemailer'; // Import Transporter type
 import { config } from 'dotenv';
 
 config();
 
-// Singleton transporter instance
-let transporter;
+// Singleton transporter instance with a proper type
+let transporter: Transporter | undefined;
 
 async function getTransporter() {
   if (transporter) {

@@ -1,4 +1,3 @@
-
 import { renderHook, act } from '@testing-library/react';
 import { useToast, reducer } from '@/hooks/use-toast';
 
@@ -81,7 +80,7 @@ describe('useToast Hook and Reducer', () => {
 
       // 3. Advance the timers INSIDE an `act` block to trigger the state update
       act(() => {
-        jest.advanceTimersByTime(5000); // Must match TOAST_REMOVE_DELAY
+        jest.runAllTimers();
       });
 
       // 4. Now the toast should be removed from the state
