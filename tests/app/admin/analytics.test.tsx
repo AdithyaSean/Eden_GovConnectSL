@@ -13,7 +13,7 @@ jest.mock('@/components/admin-layout', () => ({
 jest.mock('@/hooks/use-analytics');
 
 const mockAnalyticsData = {
-    avgProcessingTime: 5,
+    avgProcessingTime: 5, // Expected value
     avgAppointmentRating: 4.2,
     noShowRate: 12,
     peakHour: "3 PM (SLST)",

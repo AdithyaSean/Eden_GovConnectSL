@@ -43,7 +43,7 @@ describe('AdminDashboardPage', () => {
             }
             if (path === 'applications') {
                 // Check if it's the limited query for recent apps
-                if ((q as any)._query.limit) {
+                if ((q as any)._query?.limit) {
                     return Promise.resolve(mockRecentApps);
                 }
                 return Promise.resolve(mockApps);
