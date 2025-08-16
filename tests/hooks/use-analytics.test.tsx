@@ -7,12 +7,14 @@ import { getDocs, Timestamp, collection } from 'firebase/firestore';
 import { addDays, subMonths } from 'date-fns';
 import type { Application } from '@/lib/types';
 
-// Mock Firestore
+// Mock Firestore at the module level
 jest.mock('firebase/firestore', () => ({
     ...jest.requireActual('firebase/firestore'),
     getDocs: jest.fn(),
     collection: jest.fn(),
 }));
+
+const mockGetDocs = getDocs as jest.Mock;
 
 const mockApplications: Application[] = [
     // Completed app
@@ -34,20 +36,20 @@ const mockApplications: Application[] = [
 
 describe('useAnalytics Hook', () => {
     beforeEach(() => {
-        (getDocs as jest.Mock).mockClear();
+        mockGetDocs.mockClear();
     });
 
     it('should calculate analytics data correctly after fetching', async () => {
-        (getDocs as jest.Mock).mockResolvedValue({
+        mockGetDocs.mockResolvedValue({
             docs: mockApplications.map(app => ({ id: app.id, data: () => app }))
         });
         const { result } = renderHook(() => useAnalytics());
 
         await waitFor(() => {
             expect(result.current.loading).toBe(false);
-            expect(result.current.allApplications.length).toBe(mockApplications.length);
         });
-
+        
+        expect(result.current.allApplications.length).toBe(mockApplications.length);
         // Check calculated data
         expect(result.current.analyticsData.avgProcessingTime).toBeGreaterThan(0); // It's random, so just check if it's calculated
         expect(result.current.analyticsData.noShowRate).toBe(17); // 1 no-show out of 6 with appointments
@@ -58,7 +60,7 @@ describe('useAnalytics Hook', () => {
     });
 
     it('should handle cases with zero applications', async () => {
-         (getDocs as jest.Mock).mockResolvedValue({ docs: [] });
+         mockGetDocs.mockResolvedValue({ docs: [] });
          const { result } = renderHook(() => useAnalytics());
 
          await waitFor(() => {

@@ -9,7 +9,7 @@ import { db } from '@/lib/firebase';
 jest.mock('firebase/firestore', () => ({
   ...jest.requireActual('firebase/firestore'), // Import and retain default exports
   getDocs: jest.fn(),
-  collection: jest.fn(),
+  collection: jest.fn((db, path) => ({ path })), // Return a simple object with the path
   query: jest.fn(),
   orderBy: jest.fn(),
   limit: jest.fn(),
@@ -23,6 +23,8 @@ jest.mock('@/components/admin-layout', () => ({
 jest.mock('@/components/sri-lanka-time', () => ({
   SriLankaTime: () => <div>SL Time</div>,
 }));
+
+const mockGetDocs = getDocs as jest.Mock;
 
 describe('AdminDashboardPage', () => {
     beforeEach(() => {
@@ -42,18 +44,18 @@ describe('AdminDashboardPage', () => {
         };
 
         // Correctly mock the implementation of getDocs
-        (getDocs as jest.Mock).mockImplementation((q) => {
-            const path = (q as any)._query?.path?.segments?.join('/');
-            if (path === 'users') {
+        mockGetDocs.mockImplementation((q) => {
+            // Check the collection path to determine which mock data to return
+            if (q.path === 'users') {
                  return Promise.resolve(mockUsers);
             }
-            if (path === 'applications' && (q as any)._query?.limit) {
+            if (q.path === 'applications' && q._query?.limit) { // Check if it's the recent apps query
                 return Promise.resolve(mockRecentApps);
             }
-            if (path === 'applications') {
+            if (q.path === 'applications') {
                 return Promise.resolve(mockApps);
             }
-            if (path === 'payments') {
+            if (q.path === 'payments') {
                 return Promise.resolve(mockPayments);
             }
             return Promise.resolve({ docs: [], size: 0 }); // Default empty response
