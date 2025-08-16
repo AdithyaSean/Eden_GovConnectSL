@@ -51,13 +51,11 @@ To get a local copy up and running, follow these simple steps.
     Create a `.env` file in the root of the project and add your Firebase configuration keys. You can get these from your Firebase project settings.
 
     ```env
-    # Firebase Configuration
-    NEXT_PUBLIC_FIREBASE_API_KEY="AIza..."
-    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="your-project.firebaseapp.com"
-    NEXT_PUBLIC_FIREBASE_PROJECT_ID="your-project-id"
-    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="your-project.appspot.com"
-    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="..."
-    NEXT_PUBLIC_FIREBASE_APP_ID="1:..."
+    GMAIL_USER=
+    GMAIL_APP_PASSWORD=
+    NEXT_PUBLIC_APP_URL=
+    GEMINI_API_KEY=
+    NEXT_PUBLIC_FIREBASE_API_KEY=
     ```
 
 ### Running the Application
@@ -96,4 +94,4 @@ To run the automated tests for this project, use the following command:
 npm test
 ```
 
-This will launch Jest in watch mode, automatically re-running tests as you make changes to the code.
+This will launch Jest in watch mode, automatically re-running tests as you make changes to the code. Don't forget to check your spam inbox for for account verification emails.
