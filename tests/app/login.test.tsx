@@ -6,20 +6,18 @@ import { useToast } from '@/hooks/use-toast';
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { getDocs } from 'firebase/firestore';
 
-// Mocks
-const getDocsMock = jest.fn();
+// 1. DECLARE MOCK VARIABLES FIRST
 const signInWithEmailAndPasswordMock = jest.fn();
 const sendPasswordResetEmailMock = jest.fn();
+const getDocsMock = jest.fn();
 
-jest.mock('@/lib/firebase', () => ({
-    auth: {},
-    db: {},
-}));
+// 2. NOW, MOCK THE MODULES USING THE DECLARED VARIABLES
 jest.mock('firebase/auth', () => ({
     getAuth: jest.fn(),
     signInWithEmailAndPassword: signInWithEmailAndPasswordMock,
     sendPasswordResetEmail: sendPasswordResetEmailMock,
 }));
+
 jest.mock('firebase/firestore', () => ({
     getFirestore: jest.fn(),
     collection: jest.fn(),
@@ -27,6 +25,7 @@ jest.mock('firebase/firestore', () => ({
     where: jest.fn(),
     getDocs: getDocsMock,
 }));
+
 
 jest.mock('@/hooks/use-toast', () => ({
   useToast: jest.fn(),

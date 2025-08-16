@@ -3,7 +3,7 @@ import { renderHook, act } from '@testing-library/react';
 import { useToast, reducer } from '@/hooks/use-toast';
 
 // Mock setTimeout to control timing in tests
-jest.useFakeTimers();
+// jest.useFakeTimers();
 
 describe('useToast Hook and Reducer', () => {
 
@@ -30,10 +30,6 @@ describe('useToast Hook and Reducer', () => {
       const action = { type: 'DISMISS_TOAST', toastId: '1' };
       const state = reducer(initialState, action);
       expect(state.toasts[0].open).toBe(false);
-      // Fast-forward timers to check if it gets removed after delay
-      act(() => {
-        jest.runAllTimers();
-      });
     });
     
     it('should remove a toast', () => {
@@ -72,25 +68,30 @@ describe('useToast Hook and Reducer', () => {
     });
 
     it('should dismiss a toast after a delay', () => {
-        jest.useFakeTimers();
-        const { result } = renderHook(() => useToast());
-        
-        act(() => {
-            result.current.toast({ title: 'Temporary Toast' });
-        });
-        
-        // At this point, the toast is visible
-        expect(result.current.toasts).toHaveLength(1);
-        expect(result.current.toasts[0].open).toBe(true);
+      // 1. Tell Jest to use fake timers
+      jest.useFakeTimers();
 
-        // Fast-forward time by the remove delay
-        act(() => {
-            jest.advanceTimersByTime(5000);
-        });
-        
-        // Now the toast should be removed from the state
-        expect(result.current.toasts).toHaveLength(0);
-        jest.useRealTimers();
+      const { result } = renderHook(() => useToast());
+
+      // 2. Dispatch the toast inside `act`
+      act(() => {
+        result.current.toast({ title: 'Temporary Toast' });
+      });
+
+      // Assert it's there initially
+      expect(result.current.toasts).toHaveLength(1);
+      expect(result.current.toasts[0].title).toBe('Temporary Toast');
+
+      // 3. Advance the timers INSIDE an `act` block to trigger the state update
+      act(() => {
+        jest.advanceTimersByTime(5000); // Must match TOAST_REMOVE_DELAY
+      });
+
+      // 4. Now the toast should be removed from the state
+      expect(result.current.toasts).toHaveLength(0);
+
+      // 5. Clean up timers
+      jest.useRealTimers();
     });
   });
 });

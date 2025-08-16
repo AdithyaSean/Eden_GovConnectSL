@@ -2,10 +2,12 @@
 import { sendEmail } from '@/lib/actions/send-email';
 import nodemailer from 'nodemailer';
 
-// Mock nodemailer
+// 1. DECLARE MOCK VARIABLE FIRST
 const mockSendMail = jest.fn();
 const mockCreateTransport = jest.fn(() => ({ sendMail: mockSendMail }));
 
+
+// 2. NOW, MOCK THE MODULE USING THE DECLARED VARIABLE
 jest.mock('nodemailer', () => ({
   createTestAccount: jest.fn().mockResolvedValue({
     user: 'test_user',
