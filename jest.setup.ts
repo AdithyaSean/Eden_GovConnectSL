@@ -89,10 +89,7 @@ jest.mock('lucide-react', () => {
     __esModule: true,
     default: new Proxy({}, {
       get: (target, name) => {
-        return () => {
-          const FakeIcon = `Icon-${name as string}`;
-          return <svg data-testid={FakeIcon} />;
-        };
+        return () => `Icon-${String(name)}`;
       },
     }),
   };
