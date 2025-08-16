@@ -5,7 +5,7 @@
 </div>
 
 <div align="center" style="display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 1rem;">
-  <img src="https://img.shields.io/badge/coverage-75%25-blue?style=for-the-badge" alt="Coverage Status" />
+  <img src="https://img.shields.io/badge/coverage-82%25-blue?style=for-the-badge" alt="Coverage Status" />
   <img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js" />
   <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
   <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
@@ -24,18 +24,6 @@ GovConnect SL is a modern, unified digital platform designed to streamline acces
 - **Secure Payments**: Integrated payment gateway for handling service fees, fines, and other government payments securely.
 - **AI-Powered Support**: An intelligent chatbot is available to answer questions, guide you through processes, and help you find the right service.
 - **Dedicated Admin & Worker Portals**: Separate, feature-rich interfaces for administrators and government workers to manage applications, users, and system analytics.
-
-## 🛠️ Tech Stack
-
-This project is built with a modern, robust, and scalable technology stack:
-
-- **Frontend**: [Next.js](https://nextjs.org/) (with App Router) & [React](https://reactjs.org/)
-- **Language**: [TypeScript](https://www.typescriptlang.org/)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
-- **UI Components**: [ShadCN/UI](https://ui.shadcn.com/)
-- **Backend & Database**: [Firebase](https://firebase.google.com/) (Authentication, Firestore, Storage)
-- **Generative AI**: [Google AI & Genkit](https://firebase.google.com/docs/genkit)
-- **Testing**: [Jest](https://jestjs.io/) & [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/)
 
 ## 🚀 Getting Started
 
@@ -86,6 +74,13 @@ To get a local copy up and running, follow these simple steps.
     To seed the database, navigate to `http://localhost:9002/seed` in your browser and click the "Reset & Seed Database" button.
     
     **The password for all seeded user accounts is `password123`.**
+
+    You can use the following emails to log into the Admin & Worker portal:
+    - **Super Admin:** `worker.admin@gov.lk`
+    - **Transport Worker:** `worker.transport@gov.lk`
+    - **Immigration Worker:** `worker.immigration@gov.lk`
+    - **Identity Worker:** `worker.identity@gov.lk`
+    - **Support Worker:** `worker.support@gov.lk`
 
 3.  **Run Genkit for AI Features:**
     To enable the AI chatbot and other generative features, run the Genkit development server in a separate terminal:
