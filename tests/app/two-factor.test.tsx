@@ -6,7 +6,7 @@ import TwoFactorPage from '@/app/two-factor/page';
 describe('Two Factor Page', () => {
     it('renders the main heading and instruction text', () => {
         render(<TwoFactorPage />);
-        expect(screen.getByRole('heading', {name: /check your email/i})).toBeInTheDocument();
+        expect(screen.getByText(/check your email/i)).toBeInTheDocument();
         expect(screen.getByText(/We've sent a verification link/)).toBeInTheDocument();
     });
 

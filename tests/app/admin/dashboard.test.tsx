@@ -32,17 +32,19 @@ describe('AdminDashboardPage', () => {
             ]
         };
 
+        // Correctly mock the implementation of getDocs
         (getDocs as jest.Mock).mockImplementation((q) => {
-            if ((q as any)._query.limit) {
+            const path = (q as any)._query?.path?.segments?.join('/');
+            if (path === 'users') {
+                 return Promise.resolve(mockUsers);
+            }
+             if (path === 'applications' && (q as any)._query.limit) {
                 return Promise.resolve(mockRecentApps);
             }
-             if ((q as any)._query.path.segments.includes('users')) {
-                return Promise.resolve(mockUsers);
-            }
-            if ((q as any)._query.path.segments.includes('applications')) {
+            if (path === 'applications') {
                 return Promise.resolve(mockApps);
             }
-            if ((q as any)._query.path.segments.includes('payments')) {
+            if (path === 'payments') {
                 return Promise.resolve(mockPayments);
             }
             return Promise.resolve({ docs: [], size: 0 }); // Default empty response
