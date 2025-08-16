@@ -3,15 +3,15 @@
 
 import { renderHook, waitFor } from '@testing-library/react';
 import { useAnalytics } from '@/hooks/use-analytics';
-import { getDocs, Timestamp } from 'firebase/firestore';
+import { getDocs, Timestamp, collection } from 'firebase/firestore';
 import { addDays, subMonths } from 'date-fns';
 import type { Application } from '@/lib/types';
 
 // Mock Firestore
 jest.mock('firebase/firestore', () => ({
     ...jest.requireActual('firebase/firestore'),
-    collection: jest.fn(),
     getDocs: jest.fn(),
+    collection: jest.fn(),
 }));
 
 const mockApplications: Application[] = [
@@ -32,19 +32,17 @@ const mockApplications: Application[] = [
     { id: 'app8', user: 'User H', service: 'Test', status: 'Pending', submitted: Timestamp.fromDate(new Date('2023-10-26T08:45:00Z')) },
 ];
 
-
 describe('useAnalytics Hook', () => {
     beforeEach(() => {
         (getDocs as jest.Mock).mockClear();
     });
 
     it('should calculate analytics data correctly after fetching', async () => {
-         (getDocs as jest.Mock).mockResolvedValue({
+        (getDocs as jest.Mock).mockResolvedValue({
             docs: mockApplications.map(app => ({ id: app.id, data: () => app }))
         });
         const { result } = renderHook(() => useAnalytics());
 
-        // Wait for the loading state to become false
         await waitFor(() => {
             expect(result.current.loading).toBe(false);
             expect(result.current.allApplications.length).toBe(mockApplications.length);

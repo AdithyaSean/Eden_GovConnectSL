@@ -3,6 +3,17 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import AdminDashboardPage from '@/app/admin/dashboard/page';
 import { collection, getDocs, Timestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+
+// Mock the entire firebase/firestore module
+jest.mock('firebase/firestore', () => ({
+  ...jest.requireActual('firebase/firestore'), // Import and retain default exports
+  getDocs: jest.fn(),
+  collection: jest.fn(),
+  query: jest.fn(),
+  orderBy: jest.fn(),
+  limit: jest.fn(),
+}));
 
 // Mock child components to isolate the test
 jest.mock('@/components/admin-layout', () => ({
@@ -13,11 +24,8 @@ jest.mock('@/components/sri-lanka-time', () => ({
   SriLankaTime: () => <div>SL Time</div>,
 }));
 
-
 describe('AdminDashboardPage', () => {
     beforeEach(() => {
-        jest.clearAllMocks();
-        
         const mockUsers = { size: 15, docs: [] };
         const mockApps = { size: 25, docs: [] };
         const mockPayments = { 
@@ -33,12 +41,13 @@ describe('AdminDashboardPage', () => {
             ]
         };
 
+        // Correctly mock the implementation of getDocs
         (getDocs as jest.Mock).mockImplementation((q) => {
             const path = (q as any)._query?.path?.segments?.join('/');
             if (path === 'users') {
                  return Promise.resolve(mockUsers);
             }
-             if (path === 'applications' && (q as any)._query.limit) {
+            if (path === 'applications' && (q as any)._query?.limit) {
                 return Promise.resolve(mockRecentApps);
             }
             if (path === 'applications') {
@@ -51,9 +60,11 @@ describe('AdminDashboardPage', () => {
         });
     });
 
-    it('renders the dashboard title', () => {
+    it('renders the dashboard title', async () => {
         render(<AdminDashboardPage />);
-        expect(screen.getByRole('heading', { name: /admin dashboard/i })).toBeInTheDocument();
+        await waitFor(() => {
+          expect(screen.getByRole('heading', { name: /admin dashboard/i })).toBeInTheDocument();
+        })
     });
 
     it('displays the correct stats after fetching data', async () => {

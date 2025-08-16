@@ -3,6 +3,16 @@
 import '@testing-library/jest-dom';
 import React from 'react';
 
+// Mock ResizeObserver for Recharts
+class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+}
+
+window.ResizeObserver = ResizeObserver;
+
+
 // Mock the next/navigation module
 jest.mock('next/navigation', () => ({
   useRouter() {
