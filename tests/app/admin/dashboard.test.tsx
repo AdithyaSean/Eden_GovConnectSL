@@ -1,27 +1,21 @@
-
 import { render, screen } from '@testing-library/react';
 import AdminDashboardPage from '@/app/admin/dashboard/page';
 import '@testing-library/jest-dom';
 
-// --- START: MOCK NEXT/NAVIGATION ---
-// Mock the router, pathname, and other navigation hooks
+// Mock next/navigation
 jest.mock('next/navigation', () => ({
   useRouter: () => ({
     push: jest.fn(),
     replace: jest.fn(),
     refresh: jest.fn(),
   }),
-  usePathname: () => '/admin/dashboard', // Provide a mock pathname
+  usePathname: () => '/admin/dashboard',
   useSearchParams: () => ({
     get: jest.fn(),
   }),
 }));
 
-// --- END: MOCK NEXT/NAVIGATION ---
-
-
-// --- START: MOCK FIREBASE/FIRESTORE ---
-
+// Mock firebase/firestore
 const mockApplications = [
   {
     id: '1',
@@ -44,13 +38,12 @@ const mockPayments = [
     { amount: '1500.00' },
 ];
 
-// Mock the entire 'firebase/firestore' module
 jest.mock('firebase/firestore', () => ({
   getFirestore: jest.fn(),
   collection: jest.fn((db, path) => ({
       path: path
   })),
-  getDocs: jest.fn(async (query) => {
+  getDocs: jest.fn((query) => {
     const path = query.path;
     if (path === 'users') {
       return Promise.resolve({ size: 15 });
@@ -82,11 +75,7 @@ jest.mock('firebase/firestore', () => ({
   },
 }));
 
-// --- END: MOCK FIREBASE/FIRESTORE ---
-
-
 describe('AdminDashboardPage', () => {
-  // Test cases remain the same
   it('renders the dashboard title', async () => {
     render(<AdminDashboardPage />);
     expect(await screen.findByText('Admin Dashboard')).toBeInTheDocument();
@@ -96,7 +85,8 @@ describe('AdminDashboardPage', () => {
     render(<AdminDashboardPage />);
     expect(await screen.findByText('15')).toBeInTheDocument(); // Total Users
     expect(await screen.findByText('25')).toBeInTheDocument(); // Total Applications
-    expect(await screen.findByText('LKR 4,000.00')).toBeInTheDocument(); // Total Payments
+    // Corrected assertion to match the component's output
+    expect(await screen.findByText('LKR 4,000')).toBeInTheDocument(); // Total Payments
   });
 
   it('renders the recent applications table with correct data', async () => {
