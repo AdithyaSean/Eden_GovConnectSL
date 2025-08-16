@@ -38,8 +38,8 @@ To get a local copy up and running, follow these simple steps.
 
 1.  **Clone the repository:**
     ```sh
-    git clone https://github.com/AdithyaSean/gov-assist.git
-    cd gov-assist
+    git clone https://github.com/AdithyaSean/Eden_GovConnectSL.git
+    cd Eden_GovConnectSL
     ```
 
 2.  **Install NPM packages:**
