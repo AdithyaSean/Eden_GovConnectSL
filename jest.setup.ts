@@ -1,6 +1,7 @@
 
 // Learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom';
+import React from 'react';
 
 // Mock the next/navigation module
 jest.mock('next/navigation', () => ({
@@ -87,16 +88,14 @@ jest.mock('lucide-react', () => {
         get: function(target, name) {
             // Return a function that returns a simple div. 
             // This will stand in for any icon component like <Home />, <Star />, etc.
-            return () => {
-                const Component = (props) => {
-                    // Create a test-friendly name, e.g., "Icon-Home"
-                    const testId = `icon-${String(name)}`;
-                    // Use a div instead of a complex SVG to avoid any rendering issues in Jest
-                    return <div data-testid={testId}>{String(name)}</div>;
-                };
-                Component.displayName = `MockedLucideIcon-${String(name)}`;
-                return Component;
+            const Component = (props: any) => {
+                // Create a test-friendly name, e.g., "Icon-Home"
+                const testId = `icon-${String(name)}`;
+                // Use React.createElement to avoid JSX syntax in this file
+                return React.createElement('div', { 'data-testid': testId }, String(name));
             };
+            Component.displayName = `MockedLucideIcon-${String(name)}`;
+            return Component;
         }
     });
 });
