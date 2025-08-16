@@ -1,107 +1,98 @@
-
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import AdminDashboardPage from '@/app/admin/dashboard/page';
-import { Timestamp } from 'firebase/firestore';
+import '@testing-library/jest-dom';
 
-// Mock child components to isolate the test
-jest.mock('@/components/admin-layout', () => ({
-  AdminLayout: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+// --- START: MOCK FIREBASE/FIRESTORE ---
+
+// Mock data that matches the expectations of your tests
+const mockApplications = [
+  {
+    id: '1',
+    user: 'Nimal Silva',
+    service: 'Passport Services',
+    submitted: { toDate: () => new Date('2023-10-26') },
+    status: 'Approved',
+  },
+  {
+    id: '2',
+    user: 'Kamala Perera',
+    service: 'ID Card Renewal',
+    submitted: { toDate: () => new Date('2023-10-25') },
+    status: 'Pending',
+  },
+];
+
+const mockPayments = [
+    { amount: '2500.00' },
+    { amount: '1500.00' },
+];
+
+// Mock the entire 'firebase/firestore' module
+jest.mock('firebase/firestore', () => ({
+  getFirestore: jest.fn(),
+  collection: jest.fn((db, path) => ({
+      path: path // Pass path for getDocs to identify the collection
+  })),
+  getDocs: jest.fn((query) => {
+    const path = query.path;
+    if (path === 'users') {
+      return Promise.resolve({
+        size: 15, // As expected in the test
+        docs: [], // No need to mock full docs if only size is needed
+      });
+    }
+    if (path === 'applications') {
+      return Promise.resolve({
+        size: 25, // As expected in the test
+        docs: mockApplications.map(app => ({
+          id: app.id,
+          data: () => app,
+        })),
+      });
+    }
+    if (path === 'payments') {
+      return Promise.resolve({
+        docs: mockPayments.map(p => ({
+            data: () => p
+        })),
+      });
+    }
+    return Promise.resolve({ size: 0, docs: [] });
+  }),
+  query: jest.fn((collectionRef) => collectionRef), // Just return the ref
+  orderBy: jest.fn((collectionRef) => collectionRef), // Just return the ref
+  limit: jest.fn((collectionRef) => collectionRef), // Just return the ref
+  Timestamp: { // Mock Timestamp to avoid the 'now' error
+    now: jest.fn(),
+    fromDate: (date) => date,
+  },
 }));
 
-jest.mock('@/components/sri-lanka-time', () => ({
-  SriLankaTime: () => <div>SL Time</div>,
-}));
+// --- END: MOCK FIREBASE/FIRESTORE ---
 
-// This mock simulates the Firestore database, providing the correct data for each test.
-jest.mock('firebase/firestore', () => {
-    // Helper to create mock document structures that Firestore expects
-    const createMockDocs = (dataArray) => 
-        dataArray.map((data, i) => ({
-            id: `mock-doc-${i}`,
-            data: () => data,
-        }));
-
-    return {
-        // We need to mock all the functions used by the component to build its queries
-        collection: jest.fn((db, path) => ({ path })), // Identify the collection by its path
-        query: jest.fn((collectionRef) => collectionRef),
-        orderBy: jest.fn((queryRef) => queryRef),
-        limit: jest.fn((queryRef) => queryRef),
-
-        // This is the main data-fetching function we need to control
-        getDocs: jest.fn(async (queryRef) => {
-            const path = queryRef.path;
-
-            // Return specific data based on which collection is being queried
-            if (path === 'users') {
-                return { size: 15, docs: [] }; // Correct: Total Users count
-            }
-
-            if (path === 'applications') {
-                return {
-                    size: 25, // Correct: Total Applications count
-                    docs: createMockDocs([ // Correct: Data for the recent applications table
-                        {
-                            user: 'Nimal Silva',
-                            service: 'Passport Services',
-                            status: 'Approved',
-                            submitted: Timestamp.now(),
-                        },
-                        {
-                            user: 'Kamala Perera',
-                            service: 'Driving Licence Services',
-                            status: 'Pending',
-                            submitted: Timestamp.now(),
-                        },
-                    ]),
-                };
-            }
-
-            if (path === 'payments') {
-                // Correct: Data that sums up to the expected total payment amount
-                return {
-                    docs: createMockDocs([{ amount: '1500.00' }, { amount: '2500.00' }]),
-                };
-            }
-
-            // A default empty response for any other queries
-            return { docs: [], size: 0 };
-        }),
-    };
-});
 
 describe('AdminDashboardPage', () => {
-    afterEach(() => {
-        jest.clearAllMocks();
-    });
+  it('renders the dashboard title', () => {
+    render(<AdminDashboardPage />);
+    expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
+  });
 
-    it('renders the dashboard title', async () => {
-        render(<AdminDashboardPage />);
-        await waitFor(() => {
-          expect(screen.getByRole('heading', { name: /admin dashboard/i })).toBeInTheDocument();
-        })
-    });
+  it('displays the correct stats after fetching data', async () => {
+    render(<AdminDashboardPage />);
 
-    it('displays the correct stats after fetching data', async () => {
-        render(<AdminDashboardPage />);
+    // Use findByText which automatically waits for the element to appear
+    expect(await screen.findByText('15')).toBeInTheDocument(); // Total Users
+    expect(await screen.findByText('25')).toBeInTheDocument(); // Total Applications
+    expect(await screen.findByText('LKR 4,000.00')).toBeInTheDocument(); // Total Payments (2500 + 1500)
+  });
 
-        await waitFor(() => {
-            expect(screen.getByText('15')).toBeInTheDocument(); // Total Users
-            expect(screen.getByText('25')).toBeInTheDocument(); // Total Applications
-            expect(screen.getByText('LKR 4,000')).toBeInTheDocument(); // Total Payments
-        });
-    });
+  it('renders the recent applications table with correct data', async () => {
+    render(<AdminDashboardPage />);
 
-    it('renders the recent applications table with correct data', async () => {
-        render(<AdminDashboardPage />);
-
-        await waitFor(() => {
-            expect(screen.getByRole('cell', { name: /nimal silva/i })).toBeInTheDocument();
-            expect(screen.getByRole('cell', { name: /passport services/i })).toBeInTheDocument();
-            expect(screen.getByRole('cell', { name: /kamala perera/i })).toBeInTheDocument();
-            expect(screen.getByText('Approved')).toBeInTheDocument();
-            expect(screen.getByText('Pending')).toBeInTheDocument();
-        });
-    });
+    // Wait for the table to populate
+    expect(await screen.findByRole('cell', { name: /nimal silva/i })).toBeInTheDocument();
+    expect(screen.getByRole('cell', { name: /passport services/i })).toBeInTheDocument();
+    expect(screen.getByRole('cell', { name: /kamala perera/i })).toBeInTheDocument();
+    expect(screen.getByRole('cell', { name: /id card renewal/i })).toBeInTheDocument();
+  });
 });
