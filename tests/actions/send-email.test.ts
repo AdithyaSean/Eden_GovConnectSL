@@ -1,4 +1,3 @@
-
 // ⬇️ REPLACE THE ENTIRE FILE WITH THIS CODE ⬇️
 
 import { sendEmail } from '@/lib/actions/send-email';
