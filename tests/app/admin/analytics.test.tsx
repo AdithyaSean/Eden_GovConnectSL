@@ -34,7 +34,7 @@ describe('AdminAnalyticsPage', () => {
     });
 
     afterEach(() => {
-        jest.restoreAllMocks();
+        jest.clearAllMocks();
     });
 
     it('renders the main heading', () => {

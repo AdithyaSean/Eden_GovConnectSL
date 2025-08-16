@@ -18,17 +18,17 @@ const mockGetDocs = getDocs as jest.Mock;
 
 const mockApplications: Application[] = [
     // Completed app
-    { id: 'app1', user: 'User A', service: 'Test', status: 'Completed', submitted: Timestamp.fromDate(subMonths(new Date(), 1)), appointmentRating: 5, appointmentFeedback: 'Great service!', details: { appointmentDate: Timestamp.fromDate(subMonths(new Date(), 1)) } },
+    { id: 'app1', user: 'User A', service: 'Test', status: 'Completed', submitted: Timestamp.fromDate(subMonths(new Date(), 1)), appointmentRating: 5, appointmentFeedback: 'Great service!', details: { appointmentDate: Timestamp.fromDate(subMonths(new Date(), 1)), reminderSent: false } },
     // Approved app (counts as completed for processing time)
-    { id: 'app2', user: 'User B', service: 'Test', status: 'Approved', submitted: Timestamp.fromDate(subMonths(new Date(), 2)), details: { appointmentDate: Timestamp.fromDate(subMonths(new Date(), 2)) } },
+    { id: 'app2', user: 'User B', service: 'Test', status: 'Approved', submitted: Timestamp.fromDate(subMonths(new Date(), 2)), details: { appointmentDate: Timestamp.fromDate(subMonths(new Date(), 2)), reminderSent: false } },
     // Rejected app (counts as completed for processing time)
-    { id: 'app3', user: 'User C', service: 'Test', status: 'Rejected', submitted: Timestamp.fromDate(subMonths(new Date(), 1)), details: { appointmentDate: Timestamp.fromDate(subMonths(new Date(), 1)) } },
+    { id: 'app3', user: 'User C', service: 'Test', status: 'Rejected', submitted: Timestamp.fromDate(subMonths(new Date(), 1)), details: { appointmentDate: Timestamp.fromDate(subMonths(new Date(), 1)), reminderSent: false } },
     // In-progress app with an appointment (for no-show rate)
-    { id: 'app4', user: 'User D', service: 'Test', status: 'In Progress', submitted: Timestamp.now(), details: { appointmentDate: Timestamp.fromDate(addDays(new Date(), 5)) } },
+    { id: 'app4', user: 'User D', service: 'Test', status: 'In Progress', submitted: Timestamp.now(), details: { appointmentDate: Timestamp.fromDate(addDays(new Date(), 5)), reminderSent: false } },
     // A "no-show" app (appointment in the past, but status is still pending)
-    { id: 'app5', user: 'User E', service: 'Test', status: 'Pending', submitted: Timestamp.now(), details: { appointmentDate: Timestamp.fromDate(addDays(new Date(), -5)) } },
+    { id: 'app5', user: 'User E', service: 'Test', status: 'Pending', submitted: Timestamp.now(), details: { appointmentDate: Timestamp.fromDate(addDays(new Date(), -5)), reminderSent: false } },
     // App with a rating
-    { id: 'app6', user: 'User F', service: 'Test', status: 'Completed', submitted: Timestamp.now(), appointmentRating: 4, appointmentFeedback: 'Good.', details: { appointmentDate: Timestamp.now() } },
+    { id: 'app6', user: 'User F', service: 'Test', status: 'Completed', submitted: Timestamp.now(), appointmentRating: 4, appointmentFeedback: 'Good.', details: { appointmentDate: Timestamp.now(), reminderSent: false } },
     // App submitted at 8:30 UTC, which is 14:00 SLST (peak hour)
     { id: 'app7', user: 'User G', service: 'Test', status: 'Pending', submitted: Timestamp.fromDate(new Date('2023-10-26T08:30:00Z')) },
     { id: 'app8', user: 'User H', service: 'Test', status: 'Pending', submitted: Timestamp.fromDate(new Date('2023-10-26T08:45:00Z')) },

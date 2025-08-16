@@ -43,23 +43,26 @@ describe('AdminDashboardPage', () => {
         };
 
         // Correctly mock the implementation of getDocs
-        mockGetDocs.mockImplementation((q: any) => {
-            const path = q.path;
-            if (path === 'users') {
+        mockGetDocs.mockImplementation((q) => {
+            // This is a simplified mock. In a real app, you might inspect `q` to return different data for different queries.
+            const collectionPath = q.path;
+            if (collectionPath === 'users') {
                  return Promise.resolve(mockUsers);
             }
-            if (path === 'applications' && q.limit === 5) {
-                return Promise.resolve(mockRecentApps);
-            }
-            if (path === 'applications') {
+            if (collectionPath === 'applications') {
+                // A simple way to differentiate queries for this test
+                if (q.limit === 5) {
+                    return Promise.resolve(mockRecentApps);
+                }
                 return Promise.resolve(mockApps);
             }
-            if (path === 'payments') {
+            if (collectionPath === 'payments') {
                 return Promise.resolve(mockPayments);
             }
             return Promise.resolve({ docs: [], size: 0 }); // Default empty response
         });
     });
+
      afterEach(() => {
         jest.clearAllMocks();
     });
