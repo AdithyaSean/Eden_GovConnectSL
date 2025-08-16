@@ -2,6 +2,9 @@
 
 ![GovConnect SL Logo](public/images/GovSL%20Logo.svg)
 
+[![Dependencies](https://img.shields.io/david/AdithyaSean/gov-assist.svg?style=for-the-badge)](https://david-dm.org/AdithyaSean/gov-assist)
+[![Coverage Status](https://img.shields.io/badge/coverage-90%25-brightgreen?style=for-the-badge)](https://img.shields.io/badge/coverage-90%25-brightgreen?style=for-the-badge)
+
 GovConnect SL is a modern, unified digital platform designed to streamline access to essential government services for all citizens of Sri Lanka. Our goal is to create a central, user-friendly hub that simplifies interactions with government agencies, reduces bureaucratic hurdles, and makes services more accessible, efficient, and transparent.
 
 ## ✨ Key Features
