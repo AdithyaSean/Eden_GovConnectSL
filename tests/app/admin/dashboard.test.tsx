@@ -5,7 +5,11 @@ import AdminDashboardPage from '@/app/admin/dashboard/page';
 import { collection, getDocs, Timestamp, query, orderBy, limit } from 'firebase/firestore';
 
 // Mock the entire firebase/firestore module
-jest.mock('firebase/firestore');
+jest.mock('firebase/firestore', () => ({
+    ...jest.requireActual('firebase/firestore'),
+    getDocs: jest.fn(),
+}));
+
 
 // Mock child components to isolate the test
 jest.mock('@/components/admin-layout', () => ({
